@@ -1,0 +1,23 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+import sys,os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from taras import taras
+
+def usage():
+    print 'usage: gen_random_tweet'
+    sys.exit(0)
+
+def main(argv):
+    daemon = taras.WeiboDaemon()
+    try:
+        tweet, image_path = daemon.create_random_tweet()
+        print tweet
+        print image_path
+    except Exception, err:
+        print 'failed: %s' % err
+    finally:
+        daemon.shutdown()
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,0 +1,28 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys,os,traceback
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from util import pbrowser
+from util.log import _logger
+from third_party.selenium import selenium
+
+def main(argv):
+    url = argv[0]
+    hint = argv[1]
+    _logger.info('grabing main image, url=(%s), hint=(%s)' % (url, hint))
+    sele = selenium('localhost', 4444, '*chrome', 'http://www.baidu.com')
+    _logger.debug('opening selenium')
+    sele.start()
+    try:
+        a = pbrowser.get_main_image_with_hint(url, hint, sele, 'gbk')
+        print "image url: " + a[1]
+    except Exception, err:
+        _logger.error('get_main_image_with_hint_advanced failed: %s, %s'
+                      % (err, traceback.format_exc()))
+    finally:
+        sele.stop()
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

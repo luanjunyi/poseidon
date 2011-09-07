@@ -1,0 +1,26 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys,os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from util import pbrowser
+from util.log import _logger
+from selenium import selenium
+
+def main(argv):
+    url = argv[0]
+    _logger.info('grabing main body, url=(%s)' % (url))
+    _logger.info('starting selenium')
+    sele = selenium('localhost', 4444, 'firefox', 'http://baidu.com')
+    sele.start()
+    sele.set_timeout(2 * 60 * 1000)
+    try:
+        print pbrowser.extract_main_body(url, sele, 'gbk').encode('utf-8')
+    except Exception, err:
+        _logger.error('exception: %s' % err)
+    finally:
+        sele.stop()
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

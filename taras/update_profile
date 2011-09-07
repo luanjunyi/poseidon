@@ -1,0 +1,108 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import os, sys, re, time
+from datetime import datetime
+from urlparse import urlparse
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+
+import taras
+from util import pbrowser
+from util.log import _logger
+
+def usage():
+    print 'usage: update_profile -e[USER_EMAIL] -c[NICK_NAME] -d[DESCRIPTION] -i[PHOTO] -t[tags] -u[DBUSER=taras] -p[DBPASSWD=admin123] -n[DBNAME=taras]'
+    sys.exit(0)
+
+def main(argv):
+    from getopt import getopt
+    try:
+        opts, args = getopt(sys.argv[1:], 'e:c:d:i:t:u:p:n:',
+                            ['email=', 'nick=', 'desc=', 'photo=', 'tags=', 'dbuser=', 'dbpass=', 'dbname='])
+    except Exception, err:
+        print "getopt error:%s" % err
+        usage()
+        sys.exit(2)
+
+    dbuser = 'taras'
+    db = 'taras'
+    passwd = 'admin123'
+
+    email = ''
+    desc = ''
+    photo = ''
+    tags = ''
+    nick = ''
+
+    for opt, arg in opts:
+        if opt in ('-u', '--dbuser'):
+            dbuser = arg.strip()
+        if opt in ('-n', '--dbname'):
+            db = arg.strip()
+        if opt in ('-p', '--dbpass'):
+            passwd = arg.strip()
+        if opt in ('-e', '--email'):
+            email = arg.strip()
+        if opt in ('-c', '--nick'):
+            nick = arg.strip()
+        if opt in ('-d', '--desc'):
+            desc = arg.strip()
+        if opt in ('-i', '--photo'):
+            photo = arg.strip()
+        if opt in ('-t', '--tags'):
+            tags = arg.strip()
+        if opt in ('-c', '--nick'):
+            nick = arg.strip()
+
+    if email == '':
+        usage()
+    
+    _logger.info('dbname:%s, dbuser:%s, dbpass:%s, user-email:%s, nick:(%s), desc:(%s), tags:(%s), photo:(%s)'
+                 % (db, dbuser, passwd, email, nick, desc, tags, photo))
+
+    daemon = taras.WeiboDaemon(dbname=db, dbuser = dbuser, dbpass = passwd, noselenium = True)
+    try:
+        api = daemon.get_api_by_user(email)
+        # update tag
+        if tags != '':
+            api.tag_create(tags)
+        # update nick name, description
+        if nick != '':
+            api.update_profile(name=nick)
+            _logger.debug('nick name updated as (%s)' % api.me().name.encode('utf-8'))
+        if desc != '':
+            api.update_profile(description=desc)
+            _logger.debug('description updated as (%s)' % api.me().description.encode('utf-8'))
+            
+        # update photo
+        if photo != '':
+            br = pbrowser.get_browser()
+            # first visit the base url to get a good referer
+            try:
+                urlinfo = urlparse(photo)
+                baseurl = photo[:photo.find(urlinfo.path)]
+                _logger.debug('photo url parsed, baseurl:(%s)' % baseurl)
+                br.open(baseurl)
+            except Exception, err:
+                _logger.error('getting referer failed:(%s), will continue anyway', err)
+            img = br.download_image(photo).read()
+            # save to disk
+            if not os.path.exists('tmp'):
+                os.makedirs('tmp')
+
+            tmp_name = "tmp/tmp_photo.%s%s" % (int(time.mktime(datetime.now().timetuple())),
+                                            os.path.splitext(urlinfo.path)[1])
+            with open(tmp_name, 'w') as tmp_img:
+                tmp_img.write(img)
+            api.update_profile_image(tmp_name)
+            os.system('rm -f tmp/tmp_photo.*')
+        print '更新成功'
+            
+    except Exception, err:
+        print '更新失败: %s' % err
+    finally:
+        daemon.shutdown()
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -u
+set -e
+
+function kill_all {
+    echo 'shutting down Taras system'
+    # first stop all monitor process
+    for pid in `ps aux | grep [r]un-stuff | awk '{print $2;}'`
+    do
+        echo "killing process $pid"
+        kill -INT $pid || true
+    done
+
+    # stop all Taras processes
+    /home/luanjunyi/yhhd/py/taras/tools/run-stuff -c /home/luanjunyi/yhhd/py/taras/taras-daemon.conf -t stop
+    /home/luanjunyi/yhhd/py/taras/tools/run-stuff -c /home/luanjunyi/yhhd/py/taras/crawl-tweet.conf -t stop
+    /home/luanjunyi/yhhd/py/taras/tools/run-stuff -c /home/luanjunyi/yhhd/py/taras/crawl-victim.conf -t stop
+
+    # stop all firefox-bin, forgive me if you are surfing the Web on that server
+    killall firefox-bin
+
+    # stop Selenium
+    kill -9 `ps aux | grep [s]elenium-server-standalone | awk '{print $2}'`
+}
+
+function start_all {
+    echo 'kicking off Taras system'
+    
+    # start Seleinum
+    export DISPLAY=:1.0
+    nohup java -jar /home/luanjunyi/yhhd/py/third_party/selenium-server-standalone-2.0.0.jar &
+
+    # start Taras processes
+    /home/luanjunyi/yhhd/py/taras/tools/run-stuff -c /home/luanjunyi/yhhd/py/taras/taras-daemon.conf -t start
+    /home/luanjunyi/yhhd/py/taras/tools/run-stuff -c /home/luanjunyi/yhhd/py/taras/crawl-tweet.conf -t start
+    /home/luanjunyi/yhhd/py/taras/tools/run-stuff -c /home/luanjunyi/yhhd/py/taras/crawl-victim.conf -t start
+}
+
+function usage {
+    echo "Usage: master [-k] | [-r] | [-s]"
+    echo "Options:"
+    echo "-k: kill all Taras process including Selenium and Firfoxes"
+    echo "-s: start Taras system"
+    echo "-r: restart Taras system, equal as master -k && master -s"
+}
+
+while getopts "rks" opt
+do
+    case $opt in
+        k)
+            kill_all
+            exit 0
+            ;;
+        r)
+            echo "Not supported right now"
+            exit 0
+            ;;
+        s)
+            echo "Not supported right now"
+            ;;
+        :)
+            usage
+            exit 1
+            ;;
+   esac
+done
+
+usage

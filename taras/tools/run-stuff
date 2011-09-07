@@ -1,0 +1,171 @@
+#!/bin/bash
+
+function read_config {
+    echo -e "loading config file from $1, config:\n"
+    source $1
+
+    echo "shard count:$shard_count"
+    echo "run directory:$run_dir"
+    echo "taras.py path:$taras_exe"
+    echo "logging config path:$logger_conf"
+    echo "dead minite:$dead_minute"
+    echo "refresh rate:$sleep_time"
+
+    echo "not_dead_if:$not_dead_if"
+    echo "taras_run_type:$taras_run_type" # daemon, crawl-tweet or crawl-victim
+}
+
+function get_log_time {
+    d=`echo $1 | awk '{print $1" "$2}' | sed 's|,|.|'`
+    date -d "$d" "+%s"
+}
+
+function get_pid {
+    echo $1 | egrep -o 'pid=[0-9]+' | egrep -o [0-9]+
+    return 0
+}
+
+function restart {
+    stop
+    start
+}
+
+function monitor_one_taras {
+    dir="${run_dir}/taras$1"
+    cd $dir
+    log_path="${dir}/taras.log"
+    cur_log=`grep ' - INFO - pid=' $log_path | tail -n 1 `
+
+    cur_time=`date +%s`
+    log_time=`get_log_time "$cur_log"`
+    elapsed=$(( ${cur_time} - ${log_time} ))
+
+    if [ -z "$cur_log" ]; then
+        cur_log=`tail -n 2 $log_path`
+    fi
+
+    echo "process $1 | $elapsed sec | ($cur_log)"
+
+    # retart it if blocked
+    if (( $elapsed > $(( ${dead_minute} * 60 )) )); then
+        echo 'warning: too old'
+        if [ -z "$not_dead_if" -o -z "`echo $cur_log | grep -E "$not_dead_if"`" -o $elapsed > 3600 ]; then
+            echo 'need restart'
+            pid=`get_pid "$cur_log"`
+            echo "pid=$pid"
+            kill -INT $pid || true
+            taras_cmd="python ${taras_exe} --shard=$1 --all-shard=${shard_count} -c $taras_run_type"
+            echo "starting ${taras_cmd}..."
+            bash -i -c "$taras_cmd & echo \$!"
+        fi
+    fi
+    cd - > /dev/null
+}
+
+function monitor {
+    read_config $1
+    echo -e "\nmonitoring...\n"
+    trap 'echo "got SIGINT"' SIGINT
+    while [ true ]
+    do
+        source $config_path
+        for (( i=0; i<$shard_count; i++  ))
+        do
+            monitor_one_taras $i
+        done
+        echo "sleeping for ${sleep_time} seconds"
+        sleep $sleep_time
+    done
+    echo "caught SIGINT"
+}
+
+function start {
+    read_config $config_path
+    echo -e "\nstarting Taras instances...\n"
+    
+    # go to run_dir
+    if [ ! -d ${run_dir} ]; then
+        echo 'making directory ${run_dir}'
+        mkdir -p $run_dir
+    fi
+    cd $run_dir
+    echo "moved to $(pwd)"
+
+    # make directory for each Taras instance
+    for (( i=0; i<$shard_count; i++  ))
+    do
+        dir="${run_dir}/taras$i"
+        if [ ! -d $dir ]; then
+            mkdir -p $dir
+        fi
+        cd $dir
+        cp $logger_conf "./logger.conf"
+        taras_cmd="python ${taras_exe} --shard=$i --all-shard=${shard_count} -c $taras_run_type"
+        echo "starting ${taras_cmd}..."
+        bash -i -c "$taras_cmd & echo \$!"
+        cd - > /dev/null
+        sleep 1
+    done
+    echo -e "all instances kicked off\n"
+    echo -e "start monitor\n"
+    monitor $config_path
+}
+
+function stop {
+    source $config_path
+    echo 'stoping all taras instance'
+    ps aux | grep -E "[t]aras.py.*-c.*$taras_run_type" | awk '{print $2}' | xargs kill -INT || true
+    echo 'stopped'
+}
+
+function usage {
+    echo "Usage: run-stuff [-c config-file] [-t start|monitor|stop|restart] [-r refresh-rate=5]"
+    echo "Start(or moniter) several Taras instances according to configuration file. By default find taras.conf from current working directory."
+    echo -e "Example: \nrun-taras -c /var/run/taras.conf"
+}
+
+
+set -u
+set -e
+config_path="./taras.conf"
+master_log="`pwd`/master_log"
+cmd="monitor"
+sleep_time=5
+
+while getopts "c:t:r:" opt
+do
+    case $opt in
+        c)
+            config_path=$OPTARG
+            ;;
+        t)
+            cmd=$OPTARG
+            ;;
+        r)
+            sleep_time=$OPTARG
+            ;;
+        :)
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+case $cmd in
+    "start")
+        start
+        ;;
+    "monitor")
+        monitor $config_path
+        ;;
+    "restart")
+        restart
+        ;;
+    "stop")
+        stop
+        ;;
+    :)
+        usage
+        exit 1
+        ;;
+esac

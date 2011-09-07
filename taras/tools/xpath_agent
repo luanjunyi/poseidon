@@ -1,0 +1,61 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+import sys,os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from taras import taras
+
+
+def usage():
+    print 'usage: xpath_agent (-u|--url=) URL (-t|--title) TITLE (-a|--href=) HREF (-c|--content) CONTENT (-i|--image) IMAGE (-e|--encoding=) ENCODING'
+    sys.exit(0)
+
+def main(argv):
+    from getopt import getopt
+    try:
+        opts, args = getopt(sys.argv[1:], 'u:t:a:c:i:e:', ['url=', 'title=', 'href=', 'content=', 'image=', 'encoding='])
+    except Exception, err:
+        print "getopt error:%s" % err
+        usage()
+        sys.exit(2)
+
+    url = ''
+    title = ''
+    href = ''
+    image = ''
+    content = ''
+    encoding = 'utf-8'
+    
+    for opt, arg in opts:
+        if opt in ('-u', '--url'):
+            url = arg
+        if opt in ('-t', '--title'):
+            title = arg
+        if opt in ('-a', '--href'):
+            href = arg
+        if opt in ('-c', '--content'):
+            content = arg
+        if opt in ('-i', '--image'):
+            image = arg
+        if opt in ('-e', '--encoding'):
+            encoding = arg
+
+    if url == '':
+        print 'url can\'t be empty'
+        usage()
+
+    if encoding == '':
+        print 'encoding can\'t be empty'
+        usage()
+
+    daemon = taras.WeiboDaemon()
+    try:
+        tweet, image_path = daemon.create_tweet_on_the_fly(url, title, content, href, image, encoding)
+        print tweet
+        print image_path
+    except Exception, err:
+        print 'failed: %s' % err
+    finally:
+        daemon.shutdown()
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,0 +1,78 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+import sys, os, traceback
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from taras import taras
+from util.log import _logger
+
+def fetch_one(path, email, date):
+    if date != "today":
+        log_path = "%s/taras.log.%s" % (path, date)
+    else:
+        log_path = "%s/taras.log" % (path)
+    _logger.debug('peering log file(%s)' % log_path)
+    log = open(log_path)
+    log = log.read()
+    target = "user(%s) in action" % email
+    return log.count(target)
+
+def fetch(path, email, date):
+    i = 0
+    count = 0
+    while True:
+        curdir = "%s/taras%d" % (path, i)
+        i += 1
+        if not os.path.isdir(curdir):
+            break
+        try:
+            _logger.debug('processing dir: %s' % curdir)
+            count += fetch_one(curdir, email, date)
+        except Exception, err:
+            _logger.error('fetch_one failed: %s, %s' % (err, traceback.format_exc()))
+    return count
+
+def usage():
+    print 'usage: fetch_action_count (-p|--path=) LOG-PATH (-u|--user-email) USER\'S-LOGIN-EMAIL (-d|--date=) DATE-TO-SEARCH-ACTION-COUNT'
+    sys.exit(0)
+
+def main(argv):
+    from getopt import getopt
+    try:
+        opts, args = getopt(sys.argv[1:], 'p:u:d:', ['path=', 'user-email=', 'date='])
+    except Exception, err:
+        print "getopt error:%s" % err
+        usage()
+        sys.exit(2)
+
+    path = ''
+    email = ''
+    date = ''
+    
+    for opt, arg in opts:
+        if opt in ('-p', '--path'):
+            path = arg
+        if opt in ('-u', '--user-email'):
+            email = arg
+        if opt in ('-d', '--date'):
+            date = arg
+
+    if path == '':
+        print 'path can\'t be empty'
+        usage()
+
+    if email == '':
+        print 'email can\'t be empty'
+        usage()
+
+    if date == '':
+        print 'date can\'t be empty'
+        usage()
+
+    try:
+        print fetch(path, email, date)
+    except Exception, err:
+        #print '%s' % err
+        print -1
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,0 +1,36 @@
+[loggers]
+keys=root
+
+[logger_root]
+level=DEBUG
+handlers=errorHandler, infoHandler, debugHandler
+qualname=TarasInRun
+propagate=0
+
+[handlers]
+keys=infoHandler, errorHandler, debugHandler
+
+[formatters]
+keys=TarasInRunFormatter
+
+[handler_errorHandler]
+level=ERROR
+class=handlers.TimedRotatingFileHandler
+formatter=TarasInRunFormatter
+args=('taras.err', 'midnight', 1, 7)
+
+[handler_infoHandler]
+level=INFO
+class=handlers.TimedRotatingFileHandler
+formatter=TarasInRunFormatter
+args=('taras.log', 'midnight', 1, 7)
+
+[handler_debugHandler]
+level=DEBUG
+class=handlers.TimedRotatingFileHandler
+formatter=TarasInRunFormatter
+args=('taras.debug', 'midnight', 1, 3)
+
+[formatter_TarasInRunFormatter]
+format=%(asctime)s - %(levelname)s - pid=%(process)s - %(filename)s(%(lineno)d): %(message)s
+datefmt=

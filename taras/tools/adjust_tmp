@@ -1,0 +1,58 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+import sys, traceback
+import taras
+from util.log import _logger
+
+def usage():
+    print 'usage: update_statistic -u[USER=tarse] -d[DB=taras] -p[PASSWD=admin123]'
+    sys.exit(0)
+
+def main(argv):
+    from getopt import getopt
+    try:
+        opts, args = getopt(sys.argv[1:], 'u:d:p:', ['user=', 'db=', 'passwd='])
+    except Exception, err:
+        print "getopt error:%s" % err
+        usage()
+        sys.exit(2)
+
+    dbuser = 'taras'
+    db = 'taras'
+    passwd = 'admin123'
+    for opt, arg in opts:
+        if opt in ('-u', '--user'):
+            dbuser = arg
+        if opt in ('-d', '--db'):
+            db = arg
+        if opt in ('-p', '--passwd'):
+            passwd = arg
+
+    daemon = taras.WeiboDaemon(dbname=db, dbuser = dbuser, dbpass = passwd, noselenium=True)
+
+    try:
+        for user in daemon.agent.get_all_user():
+            try:
+                _logger.debug('processing %s' % user.uname)
+                url = daemon.get_user_url(user)
+                api = daemon.get_api_by_user(user.uname)
+                if user.enabled:
+                    new_value = "%s#%s#%s#%s" % (api.me().name.encode('utf-8'), # nickname
+                                                 user.uname, # email for login
+                                                 user.passwd, # passwd
+                                                 url
+                                                 )
+                    sql = 'update user_statistic set user = "%s" where user = "%s"' % (new_value, url)
+                else:
+                    sql = 'delete from user_statistic where user like "%%%s%%"' % (url)
+                _logger.debug('using sql: (%s)' % sql)
+                daemon.agent.cursor.execute(sql)
+                _logger.debug('%s updated (%d rows affected)' % (api.me().name.encode('utf-8'),
+                                                                 daemon.agent.cursor.rowcount))
+            except Exception, err:
+                _logger.error('adjust user_statistic failed: %s, %s' % (err, traceback.format_exc()))
+    except KeyboardInterrupt:
+        daemon.shutdown()
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

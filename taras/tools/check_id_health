@@ -1,0 +1,35 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+import sys, os, traceback
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from taras import taras
+from util.log import _logger
+
+def check_one_account(argv):
+    daemon = taras.WeiboDaemon(noselenium=True)
+    try:
+        _logger.debug('%s:%s' % (argv[0], argv[1]))
+        api = daemon.get_api_on_the_fly(argv[0], argv[1])
+        print '很健康，她的昵称是 (%s)' % api.me().name.encode('utf-8')
+    except Exception, err:
+        print '这个的ID可能用不了: %s<br/>%s' % (err, traceback.format_exc())
+    finally:
+        daemon.shutdown()
+
+def check_all_accounts():
+    daemon = taras.WeiboDaemon()
+    for user in daemon.agent.get_all_user():
+        try:
+            api = daemon.get_api_by_user(user.uname)
+            #daemon.sync_follow_log(user.uname)
+            _logger.debug('good: (%s) %s' % (user.uname, api.me().name))
+        except Exception, err:
+            _logger.debug('bad: (%s, %s) %s' % (user.uname, user.passwd, err))
+    daemon.shutdown()
+
+
+if __name__ == "__main__":
+    if sys.argv[1] == '--all':
+        check_all_accounts()
+    else:
+        check_one_account(sys.argv[1:])
