@@ -559,4 +559,12 @@ email = %s', (user.uname))
                             (email, date))
         self.conn.commit()
 
-    # Followee count log
+    # Proxy
+    def get_random_proxy(self):
+        self.cursor.execute('select * from proxy')
+        if self.cursor.rowcount == 0:
+            _logger.error('no proxy in DB')
+            return None
+        all_proxy = self.cursor.fetchall()
+        
+        return random.choice(all_proxy)

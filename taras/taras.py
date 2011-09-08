@@ -1057,6 +1057,14 @@ class WeiboDaemon:
                 self.shutdown()
 
     def assign_user(self, user):
+        # choose proxy
+        proxy = self.agent.get_random_proxy()
+        if proxy == None:
+            _logger.debug('no proxy found, will use direct address')
+        else:
+            os.environ['taras_proxy_addr'] = proxy['addr']
+            os.environ['taras_proxy_port'] = str(proxy['port'])
+
         self.app = random.choice(self.agent.get_all_app())
         self.user = user
         _logger.debug('getting api')

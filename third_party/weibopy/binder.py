@@ -1,7 +1,7 @@
 
 # Copyright 2009-2010 Joshua Roesslein
 # See LICENSE for details.
-
+import os, sys
 import httplib
 import urllib
 import time
@@ -129,13 +129,22 @@ def bind_api(**config):
             while retries_performed < self.retry_count + 1:
                 # Open connection
                 # FIXME: add timeout
-                # proxy = '61.233.3.233'
-                if self.api.secure:
-                    conn = httplib.HTTPSConnection(self.host)
-                    #conn = httplib.HTTPSConnection(proxy, 8909)
+
+                # Use taras proxy
+
+                if 'taras_proxy_addr' in os.environ:
+                    proxy_addr = os.environ['taras_proxy_addr']
+                    proxy_port = int(os.environ['taras_proxy_port'])
+                    sys.stderr.write("using proxy: %s:%d\n" % (proxy_addr, proxy_port))
                 else:
-                    conn = httplib.HTTPConnection(self.host)
-                    #conn = httplib.HTTPConnection(proxy, 8909)
+                    proxy_addr = ''
+
+                if self.api.secure:
+                    #conn = httplib.HTTPSConnection(self.host)
+                    conn = httplib.HTTPSConnection(self.host) if proxy_addr == '' else httplib.HTTPSConnection(proxy_addr, proxy_port)
+                else:
+                    #conn = httplib.HTTPConnection(self.host)
+                    conn = httplib.HTTPConnection(self.host) if proxy_addr == '' else httplib.HTTPConnection(proxy_addr, proxy_port)
 
                 # Apply authentication
                 if self.api.auth:
@@ -145,8 +154,10 @@ def bind_api(**config):
                     )
                 # Execute request
                 try:
-                    conn.request(self.method, url, headers=self.headers, body=self.post_data)
-                    #conn.request(self.method, self.host + url, headers=self.headers, body=self.post_data)
+                    if proxy_addr == '':
+                        conn.request(self.method, url, headers=self.headers, body=self.post_data)
+                    else:
+                        conn.request(self.method, self.host + url, headers=self.headers, body=self.post_data)
                     resp = conn.getresponse()
                 except Exception, e:
                     raise WeibopError('Failed to send request: %s' % e + "url=" + str(url) +",self.headers="+ str(self.headers))
