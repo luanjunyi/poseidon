@@ -437,11 +437,8 @@ image_bin, image_ext, href_md5) values(%s, %s, %s, %s, %s, %s, %s)',
             _logger.debug('failed to pop tweet stack, it\'s empty, email=%s' % email)
             return None
 
-        while True:
-            cur_row = self.cursor.fetchone()
-            if cur_row == None:
-                _logger.debug('all tweet in stack tried, none ID found in DB')
-                return None
+        all_rows = self.cursor.fetchall()
+        for cur_row in all_rows:
             tweet_id = cur_row['tweet_id']
             self.cursor.execute('delete from tweet_stack where tweet_id = %s', tweet_id)
             self.conn.commit()
@@ -459,6 +456,10 @@ image_bin, image_ext, href_md5) values(%s, %s, %s, %s, %s, %s, %s)',
                       image_bin = raw_tweet['image_bin'])
 
             return t
+
+        _logger.debug('all tweet in stack tried, none ID found in DB')
+        return None
+
         
 
     def remove_tweet(self, source_id, item_id):
