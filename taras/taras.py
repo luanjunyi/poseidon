@@ -1062,10 +1062,10 @@ class WeiboDaemon:
         if proxy == None:
             _logger.debug('no proxy found, will use direct address')
         else:
-            os.environ['taras_proxy_addr'] = proxy['addr']
-            os.environ['taras_proxy_port'] = str(proxy['port'])
-            os.environ['taras_proxy_user'] = proxy['user_name']
-            os.environ['taras_proxy_passwd'] = proxy['password']
+            os.environ['taras_proxy_addr'] = proxy['addr'].strip()
+            os.environ['taras_proxy_port'] = str(proxy['port'].strip())
+            os.environ['taras_proxy_user'] = proxy['user_name'].strip()
+            os.environ['taras_proxy_passwd'] = proxy['password'].strip()
 
         self.app = random.choice(self.agent.get_all_app())
         self.user = user
