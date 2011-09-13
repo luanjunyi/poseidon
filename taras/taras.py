@@ -1064,6 +1064,8 @@ class WeiboDaemon:
         else:
             os.environ['taras_proxy_addr'] = proxy['addr']
             os.environ['taras_proxy_port'] = str(proxy['port'])
+            os.environ['taras_proxy_user'] = proxy['user_name']
+            os.environ['taras_proxy_passwd'] = proxy['password']
 
         self.app = random.choice(self.agent.get_all_app())
         self.user = user

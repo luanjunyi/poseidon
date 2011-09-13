@@ -9,6 +9,8 @@ import re
 from weibopy.error import WeibopError
 from weibopy.utils import convert_to_utf8_str
 
+import httplib2, socks, traceback
+
 re_path_template = re.compile('{\w+}')
 
 
@@ -135,16 +137,21 @@ def bind_api(**config):
                 if 'taras_proxy_addr' in os.environ:
                     proxy_addr = os.environ['taras_proxy_addr']
                     proxy_port = int(os.environ['taras_proxy_port'])
-                    sys.stderr.write("using proxy: %s:%d\n" % (proxy_addr, proxy_port))
+                    proxy_user = os.environ['taras_proxy_user']
+                    proxy_passwd = os.environ['taras_proxy_passwd']
                 else:
                     proxy_addr = ''
 
-                if self.api.secure:
-                    #conn = httplib.HTTPSConnection(self.host)
-                    conn = httplib.HTTPSConnection(self.host) if proxy_addr == '' else httplib.HTTPSConnection(proxy_addr, proxy_port)
-                else:
-                    #conn = httplib.HTTPConnection(self.host)
-                    conn = httplib.HTTPConnection(self.host) if proxy_addr == '' else httplib.HTTPConnection(proxy_addr, proxy_port)
+
+                proxy_info = None if proxy_addr == '' else httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5,
+                                                                              proxy_addr, proxy_port,
+                                                                              proxy_user = proxy_user,
+                                                                              proxy_pass = proxy_passwd)
+                conn = httplib2.Http(proxy_info = proxy_info)
+                if proxy_info != None:
+                    print 'using proxy...'
+                    sys.stderr.write("using proxy: %s@%s:%d (%s)\n" % (proxy_user, proxy_addr, proxy_port, proxy_passwd))
+
 
                 # Apply authentication
                 if self.api.auth:
@@ -154,26 +161,27 @@ def bind_api(**config):
                     )
                 # Execute request
                 try:
-                    if proxy_addr == '':
-                        conn.request(self.method, url, headers=self.headers, body=self.post_data)
-                    else:
-                        conn.request(self.method, self.host + url, headers=self.headers, body=self.post_data)
-                    resp = conn.getresponse()
+                    resp, content = conn.request(uri = self.scheme + self.host + url,
+                                                 method = self.method,
+                                                 headers = self.headers,
+                                                 body = self.post_data)
+                    
                 except Exception, e:
+                    print traceback.format_exc()
                     raise WeibopError('Failed to send request: %s' % e + "url=" + str(url) +",self.headers="+ str(self.headers))
 
                 # Exit request loop if non-retry error code
                 if self.retry_errors:
-                    if resp.status not in self.retry_errors: break
+                    if int(resp['status']) not in self.retry_errors: break
                 else:
-                    if resp.status == 200: break
+                    if resp['status'] == '200': break
 
                 # Sleep before retrying request again
                 time.sleep(self.retry_delay)
                 retries_performed += 1
 
             # If an error was returned, throw an exception
-            body = resp.read()
+            body = content
             self.api.last_response = resp
             if self.api.log is not None:
                 requestUrl = "URL:http://"+ self.host + url
@@ -182,20 +190,19 @@ def bind_api(**config):
                 if self.post_data is not None:
                     postData = ",post:"+ self.post_data[0:500]
                 self.api.log.debug(requestUrl +",time:"+ str(eTime)+ postData+",result:"+ body )
-            if resp.status != 200:
+            if resp['status'] != '200':
                 try:
                     json = self.api.parser.parse_error(self, body)
                     error_code =  json['error_code']
                     error =  json['error']
                     error_msg = 'error_code:' + error_code +','+ error
                 except Exception:
-                    error_msg = "Weibo error response: status code = %s" % resp.status
+                    error_msg = "Weibo error response: status code = %s" % resp['status']
                 raise WeibopError(error_msg)
             
             # Parse the response payload
  
             result = self.api.parser.parse(self, body)
-            conn.close()
 
             # Store result into cache if one is available.
             if self.api.cache and self.method == 'GET' and result:
