@@ -148,9 +148,10 @@ def bind_api(**config):
                                                                               proxy_user = proxy_user,
                                                                               proxy_pass = proxy_passwd)
                 conn = httplib2.Http(proxy_info = proxy_info)
-                if proxy_info != None:
-                    print 'using proxy...'
-                    sys.stderr.write("using proxy: %s@%s:%d (%s)\n" % (proxy_user, proxy_addr, proxy_port, proxy_passwd))
+                # if proxy_info != None:
+                #     print 'using proxy...'
+                #     sys.stderr.write("using proxy: %s@%s:%d (%s)\n" % (proxy_user, proxy_addr, proxy_port, proxy_passwd))
+
 
 
                 # Apply authentication
@@ -167,7 +168,7 @@ def bind_api(**config):
                                                  body = self.post_data)
                     
                 except Exception, e:
-                    sys.stderr.write(traceback.format_exc())
+                    #sys.stderr.write(traceback.format_exc())
                     raise WeibopError('Failed to send request: %s' % e + "url=" + str(url) +",self.headers="+ str(self.headers))
 
                 # Exit request loop if non-retry error code
