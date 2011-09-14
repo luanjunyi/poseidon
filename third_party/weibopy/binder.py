@@ -167,7 +167,7 @@ def bind_api(**config):
                                                  body = self.post_data)
                     
                 except Exception, e:
-                    print traceback.format_exc()
+                    sys.stderr.write(traceback.format_exc())
                     raise WeibopError('Failed to send request: %s' % e + "url=" + str(url) +",self.headers="+ str(self.headers))
 
                 # Exit request loop if non-retry error code

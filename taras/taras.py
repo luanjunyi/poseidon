@@ -448,7 +448,7 @@ class WeiboDaemon:
             else:
                 self.weibo.update_status(status=tweet)
         except WeibopError, err:
-            _logger.error('WeiboError: %s' % err)
+            _logger.error('WeiboError: %s' % (err))
             return False
         except Exception, err:
             _logger.error('failed to publish new tweet: %s, %s' % (err, traceback.format_exc()))
