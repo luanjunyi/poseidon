@@ -566,5 +566,7 @@ email = %s', (user.uname))
             _logger.error('no proxy in DB')
             return None
         all_proxy = self.cursor.fetchall()
+
+        all_proxy.append(None) # simulate direct access as one proxy
         
         return random.choice(all_proxy)
