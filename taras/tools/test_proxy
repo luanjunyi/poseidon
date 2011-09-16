@@ -1,0 +1,68 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import os, sys
+import socks
+import httplib2
+import MySQLdb
+
+def _test(addr, port, user, passwd):
+    try:
+        http = httplib2.Http(proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5,
+                                                             addr, port,
+                                                             proxy_user = user,
+                                                             proxy_pass = passwd))
+
+        response, content =  http.request('http://junyi-luan.com/dump.php',
+                                          'GET',
+                                          )
+    except Exception, err:
+        print 'get error: %s' % err
+    else:
+        print response
+            #print content
+    print '=' * 100
+
+
+
+def test_all_proxy():
+    db_host = 'localhost'
+    db_name = 'taras'
+    db_user = 'taras'
+    db_pass = 'admin123'
+
+    print 'connecting DB... host:%s %s@%s:%s' % (db_host, db_user, db_name, db_pass)
+    conn = MySQLdb.connect(host = db_host,
+                           user = db_user,
+                           passwd = db_pass,
+                           db = db_name)
+    print 'connected'
+
+    cursor = conn.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('set names utf8')
+    conn.commit()
+    cursor.execute('select * from proxy')
+
+    print '%d proxy in DB' % cursor.rowcount
+    print '=' * 100
+
+    for proxy in cursor.fetchall():
+        addr = proxy['addr'].strip()
+        port = proxy['port']
+        user = proxy['user_name'].strip()
+        passwd = proxy['password'].strip()
+        print "trying addr=(%s:%d), %s:%s" % (addr, port, user, passwd)
+        _test(addr, port, user, passwd)
+
+def test_one_proxy(argv):
+    addr = argv[0].strip()
+    port = int(argv[1])
+    user = argv[2].strip()
+    passwd = argv[3].strip()
+    print "trying single proxy, addr=(%s:%d), %s:%s" % (addr, port, user, passwd)
+    _test(addr, port, user, passwd)
+
+if len(sys.argv) == 1:
+    test_all_proxy()
+else:
+    test_one_proxy(sys.argv[1:])
