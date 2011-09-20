@@ -1040,6 +1040,7 @@ class WeiboDaemon:
         while True:
             try:
                 self.shard_id = shard_id
+                self.shard_count = shard_count
                 self.crawl_tweet(shard_id, shard_count)
                 time.sleep(10)
             except KeyboardInterrupt, sigint:
@@ -1050,6 +1051,7 @@ class WeiboDaemon:
         while True:
             try:
                 self.shard_id = shard_id
+                self.shard_count = shard_count
                 self.crawl_victim(shard_id, shard_count)
                 time.sleep(10)
             except KeyboardInterrupt, sigint:
