@@ -62,7 +62,7 @@ class WeiboDaemon:
             return False
         try:
             user = self.user
-            _logger.debug('fetching old tweet from DB, user:(%s)' % user.uname)
+            _logger.debug('fetching published tweet from DB, user:(%s)' % user.uname)
             all_tweets = self.agent.get_tweet_log(user.uname)
         except Exception, err:
             _logger.error('failed to get last 200 user\'s timeline: %s' % err)
@@ -1058,10 +1058,17 @@ class WeiboDaemon:
 
     def assign_user(self, user):
         # choose proxy
-        proxy = self.agent.get_random_proxy()
-        if proxy == None:
-            _logger.debug('no proxy found, will use direct address')
+        all_proxy = self.agent.get_all_proxy()
+        if all_proxy == ():
+            raise Exception('no proxy found, will use direct address')
         else:
+            proxy_candidate = [proxy for i, proxy in enumerate(all_proxy) 
+                               if i % self.shard_count == self.shard_id]
+            if len(proxy_candidate) == 0:
+                raise Exception('not enough proxy')
+
+            proxy = random.choice(proxy_candidate)
+                
             os.environ['taras_proxy_addr'] = proxy['addr'].strip()
             os.environ['taras_proxy_port'] = str(proxy['port']).strip()
             os.environ['taras_proxy_user'] = proxy['user_name'].strip()
@@ -1084,6 +1091,8 @@ class WeiboDaemon:
     # Post tweet, follow, comment
     def daemon(self, shard_id=0, shard_count=1):
         self.shard_id = shard_id
+        self.shard_count = shard_count
+
         random.seed()
 
         round_count = 0

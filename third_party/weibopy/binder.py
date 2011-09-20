@@ -9,6 +9,9 @@ import re
 from weibopy.error import WeibopError
 from weibopy.utils import convert_to_utf8_str
 
+# sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '../../') # Paracode root
+# from util.log import _logger
+
 import httplib2, socks, traceback
 
 re_path_template = re.compile('{\w+}')
@@ -169,7 +172,7 @@ def bind_api(**config):
                     
                 except Exception, e:
                     #sys.stderr.write(traceback.format_exc())
-                    raise WeibopError('Failed to send request: %s' % e + "url=" + str(url) +",self.headers="+ str(self.headers))
+                    raise WeibopError('Failed to send request: %s' % e + ", url=" + str(url) +",self.headers="+ str(self.headers) + " %s" % traceback.format_exc())
 
                 # Exit request loop if non-retry error code
                 if self.retry_errors:
