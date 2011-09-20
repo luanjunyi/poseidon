@@ -50,8 +50,9 @@ function usage {
     echo "Usage: master [-k] | [-r] | [-s]"
     echo "Options:"
     echo "-k: kill all Taras process including Selenium and Firfoxes"
-    echo "-s: start Taras system"
-    echo "-r: restart Taras system, equal as master -k && master -s"
+    echo "-b: start selenium"
+    echo "-s: start Taras crawlers"
+    echo "-r: restart Taras crawlers, equal as master -k && master -s"
 }
 
 while getopts "rksb" opt
@@ -67,11 +68,14 @@ do
             ;;
         s)
             start
+            exit 0
             ;;
         b)
             start_sele
+            exit 0
             ;;
         :)
+            echo "unknown option $opt"
             usage
             exit 1
             ;;
