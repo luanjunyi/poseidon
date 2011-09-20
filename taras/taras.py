@@ -1084,8 +1084,6 @@ class WeiboDaemon:
     # Post tweet, follow, comment
     def daemon(self, shard_id=0, shard_count=1):
         self.shard_id = shard_id
-
-
         random.seed()
 
         round_count = 0
@@ -1431,6 +1429,10 @@ if __name__ == "__main__":
         signal.signal(signal.SIGINT, daemon.handle_int)
         daemon.prime_crawl = True
         daemon.crawl_tweet_daemon(shard_id, shard_count)
+    elif command == 'index-tweet':
+        import tindexer
+        indexer = tindexer.TIndexer()
+        indexer.start_indexer_daemon(dbname, dbuser, dbpass)
     else:
         _logger.error('unknown command: (%s)' % command)
         usage()

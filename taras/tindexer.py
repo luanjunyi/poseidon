@@ -79,11 +79,17 @@ class TIndexer:
                                   % (user.uname, err))
             
         _logger.info('unindexed user V.S. all tweet processed')
+
+
+    def handle_int(self, signum, frame):
+        _logger.info('got signal(%d), will shutdown SQLAgent gracefully' % signum)
+        self.agent.stop()
+        sys.exit(0)
                 
 
     def start_indexer_daemon(self, dbname, dbuser, dbpass):
+        signal.signal(signal.SIGINT, self.handle_int)
         _logger.info('starting indexer, DB: (%s@%s:%s)' % (dbuser, dbname, dbpass))
-
         _logger.info('SQLAgent initialized')
         while True:
             try:
@@ -92,6 +98,9 @@ class TIndexer:
                 self.agent.stop()
             except Exception, err:
                 _logger.error('indexer_loop failed: %s, %s' % (err, traceback.format_exc()))
+            except KeyboardInterrupt, sigint:
+                _logger.info('got Keyboard interuption, will shutdown SQLAgent gracefully')
+                self.agent.stop()
             _logger.info('sleeping for 60 sec')
             time.sleep(60)
 
