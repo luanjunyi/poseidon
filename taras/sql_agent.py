@@ -101,6 +101,7 @@ class ForceAction:
         self.categories = map(lambda i: i.decode('utf-8'), categories)
 
 class SQLAgent:
+    # set sscursor to True if want to store the result set in server. It's for large result set
     def __init__(self, dbname, uname, passwd, host = "localhost", sscursor = False):
         self.dbname = dbname
         self.uname = uname
@@ -110,10 +111,11 @@ class SQLAgent:
                                     passwd = self.passwd,
                                     db = self.dbname,
                                     )
-        if sscursor:
-            self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-        else:
+        if sscursor: # store result in server
             self.cursor = self.conn.cursor(MySQLdb.cursors.SSDictCursor)
+        else:
+            self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+
         self.cursor.execute('set names utf8')
         self.conn.commit()
 
