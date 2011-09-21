@@ -226,7 +226,7 @@ class WeiboDaemon:
             except Exception, err:
                 _logger.error('error when handling relationship between %s and %d: %s' %\
                                   (user.uname, followee_id, err))
-                break
+
             self.sleep_random(1, 2)
 
     def force_stop_follow_stubborn(self, email=None):

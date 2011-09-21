@@ -101,7 +101,7 @@ class ForceAction:
         self.categories = map(lambda i: i.decode('utf-8'), categories)
 
 class SQLAgent:
-    def __init__(self, dbname, uname, passwd, host = "localhost"):
+    def __init__(self, dbname, uname, passwd, host = "localhost", sscursor = False):
         self.dbname = dbname
         self.uname = uname
         self.passwd = passwd
@@ -110,8 +110,10 @@ class SQLAgent:
                                     passwd = self.passwd,
                                     db = self.dbname,
                                     )
-
-        self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+        if sscursor:
+            self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+        else:
+            self.cursor = self.conn.cursor(MySQLdb.cursors.SSDictCursor)
         self.cursor.execute('set names utf8')
         self.conn.commit()
 
