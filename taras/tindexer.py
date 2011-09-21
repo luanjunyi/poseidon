@@ -93,7 +93,7 @@ class TIndexer:
         _logger.info('SQLAgent initialized')
         while True:
             try:
-                self.agent = SQLAgent(dbname, dbuser, dbpass)
+                self.agent = SQLAgent(dbname, dbuser, dbpass, sscursor=True)
                 self.indexer_loop()
                 self.agent.stop()
             except Exception, err:
