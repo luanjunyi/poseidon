@@ -190,7 +190,7 @@ class WeiboDaemon:
         else: # so, we are someone
             return max(100, follower_count / 10)
 
-    def _clean_stubborn(self, user):
+    def _clean_stubborn(self, user, ruthless=False):
         weibo = self.get_api_by_user(user.uname)
         followings = weibo.friends_ids().ids
         now = datetime.now()
@@ -201,6 +201,12 @@ class WeiboDaemon:
                 if weibo.exists_friendship(followee_id, me.id).friends:
                     # OK if that followee has followed us
                     _logger.debug('%d is following me' % followee_id)
+                    continue
+
+                if ruthless:
+                    weibo.destroy_friendship(user_id=followee_id)
+                    self.agent.stop_follow(user, followee_id)
+                    _logger.debug('%s ruthlessly stop following %d' % (user.uname, followee_id))
                     continue
 
                 start_following_date = self.agent.get_follow_date(user, followee_id)
@@ -220,19 +226,28 @@ class WeiboDaemon:
             except Exception, err:
                 _logger.error('error when handling relationship between %s and %d: %s' %\
                                   (user.uname, followee_id, err))
+                break
             self.sleep_random(1, 2)
 
-    def force_stop_follow_stubborn(self):
-        users = self.agent.get_all_user()
-        for user in users:
-            self._clean_stubborn(user)
+    def force_stop_follow_stubborn(self, email=None):
+        if email == None:
+            _logger.info('cleaning following for all user')
+            users = self.agent.get_all_user()
+            for user in users:
+                weibo = self.get_api_by_user(user)
+                if weibo.me().friends_count >= 1990:
+                    self._clean_stubborn(user, ruthless=True)
+        else:
+            _logger.info('cleaning following for %s' % email)
+            user = self.agent.get_user_by_email(email)
+            self._clean_stubborn(user, ruthless=True)
 
     def stop_follow_stubborn(self):
         # This cost time, do it only on Weekends
         if not (datetime.now().hour >= 20 or datetime.now().hour <= 7):
             _logger.debug('too early to consider stop follow stubborn only do it after 20:00')
             return
-        if int(hashlib.md5(self.user.uname).hexdigest(), 16) % 3 == 0:
+        if int(hashlib.md5(self.user.uname).hexdigest(), 16) % 3 == datetime.now().day % 3:
             # my clean stubborn day
             date = datetime.now().strftime('%Y-%m-%d')
             if self.agent.is_stubborn_cleaned(self.user.uname, date):
