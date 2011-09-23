@@ -11,15 +11,15 @@ from util import pbrowser
 from util.log import _logger
 
 def usage():
-    print 'usage: update_profile -e[USER_EMAIL] -c[NICK_NAME] -d[DESCRIPTION] -i[PHOTO] -t[tags] -u[DBUSER=taras] -p[DBPASSWD=admin123] -n[DBNAME=taras] \n\
+    print 'usage: update_profile -e[USER_EMAIL] -c[NICK_NAME] -d[DESCRIPTION] -i[PHOTO] -t[tags] -u[DBUSER=taras] -p[DBPASSWD=admin123] -n[DBNAME=taras] -h[DBHOST=localhost]\n\
 tags should be delimited by comma'
     sys.exit(0)
 
 def main(argv):
     from getopt import getopt
     try:
-        opts, args = getopt(sys.argv[1:], 'e:c:d:i:t:u:p:n:',
-                            ['email=', 'nick=', 'desc=', 'photo=', 'tags=', 'dbuser=', 'dbpass=', 'dbname='])
+        opts, args = getopt(sys.argv[1:], 'e:c:d:i:t:u:p:n:h:',
+                            ['email=', 'nick=', 'desc=', 'photo=', 'tags=', 'dbuser=', 'dbpass=', 'dbname=', 'mysql_host='])
     except Exception, err:
         print "getopt error:%s" % err
         usage()
@@ -28,6 +28,7 @@ def main(argv):
     dbuser = 'taras'
     db = 'taras'
     passwd = 'admin123'
+    mysql_host = 'localhost'
 
     email = ''
     desc = ''
@@ -44,6 +45,8 @@ def main(argv):
             db = arg.strip()
         if opt in ('-p', '--dbpass'):
             passwd = arg.strip()
+        if opt in ('-h', '--mysql_host'):
+            mysql_host = arg.strip()
         if opt in ('-e', '--email'):
             email = arg.strip()
         if opt in ('-c', '--nick'):
@@ -58,12 +61,13 @@ def main(argv):
             nick = arg.strip()
 
     if email == '':
+        print 'email is empty'
         usage()
     
     _logger.info('dbname:%s, dbuser:%s, dbpass:%s, user-email:%s, nick:(%s), desc:(%s), tags:(%s), photo:(%s)'
                  % (db, dbuser, passwd, email, nick, desc, tags, photo))
 
-    daemon = taras.WeiboDaemon(dbname=db, dbuser = dbuser, dbpass = passwd, noselenium = True)
+    daemon = taras.WeiboDaemon(dbname=db, dbuser = dbuser, dbpass = passwd, noselenium = True, mysql_host = mysql_host)
     try:
         api = daemon.get_api_by_user(email)
         # update tag

@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-
 import os, sys
+from ConfigParser import RawConfigParser
 import socks
 import httplib2
 import MySQLdb
@@ -13,7 +13,7 @@ def _test(addr, port, user, passwd):
                                                              proxy_user = user,
                                                              proxy_pass = passwd))
 
-        response, content =  http.request('http://junyi-luan.com/dump.php',
+        response, content =  http.request('http://220.113.33.63/dump.php',
                                           'GET',
                                           )
     except Exception, err:
@@ -26,7 +26,15 @@ def _test(addr, port, user, passwd):
 
 
 def test_all_proxy():
-    db_host = 'localhost'
+    config_path = os.path.dirname(os.path.abspath(__file__)) + '/../config'
+    print 'reading config from %s' % config_path
+    config = RawConfigParser()
+    config.read(config_path)
+    if (len(config.sections()) < 1):
+        print 'failed to read config file from %s' % config_path
+        return
+
+    db_host = config.get('global', 'mysql_host_for_daemon')
     db_name = 'taras'
     db_user = 'taras'
     db_pass = 'admin123'
