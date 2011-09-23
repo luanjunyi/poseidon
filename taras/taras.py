@@ -333,7 +333,7 @@ class WeiboDaemon:
                     _logger.info('posted one tweet')
                 self.sleep_random(1, 2)
         else:
-            if random.randint(1, 8) > 4:
+            if random.randint(1, 8) > 7:
                 _logger.info('skip tweet')
                 return
             mentions = []
