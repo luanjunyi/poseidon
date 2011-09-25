@@ -1,76 +1,126 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 import os, sys
+from datetime import datetime, timedelta
+from urlparse import urlparse
 from ConfigParser import RawConfigParser
 import socks
 import httplib2
-import MySQLdb
+from taras.sql_agent import SQLAgent
+from util.log import _logger
 
-def _test(addr, port, user, passwd):
+class ProxyManager:
+    def __init__(self, host, db_user = 'taras', db_passwd = 'admin123', db_name = 'taras'):
+        self.agent = SQLAgent(db_name, db_user, db_passwd, host = host)
+        
+        self.test_url_path = os.path.dirname(os.path.abspath(__file__)) + '/res/test-url.txt'
+        self.update_db = False
+
+    def _parse_url_file(self, filepath):
+        result = []
+        with open(filepath, 'r') as urlfile:
+            urls = urlfile.read().split('\n')
+            for url in urls:
+                url = url.strip()
+                if url and url[0] != '#':
+                    result.append(url)
+        return result
+
+
+    def _test(self, addr, port, user, passwd, urls):
+        sum = len(urls)
+        ok_count = 0
+        elapsed_sum = 0
+        for url in urls:
+            ok, elapsed = self._test_single_url(addr, port, user, passwd, url)
+            if ok:
+                ok_count += 1
+                elapsed_sum += elapsed
+        avg_elapsed = 0 if ok_count == 0 else float(elapsed_sum) / float(ok_count)
+        _logger.debug("%d / %d OK, average time: %.2f" % (ok_count, sum, avg_elapsed))
+        return float(ok_count) / float(sum), avg_elapsed
+
+    def _test_single_url(self, addr, port, user, passwd, url = 'http://junyi-luan.com/dump.php'):
+        try:
+            begin = datetime.now()
+            http = httplib2.Http(proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5,
+                                                                 addr, port,
+                                                                 proxy_user = user,
+                                                                 proxy_pass = passwd),
+                                 timeout= 120)
+
+            response, content =  http.request(url, 'GET')
+            end = datetime.now()
+        except Exception, err:
+            _logger.error("exception:%s" % err)
+            return False, 0
+        else:
+            _logger.info("%d sec, %s, %s" % ((end - begin).seconds, response['status'], response['content-location']))
+            return response['status'] == '200', (end - begin).seconds
+
+    def test_all_proxy(self, write_to_db = False):
+        self.update_db = write_to_db
+        all_proxy = self.agent.get_all_proxy()
+        _logger.info('found %d proxy in DB' % len(all_proxy))
+        for proxy in all_proxy:
+            addr = proxy['addr'].strip()
+            port = proxy['port']
+            user = proxy['user_name'].strip()
+            passwd = proxy['password'].strip()
+            ok_rate, avg_time = self.test_one_proxy(addr, port, user, passwd)
+            if self.update_db:
+                self.agent.update_proxy_status(proxy['id'], ok_rate, avg_time)
+
+
+    def test_one_proxy(self, addr, port, user, passwd):
+        urls = self._parse_url_file(self.test_url_path)
+        _logger.info("using %d urls for test" % len(urls))
+        _logger.info("trying proxy, addr=(%s:%d), %s:%s" % (addr, port, user, passwd))
+        return self._test(addr, port, user, passwd, urls)
+
+def usage():
+    print 'usage: test_proxy -c (check-all|check-one|check-all-db) -h MYSQL_HOST [-i IP_ADDR -u USER -p PASSWD -o PORT]'
+    sys.exit(0)
+
+def main(argv):
+    from getopt import getopt
     try:
-        http = httplib2.Http(proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5,
-                                                             addr, port,
-                                                             proxy_user = user,
-                                                             proxy_pass = passwd))
-
-        response, content =  http.request('http://220.113.33.63/dump.php',
-                                          'GET',
-                                          )
+        opts, args = getopt(argv, 'c:h:i:u:p:o:',
+                            ['command=', 'mysql-host=', 'ip-addr=', 'user=', 'passwd=', 'port='])
     except Exception, err:
-        print 'get error: %s' % err
-    else:
-        print response
-            #print content
-    print '=' * 100
+        print "getopt error:%s" % err
+        usage()
+        sys.exit(2)
+    
+    command = ''
+    host = 'localhost'
+    ip_addr = ''
+    port = 0
+    user = ''
+    passwd = ''
+    for opt, arg in opts:
+        if opt in ('-c', '--command'):
+            command = arg.strip()
+        if opt in ('-h', '--mysql-host'):
+            host = arg.strip()
+        if opt in ('-i', '--ip-addr'):
+            ip_addr = arg.strip()
+        if opt in ('-u', '--user'):
+            user = arg.strip()
+        if opt in ('-p', '--passwd'):
+            passwd = arg.strip()
+        if opt in ('-o', '--port'):
+            port = int(arg.strip())
 
+    checker = ProxyManager(host)
 
+    if command == 'check-one':
+        checker.test_one_proxy(ip_addr, port, user, passwd)
+    elif command == 'check-all':
+        checker.test_all_proxy(write_to_db = False)
+    elif command == 'check-all-db':
+        checker.test_all_proxy(write_to_db = True)
 
-def test_all_proxy():
-    config_path = os.path.dirname(os.path.abspath(__file__)) + '/../config'
-    print 'reading config from %s' % config_path
-    config = RawConfigParser()
-    config.read(config_path)
-    if (len(config.sections()) < 1):
-        print 'failed to read config file from %s' % config_path
-        return
+if __name__ == "__main__":
+    main(sys.argv[1:])
 
-    db_host = config.get('global', 'mysql_host_for_daemon')
-    db_name = 'taras'
-    db_user = 'taras'
-    db_pass = 'admin123'
-
-    print 'connecting DB... host:%s %s@%s:%s' % (db_host, db_user, db_name, db_pass)
-    conn = MySQLdb.connect(host = db_host,
-                           user = db_user,
-                           passwd = db_pass,
-                           db = db_name)
-    print 'connected'
-
-    cursor = conn.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('set names utf8')
-    conn.commit()
-    cursor.execute('select * from proxy')
-
-    print '%d proxy in DB' % cursor.rowcount
-    print '=' * 100
-
-    for proxy in cursor.fetchall():
-        addr = proxy['addr'].strip()
-        port = proxy['port']
-        user = proxy['user_name'].strip()
-        passwd = proxy['password'].strip()
-        print "trying addr=(%s:%d), %s:%s" % (addr, port, user, passwd)
-        _test(addr, port, user, passwd)
-
-def test_one_proxy(argv):
-    addr = argv[0].strip()
-    port = int(argv[1])
-    user = argv[2].strip()
-    passwd = argv[3].strip()
-    print "trying single proxy, addr=(%s:%d), %s:%s" % (addr, port, user, passwd)
-    _test(addr, port, user, passwd)
-
-if len(sys.argv) == 1:
-    test_all_proxy()
-else:
-    test_one_proxy(sys.argv[1:])

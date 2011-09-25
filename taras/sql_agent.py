@@ -102,14 +102,16 @@ class ForceAction:
 
 class SQLAgent:
     # set sscursor to True if want to store the result set in server. It's for large result set
-    def __init__(self, dbname, uname, passwd, host = "localhost", sscursor = False):
-        self.dbname = dbname
-        self.uname = uname
-        self.passwd = passwd
+    def __init__(self, db_name, db_user, db_pass, host = "localhost", sscursor = False):
+        self.db_name = db_name
+        self.db_user = db_user
+        self.db_pass = db_pass
+
+        _logger.info('connecting DB... host:%s %s@%s:%s' % (host, db_user, db_name, db_pass))
         self.conn = MySQLdb.connect(host = host,
-                                    user = self.uname,
-                                    passwd = self.passwd,
-                                    db = self.dbname,
+                                    user = self.db_user,
+                                    passwd = self.db_pass,
+                                    db = self.db_name,
                                     )
         if sscursor: # store result in server
             self.cursor = self.conn.cursor(MySQLdb.cursors.SSDictCursor)
@@ -581,3 +583,7 @@ email = %s', (user.uname))
             return ()
         return self.cursor.fetchall()
         
+    def update_proxy_status(self, proxy_id, ok_rate, avg_time):
+        self.cursor.execute('insert into proxy_status(proxy_id, ok_rate, avg_time)  values(%s, %s, %s)',
+                            (proxy_id, ok_rate, avg_time))
+        self.conn.commit()
