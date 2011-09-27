@@ -433,21 +433,23 @@ class WeiboDaemon:
         return tweet[:(140 - tail_len)] + mention_text
 
     def post_one_tweet(self, mentions=[]):
-        raw_tweet = self.agent.pop_tweet_stack(self.user.uname)
-        if raw_tweet == None:
-            _logger.debug('failed to find tweet from tweet_stack')
-            return
-        _logger.debug('raw tweet fetched from tweet_stack in DB')
-        tweet_text, img_path = self._compose_tweet(raw_tweet)
+        while True:
+            raw_tweet = self.agent.pop_tweet_stack(self.user.uname)
+            if raw_tweet == None:
+                _logger.debug('failed to find tweet from tweet_stack')
+                return
+            _logger.debug('raw tweet fetched from tweet_stack in DB')
+            tweet_text, img_path = self._compose_tweet(raw_tweet)
 
-        if not self._valid_tweet(tweet_text):
-            _logger.error('invalid tweet:(%s)' % tweet_text)
-            return False
-        else:
-            _logger.debug('tweet passed validity test:(%s)' % tweet_text)
+            if not self._valid_tweet(tweet_text):
+                _logger.error('invalid tweet:(%s)' % tweet_text)
+                continue
+            else:
+                _logger.debug('tweet passed validity test:(%s)' % tweet_text)
 
-        tweet = tweet_text.decode('utf-8')
-        mention_text = ''
+            tweet = tweet_text.decode('utf-8')
+            mention_text = ''
+            break
 
         # Add @
         for mention in mentions:
@@ -1247,7 +1249,8 @@ class WeiboDaemon:
             'mutual_follow_count': -1,
             }
 
-        _logger.debug('status: %s' % str(stat))
+        _logger.debug('status: follower:(%d), following:(%d), user:(%s)' % 
+                      (stat['followed_count'], stat['following_count'], stat['user']))
         return stat
 
     def get_peering_user(self, force=False):

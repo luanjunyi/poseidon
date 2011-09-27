@@ -1,6 +1,8 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 import os, sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../..') # Paracode root
+
 from datetime import datetime, timedelta
 from urlparse import urlparse
 from ConfigParser import RawConfigParser
@@ -47,7 +49,7 @@ class ProxyManager:
                                                                  addr, port,
                                                                  proxy_user = user,
                                                                  proxy_pass = passwd),
-                                 timeout= 120)
+                                 timeout= 60)
 
             response, content =  http.request(url, 'GET')
             end = datetime.now()
@@ -120,6 +122,8 @@ def main(argv):
         checker.test_all_proxy(write_to_db = False)
     elif command == 'check-all-db':
         checker.test_all_proxy(write_to_db = True)
+    else:
+        usage()
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -150,12 +150,7 @@ def bind_api(**config):
                                                                               proxy_addr, proxy_port,
                                                                               proxy_user = proxy_user,
                                                                               proxy_pass = proxy_passwd)
-                conn = httplib2.Http(proxy_info = proxy_info)
-                # if proxy_info != None:
-                #     print 'using proxy...'
-                #     sys.stderr.write("using proxy: %s@%s:%d (%s)\n" % (proxy_user, proxy_addr, proxy_port, proxy_passwd))
-
-
+                conn = httplib2.Http(proxy_info = proxy_info, timeout= 120)
 
                 # Apply authentication
                 if self.api.auth:
