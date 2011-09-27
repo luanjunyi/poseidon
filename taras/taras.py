@@ -1250,7 +1250,7 @@ class WeiboDaemon:
             }
 
         _logger.debug('status: follower:(%d), following:(%d), user:(%s)' % 
-                      (stat['followed_count'], stat['following_count'], stat['user']))
+                      (stat['followed_count'], stat['follow_count'], stat['user']))
         return stat
 
     def get_peering_user(self, force=False):
