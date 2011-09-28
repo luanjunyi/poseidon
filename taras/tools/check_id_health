@@ -17,12 +17,18 @@ def check_one_account(argv):
         daemon.shutdown()
 
 def check_all_accounts():
-    daemon = taras.WeiboDaemon()
-    for user in daemon.agent.get_all_user():
+    daemon = taras.WeiboDaemon(noselenium=True, mysql_host="220.113.33.63")
+
+    local_daemon = taras.WeiboDaemon(noselenium=True, mysql_host="192.168.1.200")
+
+    for user in daemon.agent.get_all_user_including_disabled():
         try:
             api = daemon.get_api_by_user(user.uname)
-            #daemon.sync_follow_log(user.uname)
-            _logger.debug('good: (%s) %s' % (user.uname, api.me().name))
+            local_copy = local_daemon.agent.get_user_by_email(user.uname)
+            if local_copy == None or not local_copy.enabled:
+                _logger.debug('good: (%s:%s) %s' % (user.uname, user.passwd, api.me().name))
+            else:
+                _logger.debug('used: (%s:%s) %s' % (user.uname, user.passwd, api.me().name))
         except Exception, err:
             _logger.debug('bad: (%s, %s) %s' % (user.uname, user.passwd, err))
     daemon.shutdown()

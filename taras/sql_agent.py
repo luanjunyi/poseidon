@@ -147,6 +147,11 @@ class SQLAgent:
         raw_users = self.cursor.fetchall()
         return self.get_all_user_internal(raw_users)
 
+    def get_all_user_including_disabled(self, shard_id = 0, shard_count = 1):
+        self.cursor.execute('select * from sina_user where id %% %d = %d' %
+                            (shard_count, shard_id))
+        raw_users = self.cursor.fetchall()
+        return self.get_all_user_internal(raw_users)
 
     def get_user_by_email(self, email):
         self.cursor.execute('select * from sina_user where email = %s', email)
@@ -337,11 +342,20 @@ class SQLAgent:
         actions = self.cursor.fetchall()
         return [ForceAction(action) for action in actions]
 
+    # About user statistics
     def update_db_statistic(self, stat):
         self.cursor.execute(
             "replace user_statistic values(%s, %s, %s, %s, %s, %s)",
             (stat['user'], stat['date'], stat['follow_count'],
              stat['followed_count'], stat['tweet_count'], stat['mutual_follow_count']))
+
+    def get_last_action_time(self, user):
+        self.cursor.execute("select collect_date from user_statistic where user like '%%%s%%' order by collect_date desc limit 1"
+                            % user.uname)
+        if self.cursor.rowcount == 0:
+            return None
+        return datetime.strptime(self.cursor.fetchone()['collect_date'], '%Y-%m-%d')
+        
 
     def get_safe_source(self):
         return self.get_source('safe.news.baidu')

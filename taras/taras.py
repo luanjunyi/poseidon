@@ -309,12 +309,21 @@ class WeiboDaemon:
         return token
 
     def freeze_user(self, user=None):
-        # Do nothing for now
-        _logger.debug('pass freezing user')
-        return
-
         if user == None:
             user = self.user
+
+        last_action_time = self.agent.get_last_action_time(user)
+        if last_action_time == None:
+            _logger.error("can\'t find last action time in user statistic, will skip freezening ")
+
+        now = datetime.now()
+        dead_day = (now - last_action_time).days
+        if dead_day < 3:
+            _logger.debug('%s only dead for %d day, skip freezening' % (user.uname, dead_day))
+            return
+        freeze_to = now + timedelta(days = dead_day)
+        _logger.debug('will freeze for %d days, to %s' % (dead_day, str(freeze_to)))
+        self.agent.update_next_action_time(user, freeze_to)
         # freeze for 2 days
         self.agent.freeze_user(user,
                                (datetime.now() + timedelta(2)).strftime('%Y-%m-%d'))
@@ -1030,8 +1039,7 @@ class WeiboDaemon:
                     self.assign_user(user)
                     _logger.debug("api generated for user(%s)" % self.user.uname)
                 except WeibopError, err:
-                    _logger.error('get_api_by_user failed, will freeze user: %s', err)
-                    self.freeze_user(user)
+                    _logger.error('get_api_by_user failed: %s', err)
                 except Exception, err:
                     _logger.error('get_api_by_user failed, but not WeibopError: %s', err)
                 else:
