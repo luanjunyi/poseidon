@@ -324,9 +324,6 @@ class WeiboDaemon:
         freeze_to = now + timedelta(days = dead_day)
         _logger.debug('will freeze for %d days, to %s' % (dead_day, str(freeze_to)))
         self.agent.update_next_action_time(user, freeze_to)
-        # freeze for 2 days
-        self.agent.freeze_user(user,
-                               (datetime.now() + timedelta(2)).strftime('%Y-%m-%d'))
 
 
     def post_tweet(self):
