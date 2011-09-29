@@ -612,3 +612,32 @@ email = %s', (user.uname))
         self.cursor.execute('insert into proxy_status(proxy_id, ok_rate, avg_time)  values(%s, %s, %s)',
                             (proxy_id, ok_rate, avg_time))
         self.conn.commit()
+
+    def update_proxy_log(self, proxy_addr, log_type):
+        cur_date = datetime.now().strftime("%Y-%m-%d")
+
+        self.cursor.execute("select * from proxy_log where proxy_ip = %s and collect_date = %s", (proxy_addr, cur_date))
+        if self.cursor.rowcount == 0:
+            use = 0
+            fail = 0
+        else:
+            row = self.cursor.fetchone()
+            use = row['use_count']
+            fail = row['fail_count']
+
+        if log_type == "use":
+            use += 1
+        elif log_type == "fail":
+            fail += 1
+        else:
+            _logger.error("unknown proxy log type: %s" % log_type)
+            return
+
+        self.cursor.execute("replace into proxy_log(proxy_ip, collect_date, use_count, fail_count) values(%s, %s, %s, %s)",
+                            (proxy_addr, cur_date, use, fail))
+        self.conn.commit()
+
+    # global bad words
+    def get_global_bad_words(self):
+        self.cursor.execute("select * from bad_word")
+        return [row['content'] for row in self.cursor.fetchall()]

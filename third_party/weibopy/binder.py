@@ -13,6 +13,7 @@ from weibopy.utils import convert_to_utf8_str
 # from util.log import _logger
 
 import httplib2, socks, traceback
+from httplib2.socks import ProxyError
 
 re_path_template = re.compile('{\w+}')
 
@@ -150,6 +151,8 @@ def bind_api(**config):
                                                                               proxy_addr, proxy_port,
                                                                               proxy_user = proxy_user,
                                                                               proxy_pass = proxy_passwd)
+
+
                 conn = httplib2.Http(proxy_info = proxy_info, timeout= 120)
 
                 # Apply authentication
@@ -164,9 +167,10 @@ def bind_api(**config):
                                                  method = self.method,
                                                  headers = self.headers,
                                                  body = self.post_data)
-                    
+                except ProxyError, err:
+                    self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
+                    raise err
                 except Exception, e:
-                    #sys.stderr.write(traceback.format_exc())
                     raise WeibopError('Failed to send request: %s' % e + ", url=" + str(url) +",self.headers="+ str(self.headers) + " %s" % traceback.format_exc())
 
                 # Exit request loop if non-retry error code
@@ -209,7 +213,6 @@ def bind_api(**config):
             return result
 
     def _call(api, *args, **kargs):
-
         method = APIMethod(api, args, kargs)
         return method.execute()
 

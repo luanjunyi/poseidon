@@ -365,12 +365,13 @@ class WeiboDaemon:
                     '– –'
                     '请联系',
                     '仅售',
-                    '可联系',
                     '报价',
                     '■',
-                    '来电话',
                     '□',
                     ]
+
+        bad_word.extend(self.agent.get_global_bad_words())
+
         for bad in bad_word:
             try:
                 tweet.index(bad)
@@ -1122,12 +1123,15 @@ class WeiboDaemon:
             os.environ['taras_proxy_user'] = proxy['user_name'].strip()
             os.environ['taras_proxy_passwd'] = proxy['password'].strip()
             _logger.debug('using proxy: %s' % os.environ['taras_proxy_addr'])
+            self.agent.update_proxy_log(os.environ['taras_proxy_addr'],
+                                        log_type="use")
 
         self.app = random.choice(self.agent.get_all_app())
         self.user = user
 
         _logger.debug('getting api')
         self.weibo = self.get_api_by_user(user.uname)
+
 
     def update_current_user_stat(self):
         try:
@@ -1185,27 +1189,23 @@ class WeiboDaemon:
                         self.user = user
                         _logger.info("user(%s) in action, process: (%d / %d, round: %d)" % (user.uname, index, user_num, round_count))
 
-                        self.user.next_action_time = self._schedule_next_action()
-                        self.agent.update_next_action_time(user, self.user.next_action_time)
-
-                        # give user a category if she has none
-                        if len(user.categories) == 0:
-                            category = self._get_unused_category(users)
-                            if category != None:
-                                user.categories.append(category)
-
                         start_time = datetime.now() # profiling
 
                         try:
                             _logger.debug('assigning user')
                             self.assign_user(user)
+                            self.user.next_action_time = self._schedule_next_action()
                         except WeibopError, err:
                             _logger.error('get_api_by_user failed: %s, will freeze user', err)
                             self.freeze_user(user)
                         except Exception, err:
                             _logger.error('get_api_by_user failed, but not WeibopError: %s', err)
+                            print traceback.format_exc()
                         else:
                             _logger.debug("api generated for user(%s)" % self.user.uname)
+
+                            self.agent.update_next_action_time(user, self.user.next_action_time)
+
                             for func in self.func_array:
                                 try:
                                     func()
@@ -1335,6 +1335,7 @@ class WeiboDaemon:
         api = sina_api(handle)
         # test api, will raise Exception if the user is blocked
         _logger.debug('trying public_timeline')
+        api.taras = self
         api.public_timeline()
         return api
 
