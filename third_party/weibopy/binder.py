@@ -13,6 +13,7 @@ from weibopy.utils import convert_to_utf8_str
 # from util.log import _logger
 
 import httplib2, socks, traceback
+import httplib2.socks
 from httplib2.socks import ProxyError
 
 re_path_template = re.compile('{\w+}')
