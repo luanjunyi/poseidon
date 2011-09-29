@@ -194,7 +194,7 @@ class WeiboDaemon:
         weibo = self.get_api_by_user(user.uname)
         followings = weibo.friends_ids().ids
         now = datetime.now()
-        me = weibo.me()
+        me = self.me
         _logger.debug('nick: %s, handling %d followee' % (me.name.encode('utf-8'), len(followings)))
         for followee_id in followings:
             try:
@@ -227,7 +227,7 @@ class WeiboDaemon:
                 _logger.error('error when handling relationship between %s and %d: %s' %\
                                   (user.uname, followee_id, err))
 
-            self.sleep_random(1, 2)
+            self.sleep_random(1, 1)
 
     def force_stop_follow_stubborn(self, email=None):
         if email == None:
@@ -235,7 +235,7 @@ class WeiboDaemon:
             users = self.agent.get_all_user()
             for user in users:
                 weibo = self.get_api_by_user(user)
-                if weibo.me().friends_count >= 1990:
+                if self.me.friends_count >= 1990:
                     self._clean_stubborn(user, ruthless=True)
         else:
             _logger.info('cleaning following for %s' % email)
@@ -249,6 +249,7 @@ class WeiboDaemon:
             return
         if int(hashlib.md5(self.user.uname).hexdigest(), 16) % 3 == datetime.now().day % 3:
             # my clean stubborn day
+            _logger.debug('my clean stobborn day checking clean history')
             date = datetime.now().strftime('%Y-%m-%d')
             if self.agent.is_stubborn_cleaned(self.user.uname, date):
                 _logger.debug('my clean stobborn day but has cleaned already')
@@ -308,6 +309,23 @@ class WeiboDaemon:
             _logger.error('failed to update token, but the authorized token will be returned')
         return token
 
+    def get_api_by_user(self, email):
+        """
+        Given an Email address, return the user's API object
+        """
+        user = self.agent.get_user_by_email(email)
+        app = random.choice(self.agent.get_all_app())
+        token = self.get_token(user, app)
+        handle = sina_auth.OAuthHandler(app.consumer_key, app.consumer_secret)
+        handle.setToken(token=token.key, tokenSecret=token.secret)
+        _logger.debug('creating api')
+        api = sina_api(handle)
+        # test api, will raise Exception if the user is blocked
+        _logger.debug('trying api.me()')
+        api.taras = self
+        self.me = api.me()
+        return api
+
     def freeze_user(self, user=None):
         if user == None:
             user = self.user
@@ -340,8 +358,9 @@ class WeiboDaemon:
                     _logger.info('posted one tweet')
                 self.sleep_random(1, 2)
         else:
-            if random.randint(1, 8) > 7:
-                _logger.info('skip tweet')
+            new_tweet_count = self.get_new_tweet_count()
+            if new_tweet_count >= 5 + len(self.user.uname) % 3:
+                _logger.info('skip tweet, %d new tweet published today' % new_tweet_count)
                 return
             mentions = []
             if random.randint(1, 10) == 11:
@@ -565,7 +584,7 @@ class WeiboDaemon:
             return
 
         # Get users share the same category
-        me = self.weibo.me()
+        me = self.me
         all_users = self.agent.get_all_user()
         candidates = []
         for candidate in all_users:
@@ -680,13 +699,7 @@ class WeiboDaemon:
     ##############################################
 
     def get_new_follow_count(self):
-        try:
-            _logger.debug("trying me() by API")
-            me = self.weibo.me()
-        except Exception, err:
-            _logger.error("can\'t determin new follow count, failed to get me() from API: %s" % err)
-            return 0
-
+        me = self.me
         old_follow_count = self.agent.get_yesterday_follow_count(self.user)
         if old_follow_count == -1:
             _logger.debug('can\'t find yesterday statistic for (%s)' % self.user.uname)
@@ -696,8 +709,19 @@ class WeiboDaemon:
             _logger.debug("new follow count is %d" % follow_delta)
             return follow_delta
 
+    def get_new_tweet_count(self):
+        me = self.me
+        old_tweet_count = self.agent.get_yesterday_tweet_count(self.user)
+        if old_tweet_count == -1:
+            _logger.debug('can\'t find yesterday statistic for (%s)' % self.user.uname)
+            return 0
+        else:
+            tweet_delta = me.statuses_count - old_tweet_count
+            _logger.debug("new tweet count is %d" % tweet_delta)
+            return tweet_delta
+
     def _tomorrow_eight(self):
-        return date.today() + timedelta(days=1, hours=8, minutes=random.randint(-20, 20))
+        return date.today() + timedelta(days=1)
 
     def _schedule_next_action(self):
         """
@@ -707,29 +731,13 @@ class WeiboDaemon:
         MINUTE = 60
         HOUR = 3600
         now = datetime.now()
-        
-        need_once_action = True
 
         follow_delta = self.get_new_follow_count()
 
         if follow_delta >= 190: # already followed enough today, rest
             next_action_time = self._tomorrow_eight()
         else:
-            if now.hour >= 23:
-                next_action_time = self._tomorrow_eight()
-            elif now.hour < 8:
-                next_action_time = self._tomorrow_eight()
-            else:
-                next_action_time = now + timedelta(seconds = 60 * random.randint(50, 70))
-                need_once_action = False
-
-        if need_once_action:
-            _logger.debug('Run once_func_array')
-            for func in self.once_func_array:
-                try:
-                    func()
-                except Exception, err:
-                    _logger.error('once_func(%s) failed: %s' % (func.__name__, err))
+            next_action_time = now + timedelta(seconds = 60 * random.randint(50, 70))
 
         _logger.debug('next action time: %s' % str(next_action_time))
         return next_action_time
@@ -1132,7 +1140,6 @@ class WeiboDaemon:
         _logger.debug('getting api')
         self.weibo = self.get_api_by_user(user.uname)
 
-
     def update_current_user_stat(self):
         try:
             stat = self.get_user_statistic(self.user, self.weibo)
@@ -1208,7 +1215,6 @@ class WeiboDaemon:
                             for func in self.func_array:
                                 try:
                                     func()
-                                    self.sleep_random(1, 3)
                                 except Exception, err:
                                     _logger.error("func failed(%s), %s" % (err, traceback.format_exc()))
 
@@ -1241,16 +1247,6 @@ class WeiboDaemon:
         _logger.debug('randomly sleep for %d sec' % sleep)
         time.sleep(sleep)
 
-    def update_statistic(self):
-        _logger.debug('collecting users from DB')
-        for user in self.agent.get_all_user():
-            if user.enabled:
-                try:
-                    stat = self.get_user_statistic(user)
-                    self.agent.update_db_statistic(stat)
-                except Exception, err:
-                    _logger.error('failed to update statistic for user(%s):%s, %s' % (user.uname, err, traceback.format_exc()))
-
     def _wait_load(self, minutes = 1):
         MIN = 60 * 1000
         try:
@@ -1262,15 +1258,17 @@ class WeiboDaemon:
     def get_user_statistic(self, user, api = None):
         if api == None:
             api = self.get_api_by_user(user.uname)
-
+            me = api.me()
+        else:
+            me = self.me
         # navigate to main page of 'user'
-        me = api.me()
+
         stat = {
-            'user': "%s#%s#%s#%s" % (api.me().name.encode('utf-8'), # nickname
-                                             user.uname, # email for login
-                                             user.passwd, # passwd
-                                             self.get_user_url(user, api),
-                                             ),
+            'user': "%s#%s#%s#%s" % (me.name.encode('utf-8'), # nickname
+                                     user.uname, # email for login
+                                     user.passwd, # passwd
+                                     self.get_user_url(user, api),
+                                     ),
             'date': datetime.now().date().strftime("%Y-%m-%d"),
             'follow_count': me.friends_count,
             'followed_count': me.followers_count,
@@ -1282,6 +1280,8 @@ class WeiboDaemon:
                       (stat['followed_count'], stat['follow_count'], stat['user']))
         return stat
 
+    # This method is obsolating as for 2011-09-15, since we don't use selenium to login
+    # to weibo anymore. Consider remove it.
     def get_peering_user(self, force=False):
         """
         Return a peering user. Peering user will be used for logging into sina weibo
@@ -1321,22 +1321,6 @@ class WeiboDaemon:
         handle.setToken(token=token.key, tokenSecret=token.secret)
         return sina_api(handle)
 
-    def get_api_by_user(self, email):
-        """
-        Given an Email address, return the user's API object
-        """
-        user = self.agent.get_user_by_email(email)
-        app = random.choice(self.agent.get_all_app())
-        token = self.get_token(user, app)
-        handle = sina_auth.OAuthHandler(app.consumer_key, app.consumer_secret)
-        handle.setToken(token=token.key, tokenSecret=token.secret)
-        _logger.debug('creating api')
-        api = sina_api(handle)
-        # test api, will raise Exception if the user is blocked
-        _logger.debug('trying public_timeline')
-        api.taras = self
-        api.public_timeline()
-        return api
 
     def get_user_url(self, user, api=None):
         """

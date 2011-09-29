@@ -169,7 +169,8 @@ def bind_api(**config):
                                                  body = self.post_data)
                 except ProxyError, err:
                     self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
-                    raise err
+                    raise Exception("Got ProxyError: %s, IP:%s, port:%d, user:%s, passwd:%s" % 
+                                    (err, proxy_addr, proxy_port, proxy_user, proxy_passwd))
                 except Exception, e:
                     raise WeibopError('Failed to send request: %s' % e + ", url=" + str(url) +",self.headers="+ str(self.headers) + " %s" % traceback.format_exc())
 

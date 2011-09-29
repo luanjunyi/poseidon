@@ -366,6 +366,17 @@ class SQLAgent:
         if self.cursor.rowcount == 0:
             return -1
         return self.cursor.fetchone()['follow_count']
+
+    def get_yesterday_tweet_count(self, user):
+        # return the number of newly followed victims of today
+        #self.cursor.execute("select ")
+        yesterday = (date.today() - timedelta(1)).strftime("%Y-%m-%d")
+        self.cursor.execute("select tweet_count from user_statistic where user like '%%%s%%' and collect_date = '%s'"
+                            % (user.uname, yesterday))
+        if self.cursor.rowcount == 0:
+            return -1
+        return self.cursor.fetchone()['tweet_count']
+
         
 
     def get_safe_source(self):
