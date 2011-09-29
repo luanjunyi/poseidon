@@ -706,7 +706,7 @@ class WeiboDaemon:
             return 0
         else:
             follow_delta = me.friends_count - old_follow_count
-            _logger.debug("new follow count is %d" % follow_delta)
+            _logger.debug("new follow count is %d, old:%d, cur:%d" % (follow_delta, old_follow_count, me.friends_count))
             return follow_delta
 
     def get_new_tweet_count(self):
