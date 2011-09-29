@@ -343,7 +343,7 @@ class WeiboDaemon:
                 _logger.info('skip tweet')
                 return
             mentions = []
-            if random.randint(1, 10) == 1:
+            if random.randint(1, 10) == 11:
                 if random.randint(0, 10) == 0: # mention one follower
                     _logger.debug('will @ one follower')
                     uid = random.choice(self.weibo.followers_ids(count = 5000).ids)
@@ -681,13 +681,9 @@ class WeiboDaemon:
         HOUR = 3600
         now = datetime.now()
 
-        # raw_input('press to go on....')
-        # return now + timedelta(seconds = 15)
-
-        # sec = 60 * 60 + random.randint(-20, 30)
-        # print 'rest for %d' % sec
-        # return now + timedelta(seconds = sec)
         need_once_action = True
+
+        #new_follow_count = self.agent.get_new_fo
         if now.hour >= 23:
             todaylight = (24 - now.hour + 8) * 3600
             next_action_time = now + timedelta(seconds = random.randint(todaylight + 5, todaylight + 1200))

@@ -355,6 +355,12 @@ class SQLAgent:
         if self.cursor.rowcount == 0:
             return None
         return datetime.strptime(self.cursor.fetchone()['collect_date'], '%Y-%m-%d')
+
+    
+    def get_today_new_follow(self, user):
+        # return the number of newly followed victims of today
+        #self.cursor.execute("select ")
+        pass
         
 
     def get_safe_source(self):
