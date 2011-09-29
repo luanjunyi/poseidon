@@ -488,6 +488,11 @@ class WeiboDaemon:
         # To get maximum 
         _logger.info('start be friendly')
         count = random.randint(50, 60)
+
+        follow_delta = self.get_new_follow_count()
+        if count > 200 - follow_delta:
+            count = 200 - follow_delta
+
         _logger.debug('will touch %d people' % count)
         victims = self.agent.get_victims(self.user, count)
         _logger.debug('%d victim fetched from DB' % len(victims))
