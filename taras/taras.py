@@ -315,6 +315,7 @@ class WeiboDaemon:
         last_action_time = self.agent.get_last_action_time(user)
         if last_action_time == None:
             _logger.error("can\'t find last action time in user statistic, will skip freezening ")
+            return
 
         now = datetime.now()
         dead_day = (now - last_action_time).days
