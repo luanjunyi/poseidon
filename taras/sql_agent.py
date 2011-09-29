@@ -6,7 +6,7 @@
 
 import sys, os, cPickle, random, hashlib
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Paracode root
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from util.log import _logger
 from third_party import chardet
 import MySQLdb
@@ -357,10 +357,15 @@ class SQLAgent:
         return datetime.strptime(self.cursor.fetchone()['collect_date'], '%Y-%m-%d')
 
     
-    def get_today_new_follow(self, user):
+    def get_yesterday_follow_count(self, user):
         # return the number of newly followed victims of today
         #self.cursor.execute("select ")
-        pass
+        yesterday = (date.today() - timedelta(1)).strftime("%Y-%m-%d")
+        self.cursor.execute("select follow_count from user_statistic where user like '%%%s%%' and collect_date = '%s'"
+                            % (user.uname, yesterday))
+        if self.cursor.rowcount == 0:
+            return -1
+        return self.cursor.fetchone()['follow_count']
         
 
     def get_safe_source(self):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib
 from ConfigParser import RawConfigParser
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from functools import partial
 from pprint import pprint
 
@@ -673,6 +673,26 @@ class WeiboDaemon:
     # end various behavior
     ##############################################
 
+    def get_new_follow_count(self):
+        try:
+            _logger.debug("trying me() by API")
+            me = self.weibo.me()
+        except Exception, err:
+            _logger.error("can\'t determin new follow count, failed to get me() from API: %s" % err)
+            return 0
+
+        old_follow_count = self.agent.get_yesterday_follow_count(self.user)
+        if old_follow_count == -1:
+            _logger.debug('can\'t find yesterday statistic for (%s)' % self.user.uname)
+            return 0
+        else:
+            follow_delta = me.friends_count - old_follow_count
+            _logger.debug("new follow count is %d" % follow_delta)
+            return follow_delta
+
+    def _tomorrow_eight(self):
+        return date.today() + timedelta(days=1, hours=8, minutes=random.randint(-20, 20))
+
     def _schedule_next_action(self):
         """
         Return next action time. This function has a side effect: if now is passed midnight,
@@ -681,19 +701,21 @@ class WeiboDaemon:
         MINUTE = 60
         HOUR = 3600
         now = datetime.now()
-
+        
         need_once_action = True
 
-        #new_follow_count = self.agent.get_new_fo
-        if now.hour >= 23:
-            todaylight = (24 - now.hour + 8) * 3600
-            next_action_time = now + timedelta(seconds = random.randint(todaylight + 5, todaylight + 1200))
-        elif now.hour < 8:
-            todaylight = (8 - now.hour) * 3600
-            next_action_time = now + timedelta(seconds = random.randint(todaylight + 5, todaylight + 1200))
+        follow_delta = self.get_new_follow_count()
+
+        if follow_delta >= 190: # already followed enough today, rest
+            next_action_time = self._tomorrow_eight()
         else:
-            next_action_time = now + timedelta(seconds = 60 * random.randint(50, 70))
-            need_once_action = False
+            if now.hour >= 23:
+                next_action_time = self._tomorrow_eight()
+            elif now.hour < 8:
+                next_action_time = self._tomorrow_eight()
+            else:
+                next_action_time = now + timedelta(seconds = 60 * random.randint(50, 70))
+                need_once_action = False
 
         if need_once_action:
             _logger.debug('Run once_func_array')
@@ -1098,6 +1120,7 @@ class WeiboDaemon:
 
         self.app = random.choice(self.agent.get_all_app())
         self.user = user
+
         _logger.debug('getting api')
         self.weibo = self.get_api_by_user(user.uname)
 

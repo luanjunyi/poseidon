@@ -1,0 +1,24 @@
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
+
+import os, sys, re
+from datetime import datetime
+import MySQLdb
+
+# Init MySQL connection
+conn = MySQLdb.connect(host = 'localhost',
+                       user = 'taras',
+                       passwd = 'admin123',
+                       db = 'taras')
+cursor = conn.cursor(MySQLdb.cursors.DictCursor)
+cursor.execute('set names utf8')
+conn.commit()
+
+cursor.execute("select user, max(collect_date) as date from user_statistic group by user")
+now = datetime.now()
+for row in cursor.fetchall():
+    last_action_date = datetime.strptime(row['date'], "%Y-%m-%d")
+    if (now - last_action_date).days >= 10:
+        user = row['user']
+        uid = re.search(r'.*http://weibo.com/([0-9]+)', user).group(1)
+        print "http://weibo.com/%s %d %s" % (uid, (now - last_action_date).days, uid)
