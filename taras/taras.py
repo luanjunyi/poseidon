@@ -481,7 +481,7 @@ class WeiboDaemon:
         else:
             # Insert tweet to DB
             self.agent.add_tweet_log(tweet_text, self.user.uname)
-            _logger.debug('posted new tweet:(%s), user:(%s)' %
+            _logger.info('posted new tweet:(%s), user:(%s)' %
                          (tweet, self.user.uname))
             return True
 
@@ -532,7 +532,7 @@ class WeiboDaemon:
         try:
             self.weibo.create_friendship(user_id=victim_id)
             self.agent.add_follow_log(self.user.uname, str(victim_id))
-            _logger.debug('friendly followed %d' % victim_id)
+            _logger.info('friendly followed %d' % victim_id)
         except WeibopError, err:
             _logger.error('failed to friendly follow victim_id=(%d), WeiboError: %s' % (victim_id, err))
             raise err
