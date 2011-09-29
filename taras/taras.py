@@ -1260,7 +1260,7 @@ class WeiboDaemon:
             api = self.get_api_by_user(user.uname)
             me = api.me()
         else:
-            me = self.me
+            me = self.weibo.me()
         # navigate to main page of 'user'
 
         stat = {
