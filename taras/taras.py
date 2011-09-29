@@ -1200,7 +1200,6 @@ class WeiboDaemon:
                             self.freeze_user(user)
                         except Exception, err:
                             _logger.error('get_api_by_user failed, but not WeibopError: %s', err)
-                            print traceback.format_exc()
                         else:
                             _logger.debug("api generated for user(%s)" % self.user.uname)
 
