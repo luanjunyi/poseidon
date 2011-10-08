@@ -383,8 +383,11 @@ class SQLAgent:
         return self.get_source('safe.news.baidu')
 
     # Tweet DB management
-    def get_all_tweet_crawled(self):
-        self.cursor.execute('select * from tweet_crawled')
+    def get_all_tweet_crawled(self, since=None):
+        if since == None:
+            self.cursor.execute('select * from tweet_crawled')
+        else:
+            self.cursor.execute('select * from tweet_crawled where created_at > %s', (since))
         tweets = []
         for raw_tweet in self.cursor.fetchall():
             t = Tweet(title = raw_tweet['title'],

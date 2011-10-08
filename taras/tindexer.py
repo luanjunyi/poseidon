@@ -66,7 +66,7 @@ class TIndexer:
         # process unindexed user with all tweet
 
         users = self.agent.get_all_user_not_indexed()
-        tweets = self.agent.get_all_tweet_crawled()
+        tweets = self.agent.get_all_tweet_crawled(since=datetime.now() + timedelta(days=-14))
         _logger.debug('process %d unindexed user and %d tweets(all)' %
                       (len(users), len(tweets)))
         if len(users) > 0 and len(tweets) > 0:
@@ -90,10 +90,10 @@ class TIndexer:
     def start_indexer_daemon(self, dbname, dbuser, dbpass):
         signal.signal(signal.SIGINT, self.handle_int)
         _logger.info('starting indexer, DB: (%s@%s:%s)' % (dbuser, dbname, dbpass))
-        _logger.info('SQLAgent initialized')
         while True:
             try:
                 self.agent = SQLAgent(dbname, dbuser, dbpass, sscursor=True)
+                _logger.info('SQLAgent initialized')
                 self.indexer_loop()
                 self.agent.stop()
             except Exception, err:
