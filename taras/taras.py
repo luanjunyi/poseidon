@@ -1131,7 +1131,8 @@ class WeiboDaemon:
                 self.shard_id = 0
                 self.shard_count = 1
             proxy_candidate = [proxy for i, proxy in enumerate(all_proxy) 
-                               if i % self.shard_count == self.shard_id]
+                               if self.shard_id % len(all_proxy) == i]
+
             if len(proxy_candidate) == 0:
                 raise Exception('not enough proxy')
 
