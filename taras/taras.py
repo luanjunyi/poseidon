@@ -506,7 +506,7 @@ class WeiboDaemon:
 
         if self.me.friends_count >= 1950:
             _logger.info("too much followee(%d), will ruthlessly remove some" % self.me.friends_count)
-            self._clean_stubborn(self.user, ruthless = False)
+            self._clean_stubborn(self.user, ruthless = True)
 
         count = random.randint(50, 60)
 
