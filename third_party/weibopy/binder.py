@@ -153,7 +153,7 @@ def bind_api(**config):
                                                                               proxy_pass = proxy_passwd)
 
 
-                conn = httplib2.Http(proxy_info = proxy_info, timeout = 40)
+                conn = httplib2.Http(proxy_info = proxy_info, timeout = 20)
 
                 # Apply authentication
                 if self.api.auth:
