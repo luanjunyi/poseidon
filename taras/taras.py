@@ -183,19 +183,14 @@ class WeiboDaemon:
         tweet = self._crawl_tweet_internal(title_xpath, content_xpath, image_xpath, href_xpath, encoding, url)
         return self._compose_tweet(tweet)
 
-    def _get_max_followee_count(self):
-        follower_count = len(self.weibo.followers_ids(count=5000).ids)
-        if follower_count < 200: # we are still small account
-            return max(50, follower_count)
-        else: # so, we are someone
-            return max(100, follower_count / 10)
-
     def _clean_stubborn(self, user, ruthless=False):
-        weibo = self.get_api_by_user(user.uname)
+        if not hasattr(self, 'user') or self.user != user:
+            self.assign_user(user)
+        weibo = self.weibo
         followings = weibo.friends_ids().ids
         now = datetime.now()
         me = self.me
-        _logger.debug('nick: %s, handling %d followee' % (me.name.encode('utf-8'), len(followings)))
+        _logger.debug('nick: %s, following %d, handling %d of them' % (me.name.encode('utf-8'), me.friends_count, len(followings)))
         for followee_id in followings:
             try:
                 if weibo.exists_friendship(followee_id, me.id).friends:
@@ -203,7 +198,7 @@ class WeiboDaemon:
                     _logger.debug('%d is following me' % followee_id)
                     continue
 
-                if ruthless:
+                if ruthless and me.friends_count >= 1800:
                     weibo.destroy_friendship(user_id=followee_id)
                     self.agent.stop_follow(user, followee_id)
                     _logger.debug('%s ruthlessly stop following %d' % (user.uname, followee_id))
@@ -234,9 +229,10 @@ class WeiboDaemon:
             _logger.info('cleaning following for all user')
             users = self.agent.get_all_user()
             for user in users:
-                weibo = self.get_api_by_user(user)
-                if self.me.friends_count >= 1990:
+                try:
                     self._clean_stubborn(user, ruthless=True)
+                except Exception, err:
+                    _logger.error('clean_following failed: %s' % (err))
         else:
             _logger.info('cleaning following for %s' % email)
             user = self.agent.get_user_by_email(email)
@@ -247,7 +243,7 @@ class WeiboDaemon:
         if not (datetime.now().hour >= 20 or datetime.now().hour <= 7):
             _logger.debug('too early to consider stop follow stubborn only do it after 20:00')
             return
-        if int(hashlib.md5(self.user.uname).hexdigest(), 16) % 3 == datetime.now().day % 3:
+        if int(hashlib.md5(self.user.uname).hexdigest(), 16) % 2 == datetime.now().day % 2:
             # my clean stubborn day
             _logger.debug('my clean stobborn day checking clean history')
             date = datetime.now().strftime('%Y-%m-%d')
@@ -507,11 +503,21 @@ class WeiboDaemon:
     def be_friendly(self):
         # To get maximum 
         _logger.info('start be friendly')
+
+        if self.me.friends_count >= 1950:
+            _logger.info("too much followee(%d), will ruthlessly remove some" % self.me.friends_count)
+            self._clean_stubborn(self.user, ruthless = True)
+
         count = random.randint(50, 60)
 
         follow_delta = self.get_new_follow_count()
-        if count > 200 - follow_delta:
-            count = 200 - follow_delta
+
+        if follow_delta >= 200:
+            _logger.debug("follow_delta is %d, larger than 200, will not follow anyone" % follow_delta)
+            count = 0
+        else:
+            if count > 200 - follow_delta:
+                count = 200 - follow_delta
 
         _logger.debug('will touch %d people' % count)
         victims = self.agent.get_victims(self.user, count)
@@ -1119,6 +1125,9 @@ class WeiboDaemon:
         if all_proxy == ():
             raise Exception('no proxy found, will use direct address')
         else:
+            if not hasattr(self, 'shard_count'):
+                self.shard_id = 0
+                self.shard_count = 1
             proxy_candidate = [proxy for i, proxy in enumerate(all_proxy) 
                                if i % self.shard_count == self.shard_id]
             if len(proxy_candidate) == 0:
