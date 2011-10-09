@@ -195,19 +195,19 @@ class WeiboDaemon:
             try:
                 if weibo.exists_friendship(followee_id, me.id).friends:
                     # OK if that followee has followed us
-                    _logger.debug('%d is following me' % followee_id)
+                    _logger.info('%d is following me' % followee_id)
                     continue
 
                 if ruthless and me.friends_count >= 1800:
                     weibo.destroy_friendship(user_id=followee_id)
                     self.agent.stop_follow(user, followee_id)
-                    _logger.debug('%s ruthlessly stop following %d' % (user.uname, followee_id))
+                    _logger.info('%s ruthlessly stop following %d' % (user.uname, followee_id))
                     continue
 
                 start_following_date = self.agent.get_follow_date(user, followee_id)
                 if start_following_date == None:
                     self.agent.update_follow_date(user, str(followee_id), now)
-                    _logger.debug('%d monitoring date added: %s' % (followee_id, str(now)))
+                    _logger.info('%d monitoring date added: %s' % (followee_id, str(now)))
                     continue
                 # Stop following this bastard if it has been more than 14 days since we
                 # followed him
@@ -215,9 +215,9 @@ class WeiboDaemon:
                 if monitored_day > 4:
                     weibo.destroy_friendship(user_id=followee_id)
                     self.agent.stop_follow(user, followee_id)
-                    _logger.debug('%s stop following %d' % (user.uname, followee_id))
+                    _logger.info('%s stop following %d' % (user.uname, followee_id))
                 else:
-                    _logger.debug('%s in monitor day %d' % (followee_id, monitored_day))
+                    _logger.info('%s in monitor day %d' % (followee_id, monitored_day))
             except Exception, err:
                 _logger.error('error when handling relationship between %s and %d: %s' %\
                                   (user.uname, followee_id, err))
