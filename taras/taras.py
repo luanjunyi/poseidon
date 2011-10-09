@@ -188,6 +188,7 @@ class WeiboDaemon:
             self.assign_user(user)
         weibo = self.weibo
         followings = weibo.friends_ids(count=2000).ids
+        followings.reverse()
         now = datetime.now()
         me = self.me
         _logger.debug('nick: %s, following %d, handling %d of them' % (me.name.encode('utf-8'), me.friends_count, len(followings)))
