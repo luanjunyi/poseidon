@@ -36,6 +36,8 @@ class WeiboDaemon:
         self.config.read(config_path)
         if (len(self.config.sections()) < 1):
             _logger.fatal('failed to read config file from %s' % config_path)
+        self.FRIENDS_COUNT_SAFE_LEVEL = self.config.getint("global", "friends_count_safe_level")
+
         if treefile == '':
             treefile = os.path.dirname(os.path.abspath(__file__)) + '/tree.txt'
         # Create keyword tree
@@ -199,7 +201,7 @@ class WeiboDaemon:
                     _logger.info('%d is following me' % followee_id)
                     continue
 
-                if ruthless and me.friends_count >= 1800:
+                if ruthless and me.friends_count >= self.FRIENDS_COUNT_SAFE_LEVEL:
                     weibo.destroy_friendship(user_id=followee_id)
                     self.agent.stop_follow(user, followee_id)
                     _logger.info('%s ruthlessly stop following %d' % (user.uname, followee_id))
@@ -506,7 +508,7 @@ class WeiboDaemon:
         # To get maximum 
         _logger.info('start be friendly')
 
-        if self.me.friends_count >= 1950:
+        if self.me.friends_count >= self.FRIENDS_COUNT_SAFE_LEVEL:
             _logger.info("too much followee(%d), will ruthlessly remove some" % self.me.friends_count)
             self._clean_stubborn(self.user, ruthless = True)
 
@@ -742,7 +744,7 @@ class WeiboDaemon:
 
         follow_delta = self.get_new_follow_count()
 
-        if follow_delta >= 190: # already followed enough today, rest
+        if follow_delta >= 190  and self.me.friends_count < self.FRIENDS_COUNT_SAFE_LEVEL: # already followed enough today, rest
             next_action_time = self._tomorrow_eight()
         else:
             next_action_time = now + timedelta(seconds = 60 * random.randint(50, 70))
@@ -1213,7 +1215,7 @@ class WeiboDaemon:
                         try:
                             _logger.debug('assigning user')
                             self.assign_user(user)
-                            self.user.next_action_time = self._schedule_next_action()
+
                         except WeibopError, err:
                             _logger.error('get_api_by_user failed: %s, will freeze user', err)
                             self.freeze_user(user)
@@ -1221,14 +1223,17 @@ class WeiboDaemon:
                             _logger.error('get_api_by_user failed, but not WeibopError: %s', err)
                         else:
                             _logger.debug("api generated for user(%s)" % self.user.uname)
-
-                            self.agent.update_next_action_time(user, self.user.next_action_time)
-
                             for func in self.func_array:
                                 try:
                                     func()
                                 except Exception, err:
                                     _logger.error("func failed(%s), %s" % (err, traceback.format_exc()))
+
+                            try:
+                                self.user.next_action_time = self._schedule_next_action()
+                                self.agent.update_next_action_time(user, self.user.next_action_time)
+                            except Exception, err:
+                                _logger.error("schedule next action time failed: %s, %s" % (err, traceback.format_exc()))
 
                         end_time = datetime.now() # profiling
                         _logger.info("profiled: %d seconds for %s" % ((end_time - start_time).seconds, self.user.uname))
