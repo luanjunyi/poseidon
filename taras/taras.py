@@ -247,7 +247,8 @@ class WeiboDaemon:
         if not (datetime.now().hour >= 20 or datetime.now().hour <= 7):
             _logger.debug('too early to consider stop follow stubborn only do it after 20:00')
             return
-        if int(hashlib.md5(self.user.uname).hexdigest(), 16) % 2 == datetime.now().day % 2:
+        # Clean stubborn every day for now
+        if True or int(hashlib.md5(self.user.uname).hexdigest(), 16) % 2 == datetime.now().day % 2:
             # my clean stubborn day
             _logger.debug('my clean stobborn day checking clean history')
             date = datetime.now().strftime('%Y-%m-%d')
