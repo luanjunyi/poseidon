@@ -1,7 +1,9 @@
 [global]
 #func_array=[self.post_tweet, self.retweet, self.be_friendly]
-func_array=[self.post_tweet, self.retweet, self.be_friendly, self.update_current_user_stat, self.stop_follow_stubborn]
+func_array=[self.post_tweet, self.be_friendly, self.update_current_user_stat, self.stop_follow_stubborn]
 #once_func_array=[self.stop_follow_stubborn]
 once_func_array=[]
-see_as_duplicate_when_user_timeline_unavialable=True
+see_as_duplicate_when_user_timeline_unavialable=True # obsolating
 mysql_host_for_daemon=192.168.1.200
+friends_count_safe_level=1800
+
