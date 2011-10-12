@@ -1030,7 +1030,8 @@ class WeiboDaemon:
         for tweet in all_tweet:
             victim_id = tweet.user.id
             if not self.agent.victim_crawled(self.user, victim_id) and \
-                    not self.agent.exists_in_follow_log(self.user.uname, victim_id):
+                    not self.agent.exists_in_follow_log(self.user.uname, victim_id) and \
+                    not self.agent.is_taras_id(victim_id):
                 result.add(victim_id)
         return result
 
@@ -1154,6 +1155,8 @@ class WeiboDaemon:
 
         _logger.debug('getting api')
         self.weibo = self.get_api_by_user(user.uname)
+        user.sina_id = self.me.id
+        self.agent.update_sina_id(user)
 
     def update_current_user_stat(self):
         try:

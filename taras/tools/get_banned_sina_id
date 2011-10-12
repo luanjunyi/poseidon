@@ -1,24 +1,36 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-
-import os, sys, re
-from datetime import datetime
+import sys, os, re, traceback
 import MySQLdb
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from taras import taras
+from util.log import _logger
 
 # Init MySQL connection
-conn = MySQLdb.connect(host = 'localhost',
+conn = MySQLdb.connect(host = 'yhhd',
                        user = 'taras',
                        passwd = 'admin123',
                        db = 'taras')
 cursor = conn.cursor(MySQLdb.cursors.DictCursor)
 cursor.execute('set names utf8')
 conn.commit()
-
 cursor.execute("select user, max(collect_date) as date from user_statistic group by user")
-now = datetime.now()
+
+daemon = taras.WeiboDaemon(noselenium=True)
 for row in cursor.fetchall():
-    last_action_date = datetime.strptime(row['date'], "%Y-%m-%d")
-    if (now - last_action_date).days >= 10:
-        user = row['user']
-        uid = re.search(r'.*http://weibo.com/([0-9]+)', user).group(1)
-        print "http://weibo.com/%s %d %s" % (uid, (now - last_action_date).days, uid)
+    user = row['user']
+    parse = re.search(r'.+#(.+)#(.+)#http://weibo.com/([0-9]+)', user)
+    if parse == None:
+        raise Exception("")
+    email = parse.group(1)
+    passwd = parse.group(2)
+    uid = parse.group(3)
+    try:
+        api = daemon.get_api_on_the_fly(email, passwd)
+        _logger.debug("good: (%s, %s) %s" % (email, passwd, api.me().name))
+    except Exception, err:
+        _logger.debug("bad: (%s, %s) %s" % (email, passwd, err))
+daemon.shutdown()
+
+    
+

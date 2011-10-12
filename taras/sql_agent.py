@@ -332,10 +332,18 @@ class SQLAgent:
         return comment + ' ' + random.choice(map(lambda i: i['content'], self.cursor.fetchall()))
 
 
-    def update_sina_id(self, user):
+    def update_sina_id(self, user, sina_id=0):
+        if sina_id == 0:
+            sina_id = user.sina_id
         self.cursor.execute('update sina_user set sina_id = %s where email = %s',
-                            (user.sina_id, user.uname))
+                            (sina_id, user.uname))
         self.conn.commit()
+
+    # True is 'sina_id' is one of our own accounts' ID
+    def is_taras_id(self, sina_id):
+        self.cursor.execute('select email from sina_user where sina_id = %s',
+                            (sina_id))
+        return self.cursor.rowcount > 0
 
     def get_all_force_action(self):
         self.cursor.execute('select * from force_action')
