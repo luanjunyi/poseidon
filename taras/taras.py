@@ -1131,9 +1131,6 @@ class WeiboDaemon:
         if all_proxy == ():
             raise Exception('no proxy found, will use direct address')
         else:
-            erand = int(time.mktime(date.today().timetuple())) % len(all_proxy)
-            all_proxy = all_proxy[erand:] + all_proxy[:erand]
-
             if not hasattr(self, 'shard_count'):
                 self.shard_id = 0
                 self.shard_count = 1
