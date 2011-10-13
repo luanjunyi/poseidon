@@ -29,7 +29,7 @@ for row in cursor.fetchall():
         api = daemon.get_api_on_the_fly(email, passwd)
         _logger.debug("good: (%s, %s) %s" % (email, passwd, api.me().name))
     except Exception, err:
-        _logger.debug("bad: (%s, %s) %s" % (email, passwd, err))
+        _logger.debug("bad: (%s, %s, %s) %s" % (email, passwd, uid, err))
 daemon.shutdown()
 
     
