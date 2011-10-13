@@ -284,10 +284,10 @@ class WeiboDaemon:
             except Exception, err:
 
                 # Tempary solution
-                with open('bad_id_detected', 'a') as bad_id:
-                    bad_id.write('%s:%s\n' % (uname, passwd))
-                    bad_id.flush()
-                self.agent.disable_user(uname)
+                # with open('bad_id_detected', 'a') as bad_id:
+                #     bad_id.write('%s:%s\n' % (uname, passwd))
+                #     bad_id.flush()
+                # self.agent.disable_user(uname)
 
                 dumppath = util.dump2file_with_date(html)
                 raise Exception('getting authrization pin code failed: %s, page dumped to %s, %s' %
