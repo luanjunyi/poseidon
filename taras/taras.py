@@ -37,6 +37,8 @@ class WeiboDaemon:
         if (len(self.config.sections()) < 1):
             _logger.fatal('failed to read config file from %s' % config_path)
         self.FRIENDS_COUNT_SAFE_LEVEL = self.config.getint("global", "friends_count_safe_level")
+        self.VALID_PROXY_FAIL_RATE = self.config.getfloat("global", "valid_proxy_fail_rate")
+        self.MAX_ACCOUNT_PER_PROXY = self.config.getint("global", "max_account_per_proxy")
 
         if treefile == '':
             treefile = os.path.dirname(os.path.abspath(__file__)) + '/tree.txt'
@@ -1125,6 +1127,31 @@ class WeiboDaemon:
                 _logger.info('got SIGINT, will shutdown gracefully')
                 self.shutdown()
 
+    def _choose_proxy(self, user, proxies):
+        all_proxy = []
+        for proxy in proxies:
+            proxy_log = self.agent.get_proxy_log(proxy)
+            if proxy_log == None or proxy_log['use_count'] < 10 \
+                    or float(proxy_log['fail_count']) / float(proxy_log['use_count']) < \
+                    self.VALID_PROXY_FAIL_RATE:
+                all_proxy.append(proxy)
+            else:
+                _logger.debug("discarding proxy: addr=%s, use=%d, fail_rate=%.2f" %
+                              (proxy['addr'], proxy_log['use_count'],
+                               float(proxy_log['fail_count']) / float(proxy_log['use_count'])))
+        account_num = self.agent.get_enabled_user_count()
+
+        if len(all_proxy) * self.MAX_ACCOUNT_PER_PROXY < account_num:
+            raise Exception('only %d valid proxy in DB, not enough for %d accounts' %
+                            (len(all_proxy), account_num))
+
+        all_proxy = [proxy for i, proxy in enumerate(all_proxy)
+                     if user.shard_id % len(all_proxy) == i]
+        return random.choice(all_proxy)
+
+            
+
+
     def assign_user(self, user):
         # choose proxy
         all_proxy = self.agent.get_all_proxy()
@@ -1134,14 +1161,8 @@ class WeiboDaemon:
             if not hasattr(self, 'shard_count'):
                 self.shard_id = 0
                 self.shard_count = 1
-            proxy_candidate = [proxy for i, proxy in enumerate(all_proxy) 
-                               if self.shard_id % len(all_proxy) == i]
 
-            if len(proxy_candidate) == 0:
-                raise Exception('not enough proxy')
-
-            proxy = random.choice(proxy_candidate)
-                
+            proxy = self._choose_proxy(user, all_proxy)
             os.environ['taras_proxy_addr'] = proxy['addr'].strip()
             os.environ['taras_proxy_port'] = str(proxy['port']).strip()
             os.environ['taras_proxy_user'] = proxy['user_name'].strip()

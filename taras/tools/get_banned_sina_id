@@ -1,13 +1,14 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 import sys, os, re, traceback
+from datetime import datetime, date
 import MySQLdb
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
 from taras import taras
 from util.log import _logger
 
 # Init MySQL connection
-conn = MySQLdb.connect(host = 'yhhd',
+conn = MySQLdb.connect(host = 'obama',
                        user = 'taras',
                        passwd = 'admin123',
                        db = 'taras')
@@ -17,7 +18,13 @@ conn.commit()
 cursor.execute("select user, max(collect_date) as date from user_statistic group by user")
 
 daemon = taras.WeiboDaemon(noselenium=True)
+
+today = date.today()
+
 for row in cursor.fetchall():
+    if row['date'] == today.__str__():
+        continue
+
     user = row['user']
     parse = re.search(r'.+#(.+)#(.+)#http://weibo.com/([0-9]+)', user)
     if parse == None:

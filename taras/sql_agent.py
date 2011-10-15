@@ -137,6 +137,10 @@ class SQLAgent:
         random.shuffle(users)
         return users
 
+    def get_enabled_user_count(self):
+        self.cursor.execute("select count(*) as count from sina_user where enabled = 1")
+        return self.cursor.fetchone()['count']
+
     def get_all_user(self, shard_id = 0, shard_count = 1):
         """
         Get all enabled, non-frozen users from DB
@@ -658,6 +662,15 @@ email = %s', (user.uname))
         self.cursor.execute("replace into proxy_log(proxy_ip, collect_date, use_count, fail_count) values(%s, %s, %s, %s)",
                             (proxy_addr, cur_date, use, fail))
         self.conn.commit()
+
+    def get_proxy_log(self, proxy):
+        cur_date = datetime.now().strftime("%Y-%m-%d")
+        self.cursor.execute("select * from proxy_log where proxy_ip = %s and collect_date = %s", (proxy['addr'], cur_date))
+        if self.cursor.rowcount == 0:
+            return None
+        if self.cursor.rowcount > 1:
+            raise Exception('multiple proxy_log found for %s, %s' % (proxy['addr'], cur_date))
+        return self.cursor.fetchone()
 
     # global bad words
     def get_global_bad_words(self):
