@@ -192,7 +192,7 @@ class WeiboDaemon:
             self.assign_user(user)
         weibo = self.weibo
         followings = weibo.friends_ids(count=2000).ids
-        followings.reverse()
+        random.shuffle(followings)
         now = datetime.now()
         me = self.me
         _logger.debug('nick: %s, following %d, handling %d of them' % (me.name.encode('utf-8'), me.friends_count, len(followings)))
@@ -1151,9 +1151,6 @@ class WeiboDaemon:
         all_proxy = [proxy for i, proxy in enumerate(all_proxy)
                      if user.shard_id % len(all_proxy) == i]
         return random.choice(all_proxy)
-
-            
-
 
     def assign_user(self, user):
         # choose proxy
