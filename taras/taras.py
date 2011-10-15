@@ -1136,10 +1136,13 @@ class WeiboDaemon:
                     self.VALID_PROXY_FAIL_RATE:
                 all_proxy.append(proxy)
             else:
-                _logger.debug("discarding proxy: addr=%s, use=%d, fail_rate=%.2f" %
-                              (proxy['addr'], proxy_log['use_count'],
+                _logger.debug("discarding proxy: addr=%s, use=%d, fail=%d, fail_rate=%.2f" %
+                              (proxy['addr'], proxy_log['use_count'], proxy_log['fail_count'],
                                float(proxy_log['fail_count']) / float(proxy_log['use_count'])))
         account_num = self.agent.get_enabled_user_count()
+
+        _logger.debug("%d valid proxy and %d account: %.2f accounts per proxy" %
+                      (len(all_proxy), account_num, float(account_num) / len(all_proxy)))
 
         if len(all_proxy) * self.MAX_ACCOUNT_PER_PROXY < account_num:
             raise Exception('only %d valid proxy in DB, not enough for %d accounts' %
