@@ -1131,7 +1131,7 @@ class WeiboDaemon:
         all_proxy = []
         for proxy in proxies:
             proxy_log = self.agent.get_proxy_log(proxy)
-            if proxy_log == None or proxy_log['use_count'] < 10 \
+            if proxy_log == None or proxy_log['use_count'] < 100 \
                     or float(proxy_log['fail_count']) / float(proxy_log['use_count']) < \
                     self.VALID_PROXY_FAIL_RATE:
                 all_proxy.append(proxy)
