@@ -11,7 +11,7 @@ from weibopy.utils import convert_to_utf8_str
 
 # sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '../../') # Paracode root
 # from util.log import _logger
-
+import socket
 import httplib2, socks, traceback
 from httplib2.socks import ProxyError
 
@@ -168,6 +168,10 @@ def bind_api(**config):
                                                  headers = self.headers,
                                                  body = self.post_data)
                 except ProxyError, err:
+                    self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
+                    raise Exception("Got ProxyError: %s, IP:%s, port:%d, user:%s, passwd:%s" % 
+                                    (err, proxy_addr, proxy_port, proxy_user, proxy_passwd))
+                except socket.error, err:
                     self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
                     raise Exception("Got ProxyError: %s, IP:%s, port:%d, user:%s, passwd:%s" % 
                                     (err, proxy_addr, proxy_port, proxy_user, proxy_passwd))

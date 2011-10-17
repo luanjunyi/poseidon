@@ -12,6 +12,9 @@ friends_count_safe_level=1800
 # proxy with fail rate higher than this value will be discarded
 valid_proxy_fail_rate=0.3
 
+# proxy with use count below this value will be seen as valid
+proxy_tryout_count=100
+
 # if each proxy will need to host more account than this value, the whole system will be halted until more
 # proxies are added
 max_account_per_proxy=100 

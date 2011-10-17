@@ -39,6 +39,7 @@ class WeiboDaemon:
         self.FRIENDS_COUNT_SAFE_LEVEL = self.config.getint("global", "friends_count_safe_level")
         self.VALID_PROXY_FAIL_RATE = self.config.getfloat("global", "valid_proxy_fail_rate")
         self.MAX_ACCOUNT_PER_PROXY = self.config.getint("global", "max_account_per_proxy")
+        self.PROXY_TRYOUT_COUNT = self.config.getint("global", 'proxy_tryout_count')
 
         if treefile == '':
             treefile = os.path.dirname(os.path.abspath(__file__)) + '/tree.txt'
@@ -1131,7 +1132,7 @@ class WeiboDaemon:
         all_proxy = []
         for proxy in proxies:
             proxy_log = self.agent.get_proxy_log(proxy)
-            if proxy_log == None or proxy_log['use_count'] < 100 \
+            if proxy_log == None or proxy_log['use_count'] < self.PROXY_TRYOUT_COUNT \
                     or float(proxy_log['fail_count']) / float(proxy_log['use_count']) < \
                     self.VALID_PROXY_FAIL_RATE:
                 all_proxy.append(proxy)

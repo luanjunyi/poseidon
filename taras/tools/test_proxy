@@ -54,7 +54,8 @@ class ProxyManager:
             response, content =  http.request(url, 'GET')
             end = datetime.now()
         except Exception, err:
-            _logger.error("exception:%s" % err)
+            _logger.error("exception:%s, type:(%s)" % (err, type(err)))
+            dir(err)
             return False, 0
         else:
             _logger.info("%d sec, %s, %s" % ((end - begin).seconds, response['status'], response['content-location']))
