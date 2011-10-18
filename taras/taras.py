@@ -199,6 +199,10 @@ class WeiboDaemon:
         _logger.debug('nick: %s, following %d, handling %d of them' % (me.name.encode('utf-8'), me.friends_count, len(followings)))
         for followee_id in followings:
             try:
+                if self.agent.is_taras_id(followee_id):
+                    weibo.destroy_friendship(user_id=followee_id)
+                    _logger.info("stop following Taras accounts")
+
                 if weibo.exists_friendship(followee_id, me.id).friends:
                     # OK if that followee has followed us
                     _logger.info('%d is following me' % followee_id)
@@ -1140,7 +1144,7 @@ class WeiboDaemon:
                 _logger.debug("discarding proxy: addr=%s, use=%d, fail=%d, fail_rate=%.2f" %
                               (proxy['addr'], proxy_log['use_count'], proxy_log['fail_count'],
                                float(proxy_log['fail_count']) / float(proxy_log['use_count'])))
-        account_num = self.agent.get_enabled_user_count()
+        account_num = self.agent.get_active_user_count()
 
         _logger.debug("%d valid proxy and %d account: %.2f accounts per proxy" %
                       (len(all_proxy), account_num, float(account_num) / len(all_proxy)))

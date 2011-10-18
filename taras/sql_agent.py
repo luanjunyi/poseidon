@@ -141,6 +141,11 @@ class SQLAgent:
         self.cursor.execute("select count(*) as count from sina_user where enabled = 1")
         return self.cursor.fetchone()['count']
 
+    def get_active_user_count(self):
+        today = date.today().strftime("%Y-%m-%d")
+        self.cursor.execute("select count(*) as count from user_statistic where collect_date = %s", today)
+        return self.cursor.fetchone()['count']
+
     def get_all_user(self, shard_id = 0, shard_count = 1):
         """
         Get all enabled, non-frozen users from DB
