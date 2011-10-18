@@ -1231,10 +1231,10 @@ class WeiboDaemon:
                     #               (user.uname, user.shard_id))
                     if user.next_action_time < now:
                         if not user.enabled:
-                            #_logger.debug('user (%s) disabled in DB' % user.uname)
+                            _logger.debug('user (%s) disabled in DB' % user.uname)
                             continue
                         if user.shard_id % shard_count != shard_id:
-                            #_logger.debug('this user(%s) is not no my shard' % user.uname)
+                            _logger.debug('this user(%s) is not no my shard' % user.uname)
                             continue
                         self.user = user
                         _logger.info("user(%s) in action, process: (%d / %d, round: %d)" % (user.uname, index, user_num, round_count))
@@ -1266,6 +1266,8 @@ class WeiboDaemon:
 
                         end_time = datetime.now() # profiling
                         _logger.info("profiled: %d seconds for %s" % ((end_time - start_time).seconds, self.user.uname))
+                    else:
+                        _logger.debug("user (%s) will sleep till %s" % (user.uname, user.next_action_time))
                 _logger.info('round %d finished' % round_count)
                 time.sleep(10)
         except KeyboardInterrupt, sigint:
