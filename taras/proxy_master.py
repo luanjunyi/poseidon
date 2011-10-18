@@ -32,9 +32,6 @@ def bad_proxy(proxy):
     proxy_log = agent.get_proxy_log(proxy)
     if proxy_log == None or proxy_log['use_count'] < PROXY_TRYOUT_COUNT \
             or float(proxy_log['fail_count']) / float(proxy_log['use_count']) < VALID_PROXY_FAIL_RATE:
-        _logger.debug("good proxy: addr=%s, use=%d, fail=%d, fail_rate=%.2f%%" %
-                     (proxy['addr'], proxy_log['use_count'], proxy_log['fail_count'],
-                      float(proxy_log['fail_count']) / float(proxy_log['use_count']) * 100))
         return False
     else:
         _logger.debug("bad proxy: addr=%s, use=%d, fail=%d, fail_rate=%.2f%%" %
