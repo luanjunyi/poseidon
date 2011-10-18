@@ -1233,9 +1233,6 @@ class WeiboDaemon:
                         if not user.enabled:
                             _logger.debug('user (%s) disabled in DB' % user.uname)
                             continue
-                        if user.shard_id % shard_count != shard_id:
-                            _logger.debug('this user(%s) is not no my shard' % user.uname)
-                            continue
                         self.user = user
                         _logger.info("user(%s) in action, process: (%d / %d, round: %d)" % (user.uname, index, user_num, round_count))
 
