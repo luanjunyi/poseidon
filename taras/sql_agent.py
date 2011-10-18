@@ -74,7 +74,7 @@ class UserAccount:
             self.sina_id = 0
         self.enabled = (user['enabled'] == 1)
 
-        self.shard_id = user['id']
+        self.shard_id = user['less_id']
         self.freeze_to = user['freeze_to']
                 
 
@@ -133,6 +133,8 @@ class SQLAgent:
         self.conn.commit()
 
     def get_all_user_internal(self, raw_users):
+        for i, user in enumerate(raw_users):
+            user['less_id'] = i
         users = [UserAccount(user) for user in raw_users]
         random.shuffle(users)
         return users
@@ -151,7 +153,7 @@ class SQLAgent:
         Get all enabled, non-frozen users from DB
         Side-effect: release frozen user if freeze_to date is passed
         """
-        self.cursor.execute('select * from sina_user where enabled = 1 and id %% %d = %d' %
+        self.cursor.execute('select * from sina_user where enabled = 1 and id %% %d = %d order by id' %
                             (shard_count, shard_id))
         raw_users = self.cursor.fetchall()
         return self.get_all_user_internal(raw_users)
@@ -166,7 +168,12 @@ class SQLAgent:
         self.cursor.execute('select * from sina_user where email = %s', email)
         if self.cursor.rowcount == 0:
             return None
-        return UserAccount(self.cursor.fetchone())
+
+        user = self.cursor.fetchone()
+        self.cursor.execute("select count(*) as count from sina_user where id < %s", user['id'])
+        user['less_id'] = self.cursor.fetchone()['count']
+
+        return UserAccount(user)
 
 
     def disable_user(self, email):
@@ -622,6 +629,12 @@ email = %s', (user.uname))
         self.conn.commit()
 
     # Proxy
+    def get_proxy_by_slot(self, slot_id):
+        self.cursor.execute("select * from proxy where slot_id = %s", slot_id)
+        if self.cursor.rowcount < 1:
+            return None
+        return self.cursor.fetchone()
+
     def get_random_proxy(self):
         self.cursor.execute('select * from proxy')
         if self.cursor.rowcount == 0:
@@ -633,7 +646,7 @@ email = %s', (user.uname))
         return random.choice(all_proxy)
 
     def get_all_proxy(self):
-        self.cursor.execute('select * from proxy')
+        self.cursor.execute('select * from proxy order by id')
         if self.cursor.rowcount == 0:
             _logger.error('no proxy in DB')
             return ()
@@ -676,8 +689,27 @@ email = %s', (user.uname))
         if self.cursor.rowcount > 1:
             raise Exception('multiple proxy_log found for %s, %s' % (proxy['addr'], cur_date))
         return self.cursor.fetchone()
+    
+    def remove_proxy_from_slot(self, proxy):
+        self.cursor.execute("update proxy set leave_slot_count = leave_slot_count + 1, slot_id = NULL where id = %s" % proxy['id'])
+        self.conn.commit()
+
+    def update_proxy_slot(self, slot, proxy):
+        self.cursor.execute("update proxy set slot_id = %s where id = %s", (slot, proxy['id']))
+        self.conn.commit()
+        
 
     # global bad words
     def get_global_bad_words(self):
         self.cursor.execute("select * from bad_word")
         return [row['content'] for row in self.cursor.fetchall()]
+
+    # core configuration
+    def get_core_config(self):
+        self.cursor.execute('select * from core_config')
+        all_config = self.cursor.fetchall()
+        config = {}
+        for cfg in all_config:
+            config[cfg['name']] = cfg['value']
+        return config
+            

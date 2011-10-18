@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib
+import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib, math
 from ConfigParser import RawConfigParser
 from datetime import datetime, timedelta, date
 from functools import partial
@@ -50,6 +50,10 @@ class WeiboDaemon:
         except Exception, err:
             _logger.error('failed to create keyword tree from(%s): %s' % (treefile, err))
         # Connect to DB
+        self.dbname = dbname
+        self.dbuser = dbuser
+        self.dbpass = dbpass
+        self.dbhost = mysql_host
         _logger.info('starting MySQL client, db:%s, user:%s, passwd:%s' % (dbname, dbuser, dbpass))
         self.agent = SQLAgent(dbname, dbuser, dbpass, mysql_host)
         # Start Selenium client
@@ -61,6 +65,10 @@ class WeiboDaemon:
 
         # Set shard_id
         self.shard_id = 0
+
+    def restart_mysql_agent(self):
+        self.agent.stop()
+        self.agent = SQLAgent(self.dbname, self.dbuser, self.dbpass, self.dbhost)
 
     def _duplicate_tweet(self, new_content):
         if not hasattr(self, 'user'):
@@ -1133,29 +1141,20 @@ class WeiboDaemon:
                 self.shutdown()
 
     def _choose_proxy(self, user, proxies):
-        all_proxy = []
-        for proxy in proxies:
-            proxy_log = self.agent.get_proxy_log(proxy)
-            if proxy_log == None or proxy_log['use_count'] < self.PROXY_TRYOUT_COUNT \
-                    or float(proxy_log['fail_count']) / float(proxy_log['use_count']) < \
-                    self.VALID_PROXY_FAIL_RATE:
-                all_proxy.append(proxy)
-            else:
-                _logger.debug("discarding proxy: addr=%s, use=%d, fail=%d, fail_rate=%.2f" %
-                              (proxy['addr'], proxy_log['use_count'], proxy_log['fail_count'],
-                               float(proxy_log['fail_count']) / float(proxy_log['use_count'])))
         account_num = self.agent.get_active_user_count()
+        slot_num = math.ceil(account_num / 50.0)
+        slot_id = user.shard_id % slot_num
 
-        _logger.debug("%d valid proxy and %d account: %.2f accounts per proxy" %
-                      (len(all_proxy), account_num, float(account_num) / len(all_proxy)))
+        _logger.debug("user less_id: %d, slot_id: %d" % (user.shard_id, slot_id))
 
-        if len(all_proxy) * self.MAX_ACCOUNT_PER_PROXY < account_num:
-            raise Exception('only %d valid proxy in DB, not enough for %d accounts' %
-                            (len(all_proxy), account_num))
+        self.restart_mysql_agent() # so that the proxy info is up to date in our proxy
 
-        all_proxy = [proxy for i, proxy in enumerate(all_proxy)
-                     if user.shard_id % len(all_proxy) == i]
-        return random.choice(all_proxy)
+        
+
+        proxy = self.agent.get_proxy_by_slot(slot_id)
+        if proxy == None:
+            raise Exception("No proxy found in slot %d" % slot_id)
+        return proxy
 
     def assign_user(self, user):
         # choose proxy
@@ -1251,6 +1250,7 @@ class WeiboDaemon:
                             self.freeze_user(user)
                         except Exception, err:
                             _logger.error('get_api_by_user failed, but not WeibopError: %s', err)
+                            print traceback.format_exc()
                         else:
                             _logger.debug("api generated for user(%s)" % self.user.uname)
                             for func in self.func_array:
