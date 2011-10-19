@@ -1078,7 +1078,7 @@ class WeiboDaemon:
 
     def crawl_victim(self, shard_id=0, shard_count=1):
         try:
-            users = self.agent.get_all_user()
+            users = self.agent.get_all_user(shard_id, shard_count)
             round_start_time = datetime.now()
             for user in users:
                 # Ignore if the user
@@ -1086,7 +1086,6 @@ class WeiboDaemon:
                 # 2. Not in current shard
                 # 3. Has lots of victims unused
                 if not user.enabled or \
-                        user.shard_id % shard_count != shard_id or \
                         self.agent.available_victim_num(user) > 200:
                     continue
                 start_time = datetime.now()
@@ -1148,8 +1147,6 @@ class WeiboDaemon:
         _logger.debug("user less_id: %d, slot_id: %d" % (user.shard_id, slot_id))
 
         self.restart_mysql_agent() # so that the proxy info is up to date in our proxy
-
-        
 
         proxy = self.agent.get_proxy_by_slot(slot_id)
         if proxy == None:
@@ -1239,7 +1236,7 @@ class WeiboDaemon:
                         start_time = datetime.now() # profiling
 
                         try:
-                            _logger.debug('assigning user')
+                            _logger.debug('assigning user, shard_id = %d' % user.shard_id)
                             self.assign_user(user)
 
                         except WeibopError, err:

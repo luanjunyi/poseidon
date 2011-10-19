@@ -134,7 +134,9 @@ class SQLAgent:
 
     def get_all_user_internal(self, raw_users):
         for i, user in enumerate(raw_users):
-            user['less_id'] = i
+            self.cursor.execute("select count(*) as count from sina_user where id < %s", user['id'])
+            user['less_id'] = self.cursor.fetchone()['count']
+
         users = [UserAccount(user) for user in raw_users]
         random.shuffle(users)
         return users
