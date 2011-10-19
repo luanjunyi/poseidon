@@ -21,12 +21,7 @@ def pick_proxy_for_slot(agent, slot_id, all_proxy):
             proxy['slot_id'] = slot_id
             return
             
-    proxies = sorted(proxies, key = lambda proxy: proxy['leave_slot_count'])
-    proxy = proxies[0]
-    _logger.info("will do with proxy at %s, which had failed %d times today" % (proxy['addr'], proxy['leave_slot_count']))
-    agent.update_proxy_slot(slot_id, proxy)
-    proxy['slot_id'] = slot_id
-
+    _logger.error("Can't find any decent proxy for slot %d" % slot_id)
 
 def bad_proxy(proxy):
     proxy_log = agent.get_proxy_log(proxy)
