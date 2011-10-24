@@ -61,6 +61,26 @@ class ProxyManager:
             _logger.info("%d sec, %s, %s" % ((end - begin).seconds, response['status'], response['content-location']))
             return response['status'] == '200', (end - begin).seconds
 
+    def test_proxy_in_file(self, pfile):
+        with open(pfile) as pfile:
+            proxies = pfile.read().split('\n')
+            for line in proxies:
+                if len(line.strip()) == 0:
+                    continue
+                line = line.split()
+                addr = line[0]
+                port = int(line[1])
+                user = ''
+                passwd = ''
+                if len(line) == 4:
+                    user = line[2]
+                    passwd = line[3]
+                _logger.info("testing %s:%d, (%s:%s)" % (addr, port, user, passwd))
+                perf = self.test_one_proxy(addr, port, user, passwd)
+                if perf[0] >= 0.8 and perf[1] <= 5:
+                    _logger.info("condidate %s:%d, (%s:%s), %.2f, %d" %
+                                 (addr, port, user, passwd, perf[0], perf[1]))
+
     def test_all_proxy(self, write_to_db = False):
         self.update_db = write_to_db
         all_proxy = self.agent.get_all_proxy()
@@ -82,14 +102,14 @@ class ProxyManager:
         return self._test(addr, port, user, passwd, urls)
 
 def usage():
-    print 'usage: test_proxy -c (check-all|check-one|check-all-db) -h MYSQL_HOST [-i IP_ADDR -u USER -p PASSWD -o PORT]'
+    print 'usage: test_proxy -c (check-all|check-one|check-all-db|check-file) -h MYSQL_HOST [-i IP_ADDR -u USER -p PASSWD -o PORT] [-f PROXY-LIST]'
     sys.exit(0)
 
 def main(argv):
     from getopt import getopt
     try:
-        opts, args = getopt(argv, 'c:h:i:u:p:o:',
-                            ['command=', 'mysql-host=', 'ip-addr=', 'user=', 'passwd=', 'port='])
+        opts, args = getopt(argv, 'c:h:i:u:p:o:f:',
+                            ['command=', 'mysql-host=', 'ip-addr=', 'user=', 'passwd=', 'port=', 'file='])
     except Exception, err:
         print "getopt error:%s" % err
         usage()
@@ -101,6 +121,7 @@ def main(argv):
     port = 0
     user = ''
     passwd = ''
+    pfile = ''
     for opt, arg in opts:
         if opt in ('-c', '--command'):
             command = arg.strip()
@@ -114,6 +135,8 @@ def main(argv):
             passwd = arg.strip()
         if opt in ('-o', '--port'):
             port = int(arg.strip())
+        if opt in ('-f', '--file'):
+            pfile = arg.strip()
 
     checker = ProxyManager(host)
 
@@ -123,6 +146,8 @@ def main(argv):
         checker.test_all_proxy(write_to_db = False)
     elif command == 'check-all-db':
         checker.test_all_proxy(write_to_db = True)
+    elif command == 'check-file':
+        checker.test_proxy_in_file(pfile)
     else:
         usage()
 

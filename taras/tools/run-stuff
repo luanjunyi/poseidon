@@ -31,6 +31,11 @@ function restart {
 }
 
 function monitor_one_taras {
+    if [ `date +%H:%M` == "23:59" ]; then
+        echo "log switching time, stop monitoring"
+        return
+    if
+
     dir="${run_dir}/taras$1"
     cd $dir
     log_path="${dir}/taras.log"

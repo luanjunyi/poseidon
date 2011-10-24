@@ -265,7 +265,7 @@ class WeiboDaemon:
         # Clean stubborn every day for now
         if True or int(hashlib.md5(self.user.uname).hexdigest(), 16) % 2 == datetime.now().day % 2:
             # my clean stubborn day
-            _logger.debug('my clean stobborn day checking clean history')
+            _logger.debug('my clean stobborn, day checking clean history')
             date = datetime.now().strftime('%Y-%m-%d')
             if self.agent.is_stubborn_cleaned(self.user.uname, date):
                 _logger.debug('my clean stobborn day but has cleaned already')
