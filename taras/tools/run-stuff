@@ -1,15 +1,13 @@
 #!/bin/bash
 
 function read_config {
-    shard_start=''
-
     echo -e "loading config file from $1, config:\n"
     source $1
 
     echo "shard count:$shard_count"
 
     # defaults for shard_start and shard_end
-    if [ -z $shard_start ]; then
+    if [ -z "${shard_start+xxx}" ]; then
         shard_start=0
         shard_end=$(($shard_count-1))
     fi
