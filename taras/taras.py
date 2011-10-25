@@ -977,33 +977,6 @@ class WeiboDaemon:
                             source.domain, terminate = terminate)
         except Exception, err:
             _logger.error('recursive_crawl  failed: %s, %s' % (err, traceback.format_exc()))
-
-        # links = pbrowser.get_all_href(source.base_url, source.encoding)
-        # _logger.debug("processing %d links" % (len(links)))
-        # count = 0
-        # now = datetime.now()
-        # for idx, link in enumerate(links):
-        #     last_crawled_at = self.agent.get_last_crawl_time(link['href'].encode('utf-8'))
-        #     if (now - last_crawled_at).days <= 30:
-        #         _logger.debug('ignore %s which is crawled %d days ago' % (link['href'], (last_crawled_at - now).days))
-        #         continue
-
-        #     tweet = None
-        #     try:
-        #         tweet = try_crawl_href(source, link, self.selenium)
-        #     except Exception, err:
-        #         _logger.error('crawl href failed: %s, %s' % (err, traceback.format_exc()))
-        #         continue
-        #     if tweet != None:
-        #         count += 1
-        #         try:
-        #             self.agent.add_crawled_tweet(source, tweet)
-        #             _logger.info('new tweed added to db, %d total, (%d / %d) prcessed' %
-        #                          (count, idx, len(links)))
-        #         except Exception, err:
-        #             _logger.error('failed to add crawled tweet to DB: %s' % err)
-        # _logger.debug('%d tweets crawled' % count)
-
             
     # Crawl tweet from source, find victims to follow
     def crawl_tweet(self, shard_id=0, shard_count=1):
@@ -1011,10 +984,6 @@ class WeiboDaemon:
             all_source = self.agent.get_all_source()
             round_start_time = datetime.now()
             for si, source in enumerate(all_source):
-                # Ignore if the source
-                # 1. Need query keyword
-                # 2. Not in current shard
-                # 3. Has lots of items unused
                 if si % shard_count != shard_id:
                     continue
                 start_time = datetime.now()

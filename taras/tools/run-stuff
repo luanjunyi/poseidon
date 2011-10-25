@@ -5,6 +5,16 @@ function read_config {
     source $1
 
     echo "shard count:$shard_count"
+
+    # defaults for shard_start and shard_end
+    if [ -z $shard_start ]; then
+        shard_start=0
+        shard_end=$(($shard_count-1))
+    fi
+
+    echo "shard start:$shard_start"
+    echo "shard end:$shard_end"
+
     echo "run directory:$run_dir"
     echo "taras.py path:$taras_exe"
     echo "logging config path:$logger_conf"
@@ -97,7 +107,7 @@ function start {
     echo "moved to $(pwd)"
 
     # make directory for each Taras instance
-    for (( i=0; i<$shard_count; i++  ))
+    for (( i=$shard_start; i<=$shard_end; i++  ))
     do
         dir="${run_dir}/taras$i"
         if [ ! -d $dir ]; then

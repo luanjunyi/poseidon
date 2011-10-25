@@ -47,14 +47,11 @@ def crawl_href(anchor, encoding, selenium):
 def try_crawl_href(anchor, encoding, agent, selenium):
     _logger.debug('crawling anchor (%s), URL: %s' % (anchor.text.encode('utf-8'),
                                                      anchor['href'].encode('utf-8')))
-    
     # filters
     # ignore bad-looking anchors
     if util.chinese_charactor_count(anchor.text.strip()) < 10:
         _logger.debug('too few chinese chars in anchor text, ignoring')
         return None
-
-
 
     # ignore same href crawled recently
     now = datetime.now()
