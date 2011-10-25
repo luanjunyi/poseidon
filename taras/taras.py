@@ -962,12 +962,18 @@ class WeiboDaemon:
     def crawl_source(self, source):
         _logger.debug('crawling source(%s)' % source.id)
         prime = False
+        # prime crawler
         if hasattr(self, 'prime_crawl') and self.prime_crawl == True:
             if not source.is_prime:
                 _logger.debug('ignoring non-prime source')
                 return
             else:
                 prime = True
+        # non-prime crawler
+        else:
+            if source.is_prime:
+                _logger.debug('ignoring prime source')
+                return
 
         #crawl_pool = threadpool.ThreadPool(maxThreads = 10)
 
