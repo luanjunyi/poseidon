@@ -132,10 +132,13 @@ class SQLAgent:
                                 (user.uname, keyword.encode('utf-8')))
         self.conn.commit()
 
-    def get_all_user_internal(self, raw_users):
+    def get_all_user_internal(self, raw_users, simple_shard_id=False):
         for i, user in enumerate(raw_users):
-            self.cursor.execute("select count(*) as count from sina_user where id < %s", user['id'])
-            user['less_id'] = self.cursor.fetchone()['count']
+            if not simple_shard_id:
+                self.cursor.execute("select count(*) as count from sina_user where id < %s", user['id'])
+                user['less_id'] = self.cursor.fetchone()['count']
+            else:
+                user['less_id'] = user['id']
 
         users = [UserAccount(user) for user in raw_users]
         random.shuffle(users)
@@ -474,7 +477,7 @@ image_bin, image_ext, href_md5) values(%s, %s, %s, %s, %s, %s, %s)',
         self.cursor.execute('select * from sina_user where enabled = 1 and indexed = 1 and id %% %d = %d' %
                             (shard_count, shard_id))
         raw_users = self.cursor.fetchall()
-        return self.get_all_user_internal(raw_users)
+        return self.get_all_user_internal(raw_users, simple_shard_id=True)
 
     def get_all_user_not_indexed(self, shard_id = 0, shard_count = 1):
         """

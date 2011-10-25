@@ -95,14 +95,17 @@ class TIndexer:
                 self.agent = SQLAgent(dbname, dbuser, dbpass, sscursor=True)
                 _logger.info('SQLAgent initialized')
                 self.indexer_loop()
+
                 self.agent.stop()
-            except Exception, err:
-                _logger.error('indexer_loop failed: %s, %s' % (err, traceback.format_exc()))
             except KeyboardInterrupt, sigint:
                 _logger.info('got Keyboard interuption, will shutdown SQLAgent gracefully')
                 self.agent.stop()
+            except Exception, err:
+                _logger.error('indexer_loop failed: %s, %s' % (err, traceback.format_exc()))
+
             _logger.info('sleeping for 60 sec')
             time.sleep(60)
+            break
 
 def usage():
     print """
