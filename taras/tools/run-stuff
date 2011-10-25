@@ -84,7 +84,7 @@ function monitor {
     while [ true ]
     do
         source $config_path
-        for (( i=0; i<$shard_count; i++  ))
+        for (( i=$shard_start; i<=$shard_end; i++  ))
         do
             monitor_one_taras $i
         done
