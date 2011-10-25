@@ -105,7 +105,6 @@ class TIndexer:
 
             _logger.info('sleeping for 60 sec')
             time.sleep(60)
-            break
 
 def usage():
     print """
