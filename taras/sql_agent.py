@@ -132,11 +132,14 @@ class SQLAgent:
                                 (user.uname, keyword.encode('utf-8')))
         self.conn.commit()
 
-    def get_all_user_internal(self, raw_users):
+    def get_all_user_internal(self, raw_users, simple=False):
         for i, user in enumerate(raw_users):
-            self.cursor.execute("select count(*) as count from sina_user where id < %s", user['id'])
-            user['less_id'] = self.cursor.fetchone()['count']
-            self.cursor.fetchall()
+            if not simple:
+                self.cursor.execute("select count(*) as count from sina_user where id < %s", user['id'])
+                user['less_id'] = self.cursor.fetchone()['count']
+                self.cursor.fetchall()
+            else:
+                user['less_id'] = user['id']
 
         users = [UserAccount(user) for user in raw_users]
         random.shuffle(users)
@@ -156,7 +159,7 @@ class SQLAgent:
         Get all enabled, non-frozen users from DB
         Side-effect: release frozen user if freeze_to date is passed
         """
-        self.cursor.execute('select * from sina_user where enabled = 1 and id %% %d = %d order by id' %
+        self.cursor.execute('select * from sina_user where enabled = 1 and id %% %d = %d' %
                             (shard_count, shard_id))
         raw_users = self.cursor.fetchall()
         return self.get_all_user_internal(raw_users)
@@ -476,7 +479,7 @@ image_bin, image_ext, href_md5) values(%s, %s, %s, %s, %s, %s, %s)',
                             (shard_count, shard_id))
 
         raw_users = self.cursor.fetchall()
-        return self.get_all_user_internal(raw_users)
+        return self.get_all_user_internal(raw_users, simple=True)
 
     def get_all_user_not_indexed(self, shard_id = 0, shard_count = 1):
         """
@@ -485,7 +488,7 @@ image_bin, image_ext, href_md5) values(%s, %s, %s, %s, %s, %s, %s)',
         self.cursor.execute('select * from sina_user where enabled = 1 and indexed = 0 and id %% %d = %d' %
                             (shard_count, shard_id))
         raw_users = self.cursor.fetchall()
-        return self.get_all_user_internal(raw_users)
+        return self.get_all_user_internal(raw_users, simple=True)
 
     def mark_user_as_indexed(self, user_email):
         self.cursor.execute('update sina_user set indexed = 1 where email = %s', user_email)
