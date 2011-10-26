@@ -1147,7 +1147,8 @@ class WeiboDaemon:
             self.agent.update_proxy_log(os.environ['taras_proxy_addr'],
                                         log_type="use")
 
-        self.app = random.choice(self.agent.get_all_app())
+        all_app = self.agent.get_all_app()
+        self.app = all_app[user.shard_id % len(all_app)]
         self.user = user
 
         _logger.debug('getting api')
