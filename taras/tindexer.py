@@ -87,12 +87,12 @@ class TIndexer:
         sys.exit(0)
                 
 
-    def start_indexer_daemon(self, dbname, dbuser, dbpass):
+    def start_indexer_daemon(self, dbname, dbuser, dbpass, dbhost):
         signal.signal(signal.SIGINT, self.handle_int)
-        _logger.info('starting indexer, DB: (%s@%s:%s)' % (dbuser, dbname, dbpass))
+        _logger.info('starting indexer, DB: (%s@%s.%s:%s)' % (dbuser, dbhost, dbname, dbpass))
         while True:
             try:
-                self.agent = SQLAgent(dbname, dbuser, dbpass, sscursor=True)
+                self.agent = SQLAgent(dbname, dbuser, dbpass, dbhost, sscursor=True)
                 _logger.info('SQLAgent initialized')
                 self.indexer_loop()
 
@@ -115,7 +115,7 @@ def usage():
 if __name__ == "__main__":
     from getopt import getopt
     try:
-        opts, args = getopt(sys.argv[1:], 'hu:p:d:', ['help', 'user=', 'passwd=', 'database='])
+        opts, args = getopt(sys.argv[1:], 'h:u:p:d:', ['host=', 'user=', 'passwd=', 'database='])
     except Exception, err:
         print "getopt error:%s" % err
         usage()
@@ -124,10 +124,11 @@ if __name__ == "__main__":
     dbname = 'taras'
     dbuser = 'taras'
     dbpass = 'admin123'
+    dbhost = 'localhost'
 
     for opt, arg in opts:
-        if opt in ('-h', '--help'):
-            usage_only = True
+        if opt in ('-h', '--host'):
+            dbhost = arg
         if opt in ('-u', '--user'):
             dbuser = arg
         if opt in ('-p', '--passwd'):
@@ -150,5 +151,5 @@ if __name__ == "__main__":
         usage()
 
     indexer = TIndexer()
-    indexer.start_indexer_daemon(dbname, dbuser, dbpass)
+    indexer.start_indexer_daemon(dbname, dbuser, dbpass, dbhost)
 
