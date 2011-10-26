@@ -246,7 +246,7 @@ class WeiboDaemon:
     def force_stop_follow_stubborn(self, email=None):
         if email == None:
             _logger.info('cleaning following for all user')
-            users = self.agent.get_all_user()
+            users = self.agent.get_all_active_user()
             for user in users:
                 try:
                     self._clean_stubborn(user, ruthless=True)
@@ -1053,7 +1053,7 @@ class WeiboDaemon:
 
     def crawl_victim(self, shard_id=0, shard_count=1):
         try:
-            users = self.agent.get_all_user(shard_id, shard_count)
+            users = self.agent.get_all_active_user(shard_id, shard_count)
             round_start_time = datetime.now()
             for user in users:
                 # Ignore if the user
@@ -1117,9 +1117,15 @@ class WeiboDaemon:
     def _choose_proxy(self, user, proxies):
         account_num = self.agent.get_active_user_count()
         slot_num = math.ceil(account_num / 50.0)
-        slot_id = user.shard_id % slot_num
+        slot_id = math.ceil(user.shard_id / 50.0)
+        if slot_id >= slot_num:
+            _logger.error("slot_id is larger than slot_num - 1, might be an error. "
+                          "less_id: %d, account_num: %d, slot_num: %d" % 
+                          (user.shard_id, account_num, slot_num))
+            slot_id = slot_num - 1
 
-        _logger.debug("user less_id: %d, slot_id: %d" % (user.shard_id, slot_id))
+        _logger.debug("user less_id: %d, slot_id: %d, account_num: %d" 
+                      % (user.shard_id, slot_id, account_num))
 
         self.restart_mysql_agent() # so that the proxy info is up to date in our proxy
 
@@ -1195,7 +1201,7 @@ class WeiboDaemon:
                     _logger.info('first round today, reset round_count')
                 else:
                     round_count += 1
-                users = self.agent.get_all_user(shard_id, shard_count)
+                users = self.agent.get_all_active_user(shard_id, shard_count)
                 user_num = len(users)
                 _logger.info('will process %d users, round: %d' % (user_num, round_count))
                 now = datetime.now()
@@ -1373,7 +1379,7 @@ class WeiboDaemon:
     def give_us_an_api(self, dbname='taras', dbuser='taras', dbpass='admin123'):
         random.seed()
         self.agent = SQLAgent(dbname, dbuser, dbpass)
-        user = random.choice(self.agent.get_all_user())
+        user = random.choice(self.agent.get_all_active_user())
         app = random.choice(self.agent.get_all_app())
         token = self.get_token(user, app)
         handle = sina_auth.OAuthHandler(app.consumer_key, app.consumer_secret)

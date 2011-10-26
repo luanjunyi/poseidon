@@ -4,7 +4,7 @@
 # commit explicitly on every 'write' SQL command. Otherwise, as implied by some ducument,
 # no change can take effect for innodb engine
 
-import sys, os, cPickle, random, hashlib
+import sys, os, cPickle, random, hashlib, re
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Paracode root
 from datetime import datetime, timedelta, date
 from util.log import _logger
@@ -153,6 +153,19 @@ class SQLAgent:
         today = date.today().strftime("%Y-%m-%d")
         self.cursor.execute("select count(*) as count from user_statistic where collect_date = %s", today)
         return self.cursor.fetchone()['count']
+
+    def get_all_active_user(self, shard_id = 0, shard_count = 1):
+        today = date.today().strftime("%Y-%m-%d")
+        self.cursor.execute("select user from user_statistic where collect_date = %s", today)
+        raw_users = []
+        for row in self.cursor.fetchall():
+            email = re.search(r'#(.+?)#', row['user']).group(1)
+            self.cursor.execute('select * from sina_user where email = %s and id %% %s = %s', 
+                                (email, shard_count, shard_id))
+            raw = self.cursor.fetchone()
+            if raw:
+                raw_users.append(raw)
+        return self.get_all_user_internal(raw_users)
 
     def get_all_user(self, shard_id = 0, shard_count = 1):
         """
