@@ -152,12 +152,13 @@ class SQLAgent:
     def get_active_user_count(self):
         yesterday = date.today() - timedelta(1)
         date_limit = yesterday.strftime("%Y-%m-%d")
-        self.cursor.execute("select count(*) as count from user_statistic where collect_date > %s", date_limit)
+        self.cursor.execute("select count(*) as count from user_statistic where collect_date >= %s", date_limit)
         return self.cursor.fetchone()['count']
 
     def get_all_active_user(self, shard_id = 0, shard_count = 1):
-        today = date.today().strftime("%Y-%m-%d")
-        self.cursor.execute("select user from user_statistic where collect_date = %s", today)
+        yesterday = date.today() - timedelta(1)
+        date_limit = yesterday.strftime("%Y-%m-%d")
+        self.cursor.execute("select user from user_statistic where collect_date >= %s", date_limit)
         raw_users = []
         for row in self.cursor.fetchall():
             email = re.search(r'#(.+?)#', row['user']).group(1)
@@ -244,6 +245,11 @@ class SQLAgent:
 
     def get_all_source(self):
         self.cursor.execute('select id from source')
+        source_ids = self.cursor.fetchall()
+        return [self.get_source(i['id']) for i in source_ids]
+
+    def get_all_prime_source(self):
+        self.cursor.execute("select id from source where is_prime = 1")
         source_ids = self.cursor.fetchall()
         return [self.get_source(i['id']) for i in source_ids]
 

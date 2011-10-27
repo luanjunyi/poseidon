@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib, math
+import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib, math, Queue, threading
 from ConfigParser import RawConfigParser
 from datetime import datetime, timedelta, date
 from functools import partial
@@ -975,8 +975,6 @@ class WeiboDaemon:
                 _logger.debug('ignoring prime source')
                 return
 
-        #crawl_pool = threadpool.ThreadPool(maxThreads = 10)
-
         try:
             terminate = 3 if prime else 1
             recursive_crawl(source.base_url, source.encoding, self.selenium, self.agent,
@@ -1168,6 +1166,38 @@ class WeiboDaemon:
         except Exception, err:
             _logger.error('update statistic failed: %s, %s'
                           % (err, traceback.format_exc()))
+
+    def crawl_tweet_prime_daemon(self, shard_id, shard_count):
+        class CrawlerThread(threading.Thread):
+            def __init__(self, taras, tasks):
+                threading.Thread.__init__(self)
+                self.taras = taras
+                self.tasks = tasks
+                self.alive = datetime.now()
+
+            def run(self):
+                while True:
+                    task = self.tasks.get()
+                    _logger.debug("Got task, url:%s, ttl:%d" % (task['source'].base_url, task['ttl']))
+
+        # Get all prime source
+        sources = self.agent.get_all_prime_source()
+        tasks = Queue.Queue()
+        for source in sources:
+            tasks.put({'source': source, 'ttl': 2})
+
+        thread_num = 10
+        workers = []
+        for i in range(thread_num):
+            worker = CrawlerThread(None, tasks) 
+            worker.setDaemon(True)
+            worker.start()
+            workers.append(worker)
+
+        for worker in workers:
+            worker.join()
+        
+            
 
     # Post tweet, follow, comment
     def daemon(self, shard_id=0, shard_count=1):
@@ -1442,7 +1472,7 @@ if __name__ == "__main__":
     dbpass = 'admin123'
     shard_id = 0
     shard_count = 1
-    command = 'daemon'
+    command = 'unset'
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             usage_only = True
@@ -1490,11 +1520,9 @@ if __name__ == "__main__":
         signal.signal(signal.SIGINT, daemon.handle_int)
         daemon.crawl_victim_daemon(shard_id, shard_count)
     elif command == 'prime-crawl':
-        noselenium = False
         daemon = WeiboDaemon(dbname, dbuser, dbpass, noselenium = noselenium)
         signal.signal(signal.SIGINT, daemon.handle_int)
-        daemon.prime_crawl = True
-        daemon.crawl_tweet_daemon(shard_id, shard_count)
+        daemon.crawl_tweet_prime_daemon(shard_id, shard_count)
     elif command == 'index-tweet':
         import tindexer
         indexer = tindexer.TIndexer()

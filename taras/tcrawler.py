@@ -1,4 +1,4 @@
-import os, sys, re, random, cPickle, traceback, urllib, time, signal
+import os, sys, re, random, cPickle, traceback, urllib, time, signal, Queue, threading
 from datetime import datetime, timedelta
 from urlparse import urlparse
 from functools import partial
