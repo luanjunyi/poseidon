@@ -150,8 +150,9 @@ class SQLAgent:
         return self.cursor.fetchone()['count']
 
     def get_active_user_count(self):
-        today = date.today().strftime("%Y-%m-%d")
-        self.cursor.execute("select count(*) as count from user_statistic where collect_date = %s", today)
+        yesterday = date.today() - timedelta(1)
+        date_limit = yesterday.strftime("%Y-%m-%d")
+        self.cursor.execute("select count(*) as count from user_statistic where collect_date > %s", date_limit)
         return self.cursor.fetchone()['count']
 
     def get_all_active_user(self, shard_id = 0, shard_count = 1):
