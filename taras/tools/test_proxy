@@ -49,7 +49,7 @@ class ProxyManager:
                                                                  addr, port,
                                                                  proxy_user = user,
                                                                  proxy_pass = passwd),
-                                 timeout= 20)
+                                 timeout= 6)
 
             response, content =  http.request(url, 'GET')
             end = datetime.now()

@@ -15,29 +15,35 @@ conn = MySQLdb.connect(host = 'obama',
 cursor = conn.cursor(MySQLdb.cursors.DictCursor)
 cursor.execute('set names utf8')
 conn.commit()
-cursor.execute("select user, max(collect_date) as date from user_statistic group by user")
 
-daemon = taras.WeiboDaemon(noselenium=True)
+
+
+
+#daemon = taras.WeiboDaemon(noselenium=True)
 
 today = date.today()
-
+cursor.execute("select * from sina_user")
 for row in cursor.fetchall():
-    if row['date'] == today.__str__():
-        continue
+    email = row['email']
 
-    user = row['user']
-    parse = re.search(r'.+#(.+)#(.+)#http://weibo.com/([0-9]+)', user)
-    if parse == None:
-        raise Exception("")
-    email = parse.group(1)
-    passwd = parse.group(2)
-    uid = parse.group(3)
-    try:
-        api = daemon.get_api_on_the_fly(email, passwd)
-        _logger.debug("good: (%s, %s) %s" % (email, passwd, api.me().name))
-    except Exception, err:
-        _logger.debug("bad: (%s, %s, %s) %s" % (email, passwd, uid, err))
-daemon.shutdown()
+    cursor.execute("select user, max(collect_date) as date from user_statistic where user like '%%%s%%'" % email)
+    date = cursor.fetchone()
+
+    if date == None or date['date'] != today.__str__():
+        _logger.debug('dead:(%s, %s, %d)' % (row['email'], row['passwd'], row['enabled']))
+
+    # parse = re.search(r'.+#(.+)#(.+)#http://weibo.com/([0-9]+)', user)
+    # if parse == None:
+    #     raise Exception("")
+    # email = parse.group(1)
+    # passwd = parse.group(2)
+    # uid = parse.group(3)
+    # try:
+    #     api = daemon.get_api_on_the_fly(email, passwd)
+    #     _logger.debug("good: (%s, %s) %s" % (email, passwd, api.me().name))
+    # except Exception, err:
+    #    _logger.debug("bad: (%s, %s, %s) %s" % (email, passwd, uid, err))
+##daemon.shutdown()
 
     
 

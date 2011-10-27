@@ -1,5 +1,6 @@
-http://weibo.com/
-http://www.sina.com.cn/
-http://eladies.sina.com.cn/
-http://auto.sina.com.cn/
-http://t.cn/
+http://api.t.sina.com.cn
+http://api.t.sina.com.cn
+http://api.t.sina.com.cn
+http://api.t.sina.com.cn
+http://api.t.sina.com.cn
+
