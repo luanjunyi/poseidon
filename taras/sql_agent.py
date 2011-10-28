@@ -146,7 +146,7 @@ class SQLAgent:
         return users
 
     def get_all_user_count(self):
-        self.cursor.execute("select count(*) as count from sina_user")
+        self.cursor.execute("select count(*) as count from sina_user where enabled = 1")
         return self.cursor.fetchone()['count']
 
     def get_enabled_user_count(self):

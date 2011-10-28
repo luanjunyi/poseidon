@@ -246,7 +246,7 @@ class WeiboDaemon:
     def force_stop_follow_stubborn(self, email=None):
         if email == None:
             _logger.info('cleaning following for all user')
-            users = self.agent.get_all_active_user()
+            users = self.agent.get_all_user()
             for user in users:
                 try:
                     self._clean_stubborn(user, ruthless=True)
@@ -1051,7 +1051,7 @@ class WeiboDaemon:
 
     def crawl_victim(self, shard_id=0, shard_count=1):
         try:
-            users = self.agent.get_all_active_user(shard_id, shard_count)
+            users = self.agent.get_all_user(shard_id, shard_count)
             round_start_time = datetime.now()
             for user in users:
                 # Ignore if the user
@@ -1230,7 +1230,7 @@ class WeiboDaemon:
                     _logger.info('first round today, reset round_count')
                 else:
                     round_count += 1
-                users = self.agent.get_all_active_user(shard_id, shard_count)
+                users = self.agent.get_all_user(shard_id, shard_count)
                 user_num = len(users)
                 _logger.info('will process %d users, round: %d' % (user_num, round_count))
                 now = datetime.now()
