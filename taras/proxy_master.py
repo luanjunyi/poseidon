@@ -42,7 +42,7 @@ def check_proxies(agent):
     VALID_PROXY_FAIL_RATE = float(config['valid_proxy_fail_rate'])
 
     all_proxy = agent.get_all_proxy()
-    account_num = agent.get_active_user_count()
+    account_num = agent.get_enabled_user_count()
     slot_num = math.ceil(account_num / 50.0)
     slot_num = int(slot_num)
     _logger.info("%d account, %d proxy slots, fail rate limit: %.2f%%, try out: %d" % 
