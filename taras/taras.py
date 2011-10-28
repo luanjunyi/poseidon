@@ -1115,7 +1115,7 @@ class WeiboDaemon:
     def _choose_proxy(self, user, proxies):
         account_num = self.agent.get_active_user_count()
         slot_num = math.ceil(account_num / 50.0)
-        slot_id = math.ceil(user.shard_id / 50.0)
+        slot_id = user.shard_id / 50
         if slot_id >= slot_num:
             _logger.error("slot_id is larger than slot_num - 1, might be an error. "
                           "less_id: %d, account_num: %d, slot_num: %d" % 
