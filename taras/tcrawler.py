@@ -1,4 +1,5 @@
-import os, sys, re, random, cPickle, traceback, urllib, time, signal, Queue, threading
+import os, sys, re, random, cPickle, traceback, urllib, time, signal, multiprocessing
+from selenium import selenium
 from datetime import datetime, timedelta
 from urlparse import urlparse
 from functools import partial
@@ -77,7 +78,6 @@ def recursive_crawl(url, encoding, selenium, agent, domain, terminate):
         _logger.debug('ignore, recently crawled: %s' % str(last_crawl))
         return
 
-
     links = pbrowser.get_all_href(url, encoding)
     _logger.debug("processing %d links" % (len(links)))
     count = 0
@@ -125,6 +125,214 @@ def recursive_crawl(url, encoding, selenium, agent, domain, terminate):
     except Exception, err:
         _logger.error('failed to add crawl history to DB:%s' % err)
 
+class CrawlerProcess(multiprocessing.Process):
+
+    def __init__(self, sele, agent, tasks):
+        multiprocessing.Process.__init__(self)
+        self.agent = agent
+        self.sele = sele
+        self.tasks = tasks
+        self.heartbeat()
+
+    def heartbeat(self, pending_queue=False):
+        self.alive = datetime.now()
+        self.pending_queue = pending_queue
+
+    def process_hub(self, task):
+        url = task['url']
+        _logger.debug('processing hub page, url:%s' % url)
+        last_crawl = self.agent.get_crawl_history(url)
+        now = datetime.now()
+        if (now - last_crawl).days <= 3:
+            _logger.debug('ignore, recently crawled: %s' % str(last_crawl))
+            return
+
+        domain = task['domain']
+        encoding = task['encoding']
+        links = pbrowser.get_all_href(url, encoding)
+        _logger.debug("got %d links" % (len(links)))
+
+        for idx, link in enumerate(links):
+            if urlparse(link['href'].encode('utf-8')).netloc.find(domain) == -1:
+                _logger.debug('ignore (%s), different from domain (%s)' %
+                              (link['href'].encode('utf-8'), domain))
+                continue
+
+            # make tempoary source
+            cur_url = link['href'].encode('utf-8')
+
+            ttl = task['ttl'] - 1
+            if ttl > 1:
+                self.tasks.put({'url': cur_url,
+                                'encoding': encoding,
+                                'domain': domain,
+                                'ttl': ttl})
+            else:
+                self.tasks.put({'anchor': link,
+                                'encoding': encoding,
+                                'ttl': ttl})
+                
+    def process_terminal(self, task):
+        link = task['anchor']
+        url = link['href'].encode('utf-8')
+        _logger.debug('processing terminal link, url:%s' % url)
+
+        tweet = None
+        try:
+            tweet = try_crawl_href(link, task['encoding'], self.agent, self.sele)
+        except Exception, err:
+            _logger.error('crawl href failed: %s, %s' % (err, traceback.format_exc()))
+            return
+
+        if tweet != None:
+            try:
+                self.agent.add_crawled_tweet(url, tweet)
+                _logger.debug('new tweed added to db, href: %s' % url)
+            except Exception, err:
+                _logger.error('failed to add crawled tweet to DB: %s' % err)
 
 
+    def run(self):
+        while True:
+            task = self.tasks.get()
+            self.heartbeat()
+            _logger.debug("Got task:%s" % (task))
 
+            try:
+                if task['ttl'] > 1:
+                    self.process_hub(task)
+
+                elif task['ttl'] == 1:
+                    self.process_terminal(task)
+            except Exception, err:
+                _logger.error('unexpected exception:%s, %s' % (err, traceback.format_exc()))
+            self.heartbeat(pending_queue = True)
+
+class Aster:
+    def __init__(self, dbname, dbuser, dbpass, dbhost):
+        self.db_name = dbname
+        self.db_user = dbuser
+        self.db_pass = dbpass
+        self.db_host = dbhost
+
+    def handle_int(self, signum, frame):
+        if os.getpid() != self.root_pid:
+            sys.exit(0)
+        _logger.info('got signal(%d), will shutdown gracefully' % signum)
+        self.shutdown()
+        sys.exit(0)
+
+    def shutdown(self):
+        if hasattr(self, 'workers'):
+            for worker in self.workers:
+                self.kill_worker(worker)
+
+    def kill_worker(self, worker):
+        try:
+            worker.sele.stop()
+        except Exception, err:
+            _logger.error('failed to stop selenium from %s: %s' % (worker.name, err))
+        try:
+            worker.agent.stop()
+        except Exception, err:
+            _logger.error('failed to stop SQLAgent from %s: %s' % (worker.name, err))
+        worker.terminate()
+
+    def _prepare_agent(self):
+        return SQLAgent(self.db_name, self.db_user, self.db_pass, self.db_host)
+
+    def _prepare_selenium(self):
+        sele = selenium('localhost', 4444, 'firefox', 'http://baidu.com')
+        sele.start()
+        return sele
+
+    def crawl_tweet_prime_daemon(self, parallel):
+        # Set root process pid
+        self.root_pid = os.getpid()
+        self.agent = self._prepare_agent()
+        # Get all prime source
+        sources = self.agent.get_all_prime_source()
+        tasks = multiprocessing.Queue()
+        for source in sources:
+            tasks.put({'ttl': 3,
+                       'url': source.base_url,
+                       'domain': source.domain,
+                       'encoding': source.encoding})
+
+        process_num = parallel
+        _logger.info('will spawn %d processes' % process_num)
+        self.workers = []
+        for i in range(process_num):
+            worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
+            _logger.info('%s created' % worker.name)
+            worker.start()
+            self.workers.append(worker)
+
+        # Checking workers' life
+        while True:
+            time.sleep(10)
+            now = datetime.now()
+            for worker in self.workers:
+                duration = util.total_seconds(now - worker.alive)
+                _logger.debug('worker %s inactive for %d seconds, pending_queue:%d' 
+                              % (worker.name, duration, worker.pending_queue))
+                if  not worker.pending_queue and duration > 10 * 60:
+                    _logger.info('terminating process, last active: %s' % worker.alive)
+                    self.kill_worker(worker)
+                    worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
+                    self.workers.append(worker)
+                    worker.start()
+                    _logger.info('%s started' % worker.name)
+
+def usage():
+    print """
+             Usage: tcrawler.py -h(--mysql-host=) MYSQL-HOST -u(--user=) DB-USER -p(--passwd=) DB-PASSWORD -d(--database=) DB-NAME
+          """
+    sys.exit(2)
+
+if __name__ == "__main__":
+    from getopt import getopt
+    try:
+        opts, args = getopt(sys.argv[1:], 'h:u:p:d:s:a:c:m:', ['mysql-host=', 'user=', 'passwd=', 'database=', 'multi='])
+    except Exception, err:
+        print "getopt error:%s" % err
+        usage()
+
+    dbname = 'taras'
+    dbuser = 'taras'
+    dbpass = 'admin123'
+    dbhost = 'localhost'
+
+    parallel = 10
+
+    for opt, arg in opts:
+        if opt in ('-h', '--mysql-host'):
+            dbhost = arg
+        if opt in ('-u', '--user'):
+            dbuser = arg
+        if opt in ('-p', '--passwd'):
+            dbpass = arg
+        if opt in ('-d', '--database'):
+            dbname = arg
+        if opt in ('-m', '--multi'):
+            parallel = int(arg)
+
+
+    if dbuser == "":
+        print '-u(--user=) must be provided'
+        usage()
+    if dbname == "":
+        print '-d(--database=) must be provided'
+        usage()
+    if dbpass == "":
+        print '-p(--passwd=) must be provided'
+        usage()
+    if dbhost == "":
+        print '-h(--mysql-host=) must be provided'
+        usage()
+
+    crawler = Aster(dbname, dbuser, dbpass, dbhost)
+    signal.signal(signal.SIGINT, crawler.handle_int)
+    crawler.crawl_tweet_prime_daemon(parallel)
+    
+    

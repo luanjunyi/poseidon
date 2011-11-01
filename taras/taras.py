@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib, math, Queue, threading
+import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib, math, Queue, multiprocessing
 from ConfigParser import RawConfigParser
 from datetime import datetime, timedelta, date
 from functools import partial
@@ -14,7 +14,7 @@ from util.log import _logger
 from util import pbrowser
 from util import util
 from sql_agent import SQLAgent, Tweet
-from tcrawler import try_crawl_href, recursive_crawl
+from tcrawler import try_crawl_href, recursive_crawl, Aster
 from third_party.selenium import selenium
 from keyword_tree import KeywordElem
 
@@ -1167,37 +1167,6 @@ class WeiboDaemon:
             _logger.error('update statistic failed: %s, %s'
                           % (err, traceback.format_exc()))
 
-    def crawl_tweet_prime_daemon(self, shard_id, shard_count):
-        class CrawlerThread(threading.Thread):
-            def __init__(self, taras, tasks):
-                threading.Thread.__init__(self)
-                self.taras = taras
-                self.tasks = tasks
-                self.alive = datetime.now()
-
-            def run(self):
-                while True:
-                    task = self.tasks.get()
-                    _logger.debug("Got task, url:%s, ttl:%d" % (task['source'].base_url, task['ttl']))
-
-        # Get all prime source
-        sources = self.agent.get_all_prime_source()
-        tasks = Queue.Queue()
-        for source in sources:
-            tasks.put({'source': source, 'ttl': 2})
-
-        thread_num = 10
-        workers = []
-        for i in range(thread_num):
-            worker = CrawlerThread(None, tasks) 
-            worker.setDaemon(True)
-            worker.start()
-            workers.append(worker)
-
-        for worker in workers:
-            worker.join()
-        
-            
 
     # Post tweet, follow, comment
     def daemon(self, shard_id=0, shard_count=1):
@@ -1280,18 +1249,21 @@ class WeiboDaemon:
             self.shutdown()
 
     def shutdown(self):
-        if hasattr(self, 'selenium'):
+        if hasattr(self, 'selenium') and self.selenium != None:
             try:
                 _logger.info('stopping Selenium client')            
                 self.selenium.stop()
+                self.selenium = None
             except Exception, err:
                 _logger.error('stopping Selenium client failed: %s' % err)
 
-        try:
-            _logger.info('stopping MySQL client')
-            self.agent.stop()
-        except Exception, err:
-            _logger.error('stoping MySQL client failed: %s' % err)
+        if hasattr(self, 'agent') and self.agent != None:
+            try:
+                _logger.info('stopping MySQL client')
+                self.agent.stop()
+                self.agent = None
+            except Exception, err:
+                _logger.error('stoping MySQL client failed: %s' % err)
         _logger.info('clean up finished, bye-bye')
 
 
@@ -1519,10 +1491,6 @@ if __name__ == "__main__":
         daemon = WeiboDaemon(dbname, dbuser, dbpass, noselenium = noselenium)
         signal.signal(signal.SIGINT, daemon.handle_int)
         daemon.crawl_victim_daemon(shard_id, shard_count)
-    elif command == 'prime-crawl':
-        daemon = WeiboDaemon(dbname, dbuser, dbpass, noselenium = noselenium)
-        signal.signal(signal.SIGINT, daemon.handle_int)
-        daemon.crawl_tweet_prime_daemon(shard_id, shard_count)
     elif command == 'index-tweet':
         import tindexer
         indexer = tindexer.TIndexer()

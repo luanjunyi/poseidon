@@ -3,6 +3,9 @@ import time, re
 from datetime import datetime
 from log import _logger
 
+def total_seconds(td):
+    return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
+
 def load_class_by_name(class_path):
     package = '.'.join(class_path.split('.')[:-1])
     class_name = class_path.split('.')[-1]
