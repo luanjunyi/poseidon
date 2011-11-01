@@ -95,7 +95,6 @@ class TIndexer:
                 self.agent = SQLAgent(dbname, dbuser, dbpass, dbhost, sscursor=True)
                 _logger.info('SQLAgent initialized')
                 self.indexer_loop()
-
                 self.agent.stop()
             except KeyboardInterrupt, sigint:
                 _logger.info('got Keyboard interuption, will shutdown SQLAgent gracefully')

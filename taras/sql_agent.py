@@ -461,8 +461,6 @@ image_bin, image_ext, href_md5) values(%s, %s, %s, %s, %s, %s, %s)',
                              tweet.title, tweet.content, tweet.href,
                              tweet.image_bin, tweet.image_ext,
                              hashlib.md5(tweet.href).hexdigest()))
-        if self.cursor.rowcount != 1:
-            raise Exception('%d rows inserted' % self.cursor.rowcount)
         self.conn.commit()
 
     def fetch_tweet(self, source_id, item_id):

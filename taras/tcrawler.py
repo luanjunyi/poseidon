@@ -226,6 +226,7 @@ class Aster:
         if hasattr(self, 'workers'):
             for worker in self.workers:
                 self.kill_worker(worker)
+                self.workers.remove(worker)
 
     def kill_worker(self, worker):
         try:
@@ -281,6 +282,7 @@ class Aster:
                 if  not worker.pending_queue and duration > 10 * 60:
                     _logger.info('terminating process, last active: %s' % worker.alive)
                     self.kill_worker(worker)
+                    self.workers.remove(worker)
                     worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
                     self.workers.append(worker)
                     worker.start()
