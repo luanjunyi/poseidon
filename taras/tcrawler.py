@@ -140,7 +140,7 @@ class CrawlerProcess(multiprocessing.Process):
 
     def process_hub(self, task):
         url = task['url']
-        _logger.debug('processing hub page, url:%s' % url)
+        _logger.info('processing hub page, url:%s' % url)
         last_crawl = self.agent.get_crawl_history(url)
         now = datetime.now()
         if (now - last_crawl).days <= 3:
@@ -175,7 +175,7 @@ class CrawlerProcess(multiprocessing.Process):
     def process_terminal(self, task):
         link = task['anchor']
         url = link['href'].encode('utf-8')
-        _logger.debug('processing terminal link, url:%s' % url)
+        _logger.info('processing terminal link, url:%s' % url)
 
         tweet = None
         try:
@@ -242,8 +242,10 @@ class Aster:
         return SQLAgent(self.db_name, self.db_user, self.db_pass, self.db_host)
 
     def _prepare_selenium(self):
+        sele_timeout_minute = 2
         sele = selenium('localhost', 4444, 'firefox', 'http://baidu.com')
         sele.start()
+        sele.set_timeout(sele_timeout_minute * 60 * 1000)
         return sele
 
     def crawl_tweet_prime_daemon(self, parallel):
