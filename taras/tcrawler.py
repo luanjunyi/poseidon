@@ -177,7 +177,6 @@ class CrawlerProcess(multiprocessing.Process):
             agent.update_crawl_history(url)
         except Exception, err:
             _logger.error('failed to add crawl history to DB:%s' % err)
-
                 
     def process_terminal(self, task):
         link = task['anchor']
@@ -296,7 +295,7 @@ class Aster:
                     worker.start()
                     _logger.info('%s started' % worker.name)
 
-            time.sleep(10)
+            time.sleep(2 * 60)
 
 def usage():
     print """
