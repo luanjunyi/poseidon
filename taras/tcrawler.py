@@ -147,10 +147,6 @@ class CrawlerProcess(multiprocessing.Process):
             _logger.debug('ignore, recently crawled: %s' % str(last_crawl))
             return
 
-        try:
-            agent.update_crawl_history(url)
-        except Exception, err:
-            _logger.error('failed to add crawl history to DB:%s' % err)
 
         domain = task['domain']
         encoding = task['encoding']
@@ -176,6 +172,12 @@ class CrawlerProcess(multiprocessing.Process):
                 self.tasks.put({'anchor': link,
                                 'encoding': encoding,
                                 'ttl': ttl})
+
+        try:
+            agent.update_crawl_history(url)
+        except Exception, err:
+            _logger.error('failed to add crawl history to DB:%s' % err)
+
                 
     def process_terminal(self, task):
         link = task['anchor']
