@@ -136,7 +136,7 @@ class CrawlerProcess(multiprocessing.Process):
 
     def heartbeat(self, pending_queue=False):
         self.alive = datetime.now()
-        self.pending_queue = pending_queue
+        self.pending_queue = [pending_queue]
 
     def process_hub(self, task):
         url = task['url']
@@ -146,6 +146,11 @@ class CrawlerProcess(multiprocessing.Process):
         if (now - last_crawl).days <= 3:
             _logger.debug('ignore, recently crawled: %s' % str(last_crawl))
             return
+
+        try:
+            agent.update_crawl_history(url)
+        except Exception, err:
+            _logger.error('failed to add crawl history to DB:%s' % err)
 
         domain = task['domain']
         encoding = task['encoding']
@@ -253,14 +258,7 @@ class Aster:
         # Set root process pid
         self.root_pid = os.getpid()
         self.agent = self._prepare_agent()
-        # Get all prime source
-        sources = self.agent.get_all_prime_source()
         tasks = multiprocessing.Queue()
-        for source in sources:
-            tasks.put({'ttl': 3,
-                       'url': source.base_url,
-                       'domain': source.domain,
-                       'encoding': source.encoding})
 
         process_num = parallel
         _logger.info('will spawn %d processes' % process_num)
@@ -273,20 +271,30 @@ class Aster:
 
         # Checking workers' life
         while True:
-            time.sleep(10)
+            # Get all prime source
+            sources = self.agent.get_all_prime_source()
+
+            for source in sources:
+                tasks.put({'ttl': 3,
+                           'url': source.base_url,
+                           'domain': source.domain,
+                           'encoding': source.encoding})
+
             now = datetime.now()
             for worker in self.workers:
                 duration = util.total_seconds(now - worker.alive)
                 _logger.debug('worker %s inactive for %d seconds, pending_queue:%d' 
-                              % (worker.name, duration, worker.pending_queue))
-                if  not worker.pending_queue and duration > 10 * 60:
-                    _logger.info('terminating process, last active: %s' % worker.alive)
+                              % (worker.name, duration, worker.pending_queue[0]))
+                if not worker.pending_queue[0] and duration > 10 * 60:
+                    _logger.info('terminating process(%s), last active: %s' % (worker.name, worker.alive))
                     self.kill_worker(worker)
                     self.workers.remove(worker)
                     worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
                     self.workers.append(worker)
                     worker.start()
                     _logger.info('%s started' % worker.name)
+
+            time.sleep(10)
 
 def usage():
     print """
