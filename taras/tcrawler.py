@@ -266,6 +266,7 @@ class Aster:
     def crawl_tweet_prime_daemon(self, parallel):
         # Set root process pid
         self.root_pid = os.getpid()
+        print "root process pid: %d" % self.root_pid
         self.agent = self._prepare_agent()
         tasks = multiprocessing.Queue()
 
@@ -289,7 +290,7 @@ class Aster:
                            'domain': source.domain,
                            'encoding': source.encoding})
 
-            logger.info("%d task in queue" % tasks.qsize())
+            _logger.info("%d task in queue" % tasks.qsize())
             now = datetime.now()
             for worker in self.workers:
                 duration = util.total_seconds(now - worker.get_heartbeat())
