@@ -206,8 +206,6 @@ class CrawlerProcess(multiprocessing.Process):
 
     def run(self):
         while True:
-            time.sleep(10)
-            continue
             task = self.tasks.get()
             self.heartbeat()
             _logger.debug("Got task:%s" % (task))
@@ -307,8 +305,8 @@ class Aster:
                     worker.start()
                     _logger.info('%s(%d) started' % (worker.name, worker.pid))
 
-            #time.sleep(2 * 60)
-            time.sleep(10)
+            time.sleep(2 * 60)
+            #time.sleep(10)
 
 def usage():
     print """
