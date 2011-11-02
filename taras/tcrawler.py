@@ -249,7 +249,7 @@ class Aster:
             worker.agent.stop()
         except Exception, err:
             _logger.error('failed to stop SQLAgent from %d: %s' % (worker.pid, err))
-        worker.terminate()
+        worker.join()
 
     def _prepare_agent(self):
         return SQLAgent(self.db_name, self.db_user, self.db_pass, self.db_host)
