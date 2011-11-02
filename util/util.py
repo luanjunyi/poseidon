@@ -1,5 +1,5 @@
 from difflib import SequenceMatcher
-import time, re
+import time, re, os
 from datetime import datetime
 from log import _logger
 
@@ -19,8 +19,9 @@ def dump2file(content, outfile="dump.html", encoding='utf-8'):
         output.write(content)
 
 def dump2file_with_date(content, ext="txt", encoding='utf-8'):
-    path = "%d.dump.%s" % (int(time.mktime(datetime.now().timetuple())),
-                           ext)
+    path = "%d.dump.%d.%s" % (int(time.mktime(datetime.now().timetuple())),
+                              os.getpid(),
+                              ext)
     dump2file(content, path, encoding)
     return path
 
