@@ -132,11 +132,19 @@ class CrawlerProcess(multiprocessing.Process):
         self.agent = agent
         self.sele = sele
         self.tasks = tasks
+        self.alive = multiprocessing.Value('I', 0)
+        self.pending_queue = multiprocessing.Value('B', 0)
         self.heartbeat()
 
     def heartbeat(self, pending_queue=False):
-        self.alive = datetime.now()
-        self.pending_queue = [pending_queue]
+        self.alive.value = int(time.mktime(datetime.now().timetuple()))
+        self.pending_queue.value = 1 if pending_queue else 0
+
+    def is_pending_queue(self):
+        return self.pending_queue.value == 1
+
+    def get_heartbeat(self):
+        return datetime.fromtimestamp(self.alive.value)
 
     def process_hub(self, task):
         url = task['url']
@@ -283,11 +291,11 @@ class Aster:
 
             now = datetime.now()
             for worker in self.workers:
-                duration = util.total_seconds(now - worker.alive)
+                duration = util.total_seconds(now - worker.get_heartbeat())
                 _logger.debug('worker %s inactive for %d seconds, pending_queue:%d' 
-                              % (worker.name, duration, worker.pending_queue[0]))
-                if not worker.pending_queue[0] and duration > 10 * 60:
-                    _logger.info('terminating process(%s), last active: %s' % (worker.name, worker.alive))
+                              % (worker.name, duration, worker.is_pending_queue()))
+                if not worker.is_pending_queue() and duration > 10 * 60:
+                    _logger.info('terminating process(%s), last active: %s' % (worker.name, worker.get_heartbeat()))
                     self.kill_worker(worker)
                     self.workers.remove(worker)
                     worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
