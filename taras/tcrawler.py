@@ -133,7 +133,7 @@ class CrawlerProcess(multiprocessing.Process):
         self.sele = sele
         self.tasks = tasks
         self.alive = multiprocessing.Value('I', 0)
-        self.pending_queue = multiprocessing.Value('B', 0)
+        self.pending_queue = multiprocessing.Value('B', 1)
         self.heartbeat()
 
     def heartbeat(self, pending_queue=False):
