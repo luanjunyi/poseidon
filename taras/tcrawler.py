@@ -182,7 +182,7 @@ class CrawlerProcess(multiprocessing.Process):
                                 'ttl': ttl})
 
         try:
-            agent.update_crawl_history(url)
+            self.agent.update_crawl_history(url)
         except Exception, err:
             _logger.error('failed to add crawl history to DB:%s' % err)
                 
@@ -289,6 +289,7 @@ class Aster:
                            'domain': source.domain,
                            'encoding': source.encoding})
 
+            logger.info("%d task in queue" % tasks.qsize())
             now = datetime.now()
             for worker in self.workers:
                 duration = util.total_seconds(now - worker.get_heartbeat())
