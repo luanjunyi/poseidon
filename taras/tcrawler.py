@@ -126,7 +126,6 @@ def recursive_crawl(url, encoding, selenium, agent, domain, terminate):
         _logger.error('failed to add crawl history to DB:%s' % err)
 
 class CrawlerProcess(multiprocessing.Process):
-
     def __init__(self, sele, agent, tasks):
         multiprocessing.Process.__init__(self)
         self.agent = agent
@@ -134,7 +133,7 @@ class CrawlerProcess(multiprocessing.Process):
         self.tasks = tasks
         self.alive = multiprocessing.Value('I', 0)
         self.pending_queue = multiprocessing.Value('B', 1)
-        self.heartbeat()
+        self.heartbeat(pending_queue=True)
 
     def heartbeat(self, pending_queue=False):
         self.alive.value = int(time.mktime(datetime.now().timetuple()))
@@ -154,7 +153,6 @@ class CrawlerProcess(multiprocessing.Process):
         if (now - last_crawl).days <= 3:
             _logger.debug('ignore, recently crawled: %s' % str(last_crawl))
             return
-
 
         domain = task['domain']
         encoding = task['encoding']
@@ -208,6 +206,8 @@ class CrawlerProcess(multiprocessing.Process):
 
     def run(self):
         while True:
+            time.sleep(10)
+            continue
             task = self.tasks.get()
             self.heartbeat()
             _logger.debug("Got task:%s" % (task))
@@ -246,11 +246,11 @@ class Aster:
         try:
             worker.sele.stop()
         except Exception, err:
-            _logger.error('failed to stop selenium from %s: %s' % (worker.name, err))
+            _logger.error('failed to stop selenium from %d: %s' % (worker.pid, err))
         try:
             worker.agent.stop()
         except Exception, err:
-            _logger.error('failed to stop SQLAgent from %s: %s' % (worker.name, err))
+            _logger.error('failed to stop SQLAgent from %d: %s' % (worker.pid, err))
         worker.terminate()
 
     def _prepare_agent(self):
@@ -270,42 +270,45 @@ class Aster:
         self.agent = self._prepare_agent()
         tasks = multiprocessing.Queue()
 
+        # Get all prime source
+        sources = self.agent.get_all_prime_source()
+
+        for source in sources:
+            tasks.put({'ttl': 3,
+                       'url': source.base_url,
+                       'domain': source.domain,
+                       'encoding': source.encoding})
+
+
         process_num = parallel
         _logger.info('will spawn %d processes' % process_num)
         self.workers = []
         for i in range(process_num):
             worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
-            _logger.info('%s created' % worker.name)
             worker.start()
+            _logger.info('%s:%d created' % (worker.name, worker.pid))
             self.workers.append(worker)
 
         # Checking workers' life
         while True:
-            # Get all prime source
-            sources = self.agent.get_all_prime_source()
-
-            for source in sources:
-                tasks.put({'ttl': 3,
-                           'url': source.base_url,
-                           'domain': source.domain,
-                           'encoding': source.encoding})
 
             _logger.info("%d task in queue" % tasks.qsize())
             now = datetime.now()
             for worker in self.workers:
                 duration = util.total_seconds(now - worker.get_heartbeat())
-                _logger.debug('worker %s inactive for %d seconds, pending_queue:%d' 
-                              % (worker.name, duration, worker.is_pending_queue()))
+                _logger.debug('worker %d inactive for %d seconds, pending_queue:%d' 
+                              % (worker.pid, duration, worker.is_pending_queue()))
                 if not worker.is_pending_queue() and duration > 10 * 60:
-                    _logger.info('terminating process(%s), last active: %s' % (worker.name, worker.get_heartbeat()))
+                    _logger.info('terminating process(%d), last active: %s' % (worker.pid, worker.get_heartbeat()))
                     self.kill_worker(worker)
                     self.workers.remove(worker)
                     worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
                     self.workers.append(worker)
                     worker.start()
-                    _logger.info('%s started' % worker.name)
+                    _logger.info('%s(%d) started' % (worker.name, worker.pid))
 
-            time.sleep(2 * 60)
+            #time.sleep(2 * 60)
+            time.sleep(10)
 
 def usage():
     print """
