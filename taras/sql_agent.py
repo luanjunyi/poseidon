@@ -403,6 +403,16 @@ class SQLAgent:
             (stat['user'], stat['date'], stat['follow_count'],
              stat['followed_count'], stat['tweet_count'], stat['mutual_follow_count']))
 
+    def remove_statistic(self, email):
+        email = email.strip()
+        if email == '':
+            _logger.error('email is empty')
+        today = date.today().strftime("%Y-%m-%d")
+        self.cursor.execute(
+            "delete from user_statistic where user like '%%%s%%' and collect_date = '%s'"
+            % (email, today))
+        self.conn.commit()
+
     def get_last_action_time(self, user):
         self.cursor.execute("select collect_date from user_statistic where user like '%%%s%%' order by collect_date desc limit 1"
                             % user.uname)
