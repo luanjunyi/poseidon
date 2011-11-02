@@ -125,11 +125,11 @@ def extract_main_body(url, selenium, encoding):
         return ''
 
     # use meta description, if any
-    soup = BSoup(html, fromEncoding='utf-8')
-    desc = soup.find('meta', attrs={'name': 'description'})
-    if desc != None and hasattr(desc, 'content') and util.chinese_charactor_count(desc['content'].strip()) > 35:
-        _logger.debug('use meta description as main body')
-        return html_unescape(desc['content'].strip())
+    # soup = BSoup(html, fromEncoding='utf-8')
+    # desc = soup.find('meta', attrs={'name': 'description'})
+    # if desc != None and hasattr(desc, 'content') and util.chinese_charactor_count(desc['content'].strip()) > 35:
+    #     _logger.debug('use meta description as main body')
+    #     return html_unescape(desc['content'].strip())
 
     contents = extract_content(html, selenium)
     limit = 70

@@ -1131,6 +1131,12 @@ class WeiboDaemon:
             raise Exception("No proxy found in slot %d" % slot_id)
         return proxy
 
+    def install_proxy(self, proxy):
+        os.environ['taras_proxy_addr'] = proxy['addr'].strip()
+        os.environ['taras_proxy_port'] = str(proxy['port']).strip()
+        os.environ['taras_proxy_user'] = proxy['user_name'].strip()
+        os.environ['taras_proxy_passwd'] = proxy['password'].strip()
+
     def assign_user(self, user):
         # choose proxy
         all_proxy = self.agent.get_all_proxy()
@@ -1142,10 +1148,7 @@ class WeiboDaemon:
                 self.shard_count = 1
 
             proxy = self._choose_proxy(user, all_proxy)
-            os.environ['taras_proxy_addr'] = proxy['addr'].strip()
-            os.environ['taras_proxy_port'] = str(proxy['port']).strip()
-            os.environ['taras_proxy_user'] = proxy['user_name'].strip()
-            os.environ['taras_proxy_passwd'] = proxy['password'].strip()
+            self.install_proxy(proxy)
             _logger.debug('using proxy: %s' % os.environ['taras_proxy_addr'])
             self.agent.update_proxy_log(os.environ['taras_proxy_addr'],
                                         log_type="use")

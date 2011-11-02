@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Paracode root
 
-from sql_agent import Tweet, SQLAgent
+from sql_agent import SQLAgent
 from util.log import _logger
 
 PROXY_TRYOUT_COUNT = 100
@@ -66,7 +66,6 @@ if __name__ == "__main__":
         opts, args = getopt(sys.argv[1:], 'h:u:p:d:', ['host=', 'user=', 'passwd=', 'database='])
     except Exception, err:
         print "getopt error:%s" % err
-        usage()
 
     dbhost = 'localhost'
     dbname = 'taras'

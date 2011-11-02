@@ -420,6 +420,15 @@ class SQLAgent:
             return None
         return datetime.strptime(self.cursor.fetchone()['collect_date'], '%Y-%m-%d')
 
+    def get_current_follow_count(self, user):
+        today = date.today().strftime("%Y-%m-%d")
+        self.cursor.execute("select follow_count from user_statistic where user like '%%%s%%' and collect_date = '%s'"
+                            % (user.uname, today))
+        if self.cursor.rowcount != 1:
+            return -1
+        return self.cursor.fetchone()['follow_count']
+        
+
     
     def get_yesterday_follow_count(self, user):
         # return the number of newly followed victims of today
