@@ -11,10 +11,10 @@ from util import pbrowser, util
 from sql_agent import Tweet, SQLAgent
 
 
-def crawl_href(anchor, encoding, selenium):
+def crawl_href(anchor_url, anchor_text, encoding, selenium):
     tweet = Tweet()
-    tweet.href = anchor['href'].strip().encode('utf-8')
-    tweet.title = anchor.text.strip().encode('utf-8')
+    tweet.href = anchor_url
+    tweet.title = anchor_text
 
     # get content
     _logger.debug('extracting content from (%s)' % tweet.href)
@@ -45,37 +45,28 @@ def crawl_href(anchor, encoding, selenium):
         tweet.image_ext = ''
     return tweet
 
-def try_crawl_href(anchor, encoding, agent, selenium):
-    _logger.debug('crawling anchor (%s), URL: %s' % (anchor.text.encode('utf-8'),
-                                                     anchor['href'].encode('utf-8')))
+def try_crawl_href(anchor_url, anchor_text, encoding, agent, selenium):
+    _logger.debug('crawling anchor (%s), URL: %s' % (anchor_text, anchor_url))
     # filters
     # ignore bad-looking anchors
-    if util.chinese_charactor_count(anchor.text.strip()) < 10:
+    if util.chinese_charactor_count(anchor_text.decode('utf-8')) < 10:
         _logger.debug('too few chinese chars in anchor text, ignoring')
         return None
 
     # ignore same href crawled recently
-    now = datetime.now()
-    last_crawled_at = agent.get_last_crawl_time(anchor['href'].encode('utf-8'))
-    if (now - last_crawled_at).days <= 30:
-        _logger.debug('ignore %s, same href was crawled %d days ago' % (anchor['href'], (now - last_crawled_at).days))
+    if crawled_as_terminal(agent, anchor_url, anchor_text, 30):
+        _logger.debug('ignore %s, same href was crawled %d days ago' % (anchor_url,
+                                                                        (now - last_crawled_at).days))
         return None
 
-    # ignore same title crawled recently
-    last_crawled_at = agent.get_last_crawl_time_by_title(anchor.text.encode('utf-8'))
-    if (now - last_crawled_at).days <= 30:
-        _logger.debug('ignore %s, same title was crawled %d days ago' % (anchor['href'], (now - last_crawled_at).days))
-        return None
-    
-    tweet = crawl_href(anchor, encoding, selenium)
-    _logger.info('crawl_href finished, anchor-text:(%s)' % anchor.text.encode('utf-8'))
+    tweet = crawl_href(anchor_url, anchor_text, encoding, selenium)
+    _logger.info('crawl_href finished, anchor-text:(%s)' % anchor_text)
     return tweet
 
 def recursive_crawl(url, encoding, selenium, agent, domain, terminate):
-    last_crawl = agent.get_crawl_history(url)
-    now = datetime.now()
-    if (now - last_crawl).days <= 3:
-        _logger.debug('ignore, recently crawled: %s' % str(last_crawl))
+    if crawled_as_hub(agent, url, day_limit=3):
+        _logger.debug('ignore, recently(3 days) crawled as hub: %s'
+                      % (url))
         return
 
     links = pbrowser.get_all_href(url, encoding)
@@ -85,12 +76,15 @@ def recursive_crawl(url, encoding, selenium, agent, domain, terminate):
         # ignore href to different domain; accept all href if 'domain' is empty string
         if urlparse(link['href'].encode('utf-8')).netloc.find(domain) == -1:
             _logger.debug('ignore (%s), different from domain (%s)' %
-                          (link['href'].encode('utf-8'), domain))
+                          (link['href'].text.encode('utf-8'), domain))
             continue
 
         tweet = None
         try:
-            tweet = try_crawl_href(link, encoding, agent, selenium)
+            #tweet = try_crawl_href(link, encoding, agent, selenium)
+            tweet = try_crawl_href(link['href'].encode('utf-8').lower(),
+                                   link.text.encode('utf-8').strip(),
+                                   encoding, agent, selenium)
         except Exception, err:
             _logger.error('crawl href failed: %s, %s' % (err, traceback.format_exc()))
             continue
@@ -125,28 +119,50 @@ def recursive_crawl(url, encoding, selenium, agent, domain, terminate):
     except Exception, err:
         _logger.error('failed to add crawl history to DB:%s' % err)
 
+def crawled_as_hub(agent, url, day_limit=3):
+    now = datetime.now()
+    last_crawl = agent.get_crawl_history(url)
+    return (now - last_crawl).days <= day_limit
+
+def crawled_as_terminal(agent, url, anchor, day_limit=30):
+    now = datetime.now()
+    last_crawled_at = agent.get_last_crawl_time(url)
+    if (now - last_crawled_at).days <= day_limit:
+        return True
+
+    last_crawled_at = agent.get_last_crawl_time_by_title(anchor)
+    return (now - last_crawled_at).days <= day_limit
+
+
 class CrawlerProcess(multiprocessing.Process):
-    def __init__(self, sele, agent, tasks):
+    def __init__(self, sele, agent, shard_id, shard_count):
         multiprocessing.Process.__init__(self)
         self.agent = agent
         self.sele = sele
-        self.tasks = tasks
         self.alive = multiprocessing.Value('I', 0)
-        self.pending_queue = multiprocessing.Value('B', 1)
-        self.heartbeat(pending_queue=True)
+        self.pending_input = multiprocessing.Value('B', 1)
+        self.shard_id = shard_id
+        self.shard_count = shard_count
 
-    def heartbeat(self, pending_queue=False):
+        self.heartbeat(pending_input=True)
+
+    def heartbeat(self, pending_input=False):
         self.alive.value = int(time.mktime(datetime.now().timetuple()))
-        self.pending_queue.value = 1 if pending_queue else 0
+        self.pending_input.value = 1 if pending_input else 0
 
-    def is_pending_queue(self):
-        return self.pending_queue.value == 1
+    def is_pending_input(self):
+        return self.pending_input.value == 1
 
     def get_heartbeat(self):
         return datetime.fromtimestamp(self.alive.value)
 
+
+    def in_task_queue(self, url, anchor):
+        return self.agent.url_in_crawler_task(url) or \
+            self.agent.anchor_in_crawler_task(anchor)
+
     def process_hub(self, task):
-        url = task['url']
+        url = task['anchor_url']
         _logger.info('processing hub page, url:%s' % url)
         last_crawl = self.agent.get_crawl_history(url)
         now = datetime.now()
@@ -166,18 +182,35 @@ class CrawlerProcess(multiprocessing.Process):
                 continue
 
             # make tempoary source
-            cur_url = link['href'].encode('utf-8')
+            cur_url = link['href'].encode('utf-8').lower()
+            cur_text = link.text.encode('utf-8').strip()
+
+            if crawled_as_hub(self.agent, cur_url, day_limit=3):
+                _logger.debug('ignore, recently(3 days) crawled as hub: %s'
+                              % (cur_url))
+                continue
+
+            if crawled_as_terminal(self.agent, cur_url, cur_text, day_limit=30):
+                _logger.debug('ignore, recently(3 days) crawled as terminal: %s'
+                              % (cur_url))
+                continue
+
+            if self.in_task_queue(cur_url, cur_text):
+                _logger.debug('ignore, already added to task queue: %s'
+                              % (cur_url))
+                continue
 
             ttl = task['ttl'] - 1
-            if ttl > 1:
-                self.tasks.put({'url': cur_url,
-                                'encoding': encoding,
-                                'domain': domain,
-                                'ttl': ttl})
-            else:
-                self.tasks.put({'anchor': link,
-                                'encoding': encoding,
-                                'ttl': ttl})
+            try:
+                self.agent.add_crawler_task(anchor_url = cur_url,
+                                            anchor_text = cur_text,
+                                            encoding = encoding,
+                                            domain = domain,
+                                            ttl = ttl)
+                _logger.debug('%s added to task in DB' % cur_url)
+            except Exception, err:
+                _logger.error('failed to add crawler task, url:(%s), %s' %
+                              (cur_url, err))
 
         try:
             self.agent.update_crawl_history(url)
@@ -185,30 +218,41 @@ class CrawlerProcess(multiprocessing.Process):
             _logger.error('failed to add crawl history to DB:%s' % err)
                 
     def process_terminal(self, task):
-        link = task['anchor']
-        url = link['href'].encode('utf-8')
-        _logger.info('processing terminal link, url:%s' % url)
+        anchor_text = task['anchor_text']
+        anchor_url = task['anchor_url']
+        _logger.info('processing terminal link, url:%s' % anchor_url)
 
         tweet = None
         try:
-            tweet = try_crawl_href(link, task['encoding'], self.agent, self.sele)
+            tweet = try_crawl_href(anchor_url, anchor_text, task['encoding'], self.agent, self.sele)
         except Exception, err:
             _logger.error('crawl href failed: %s, %s' % (err, traceback.format_exc()))
-            return
 
         if tweet != None:
             try:
-                self.agent.add_crawled_tweet(url, tweet)
-                _logger.debug('new tweed added to db, href: %s' % url)
+                self.agent.add_crawled_tweet(anchor_url, tweet)
+                _logger.debug('new tweed added to db, href: %s' % anchor_url)
             except Exception, err:
                 _logger.error('failed to add crawled tweet to DB: %s' % err)
 
 
     def run(self):
         while True:
-            task = self.tasks.get()
-            self.heartbeat()
-            _logger.debug("Got task:%s" % (task))
+            self.heartbeat(pending_input=True)
+            self.agent.restart()
+            tasks = self.agent.get_all_crawler_task()
+            my_task = None
+            for task in tasks:
+                if task['id'] % self.shard_count == self.shard_id:
+                    my_task = task
+                    break
+            if not my_task:
+                _logger.debug('no task for process shard %d' % self.shard_id)
+                time.sleep(10)
+                continue
+
+            self.heartbeat(pending_input=False)
+            _logger.debug("Got task:%s" % (my_task))
 
             try:
                 if task['ttl'] > 1:
@@ -217,8 +261,15 @@ class CrawlerProcess(multiprocessing.Process):
                 elif task['ttl'] == 1:
                     self.process_terminal(task)
             except Exception, err:
-                _logger.error('unexpected exception:%s, %s' % (err, traceback.format_exc()))
-            self.heartbeat(pending_queue = True)
+                _logger.error('unexpected exception with url(%s):%s, %s' % (task['anchor_url'], err, traceback.format_exc()))
+            finally:
+                try:
+                    self.agent.remove_crawler_task(my_task['id'])
+                    _logger.debug('task for (%s) removed from DB' % task['anchor_url'])
+                except Exception, err:
+                    _logger.error('failed to remove crawler task, url:%s' % task['anchor_url'])
+
+
 
 class Aster:
     def __init__(self, dbname, dbuser, dbpass, dbhost):
@@ -229,16 +280,23 @@ class Aster:
 
     def handle_int(self, signum, frame):
         if os.getpid() != self.root_pid:
-            sys.exit(0)
+            return
         _logger.info('got signal(%d), will shutdown gracefully' % signum)
         self.shutdown()
+        _logger.info('all process killed, will call exit(0)')
         sys.exit(0)
 
     def shutdown(self):
+        self.agent.stop()
         if hasattr(self, 'workers'):
             for worker in self.workers:
-                self.kill_worker(worker)
-                self.workers.remove(worker)
+                pid = worker.pid
+                try:
+                    self.kill_worker(worker)
+                    _logger.info('child process %d killed' % pid)
+                except Exception, err:
+                    _logger.error('failed to kill child pid:%d, %s, it will become orphan' % (pid, err))
+        self.workers = []
 
     def kill_worker(self, worker):
         try:
@@ -266,47 +324,57 @@ class Aster:
         self.root_pid = os.getpid()
         print "root process pid: %d" % self.root_pid
         self.agent = self._prepare_agent()
-        tasks = multiprocessing.Queue()
 
         # Get all prime source
         sources = self.agent.get_all_prime_source()
 
         for source in sources:
-            tasks.put({'ttl': 3,
-                       'url': source.base_url,
-                       'domain': source.domain,
-                       'encoding': source.encoding})
-
+            try:
+                self.agent.add_crawler_task(anchor_url=source.base_url,
+                                            anchor_text='',
+                                            encoding=source.encoding,
+                                            domain=source.domain,
+                                            ttl=3)
+            except Exception, err:
+                _logger.error("failed to add crawler task, url:(%s), %s"
+                              % (source.base_url, err))
 
         process_num = parallel
         _logger.info('will spawn %d processes' % process_num)
         self.workers = []
         for i in range(process_num):
-            worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
+            worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), i, parallel)
             worker.start()
             _logger.info('%s:%d created' % (worker.name, worker.pid))
             self.workers.append(worker)
 
         # Checking workers' life
         while True:
+            self.agent.restart()
+            _logger.info("%d task in DB" % self.agent.crawler_task_count())
 
-            _logger.info("%d task in queue" % tasks.qsize())
+            temp_list = []
             now = datetime.now()
             for worker in self.workers:
                 duration = util.total_seconds(now - worker.get_heartbeat())
-                _logger.debug('worker %d inactive for %d seconds, pending_queue:%d' 
-                              % (worker.pid, duration, worker.is_pending_queue()))
-                if not worker.is_pending_queue() and duration > 10 * 60:
-                    _logger.info('terminating process(%d), last active: %s' % (worker.pid, worker.get_heartbeat()))
+                _logger.debug('worker %d inactive for %d seconds, pending_input:%d' 
+                              % (worker.pid, duration, worker.is_pending_input()))
+
+            
+                if not worker.is_pending_input() and duration > 10 * 60:
+                    _logger.info('terminating process-%d(%d), last active: %s' % (worker.shard_id, worker.pid, worker.get_heartbeat()))
+                    shard_id = worker.shard_id
                     self.kill_worker(worker)
-                    self.workers.remove(worker)
-                    worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), tasks)
-                    self.workers.append(worker)
+                    worker = CrawlerProcess(self._prepare_selenium(), self._prepare_agent(), shard_id, parallel)
                     worker.start()
                     _logger.info('%s(%d) started' % (worker.name, worker.pid))
 
-            time.sleep(2 * 60)
-            #time.sleep(10)
+                temp_list.append(worker)
+            self.workers = temp_list
+
+
+            #time.sleep(2 * 60)
+            time.sleep(10)
 
 def usage():
     print """

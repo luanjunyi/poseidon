@@ -106,14 +106,18 @@ class SQLAgent:
         self.db_name = db_name
         self.db_user = db_user
         self.db_pass = db_pass
+        self.db_host = host
+        self.use_sscursor = sscursor
+        self.start()
 
-        _logger.info('connecting DB... host:%s %s@%s:%s' % (host, db_user, db_name, db_pass))
-        self.conn = MySQLdb.connect(host = host,
+    def start(self):
+        _logger.info('connecting DB... host:%s %s@%s:%s' % (self.db_host, self.db_user, self.db_name, self.db_pass))
+        self.conn = MySQLdb.connect(host = self.db_host,
                                     user = self.db_user,
                                     passwd = self.db_pass,
                                     db = self.db_name,
                                     )
-        if sscursor: # store result in server
+        if self.use_sscursor: # store result in server
             self.cursor = self.conn.cursor(MySQLdb.cursors.SSDictCursor)
         else:
             self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
@@ -124,6 +128,11 @@ class SQLAgent:
     def stop(self):
         self.cursor.close()
         self.conn.close()
+
+    def restart(self):
+        self.stop()
+        self.start()
+        
 
     def update_user_keywords(self, user):
         self.cursor.execute('delete from user_keyword_index where email = %s', user.uname)
@@ -745,6 +754,36 @@ email = %s', (user.uname))
     def update_proxy_slot(self, slot, proxy):
         self.cursor.execute("update proxy set slot_id = %s where id = %s", (slot, proxy['id']))
         self.conn.commit()
+
+    # Aster's tasks
+    def add_crawler_task(self, anchor_url, anchor_text, encoding, domain, ttl):
+        self.cursor.execute("insert into crawler_task (anchor_url, anchor_text, encoding, domain, ttl, url_md5) \
+values(%s, %s, %s, %s, %s, %s)",
+                            (anchor_url, anchor_text, encoding, domain, ttl, hashlib.md5(anchor_url).hexdigest()))
+        self.conn.commit()
+
+    def remove_crawler_task(self, task_id):
+        self.cursor.execute("delete from crawler_task where id = %s", task_id)
+        self.conn.commit()
+
+    def get_all_crawler_task(self):
+        self.cursor.execute('select * from crawler_task')
+        return self.cursor.fetchall()
+
+    def crawler_task_count(self):
+        self.cursor.execute("select count(*) as count from crawler_task")
+        return self.cursor.fetchone()['count']
+
+    def url_in_crawler_task(self, url):
+        md5 = hashlib.md5(url).hexdigest()
+        self.cursor.execute("select count(*) as count from crawler_task where url_md5 = %s", md5)
+        return self.cursor.fetchone()['count'] > 0
+
+    def anchor_in_crawler_task(self, anchor):
+        if anchor.strip() == '':
+            return False
+        self.cursor.execute("select count(*) as count from crawler_task where anchor_text = %s", anchor)
+        return self.cursor.fetchone()['count'] > 0
         
 
     # global bad words
