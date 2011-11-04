@@ -133,6 +133,11 @@ def crawled_as_terminal(agent, url, anchor, day_limit=30):
     last_crawled_at = agent.get_last_crawl_time_by_title(anchor)
     return (now - last_crawled_at).days <= day_limit
 
+def in_task_queue(agent, url, anchor):
+    return agent.url_in_crawler_task(url) or \
+        agent.anchor_in_crawler_task(anchor) and anchor != ""
+
+
 
 class CrawlerProcess(multiprocessing.Process):
     def __init__(self, sele, agent, shard_id, shard_count):
@@ -155,11 +160,6 @@ class CrawlerProcess(multiprocessing.Process):
 
     def get_heartbeat(self):
         return datetime.fromtimestamp(self.alive.value)
-
-
-    def in_task_queue(self, url, anchor):
-        return self.agent.url_in_crawler_task(url) or \
-            self.agent.anchor_in_crawler_task(anchor)
 
     def process_hub(self, task):
         url = task['anchor_url']
@@ -195,7 +195,7 @@ class CrawlerProcess(multiprocessing.Process):
                               % (cur_url))
                 continue
 
-            if self.in_task_queue(cur_url, cur_text):
+            if in_task_queue(self.agent, cur_url, cur_text):
                 _logger.debug('ignore, already added to task queue: %s'
                               % (cur_url))
                 continue
@@ -325,19 +325,6 @@ class Aster:
         print "root process pid: %d" % self.root_pid
         self.agent = self._prepare_agent()
 
-        # Get all prime source
-        sources = self.agent.get_all_prime_source()
-
-        for source in sources:
-            try:
-                self.agent.add_crawler_task(anchor_url=source.base_url,
-                                            anchor_text='',
-                                            encoding=source.encoding,
-                                            domain=source.domain,
-                                            ttl=3)
-            except Exception, err:
-                _logger.error("failed to add crawler task, url:(%s), %s"
-                              % (source.base_url, err))
 
         process_num = parallel
         _logger.info('will spawn %d processes' % process_num)
@@ -351,7 +338,24 @@ class Aster:
         # Checking workers' life
         while True:
             self.agent.restart()
-            _logger.info("%d task in DB" % self.agent.crawler_task_count())
+
+            # Get all prime source
+            sources = self.agent.get_all_prime_source()
+            for source in sources:
+                if crawled_as_hub(self.agent, source.base_url, day_limit = 5) or \
+                        in_task_queue(self.agent, source.base_url, ''):
+                    continue
+                try:
+                    self.agent.add_crawler_task(anchor_url=source.base_url,
+                                                anchor_text='',
+                                                encoding=source.encoding,
+                                                domain=source.domain,
+                                                ttl=3)
+                except Exception, err:
+                    _logger.error("failed to add crawler task, url:(%s), %s"
+                                  % (source.base_url, err))
+
+                _logger.info("%d task in DB" % self.agent.crawler_task_count())
 
             temp_list = []
             now = datetime.now()
