@@ -411,6 +411,7 @@ class SQLAgent:
             "replace user_statistic values(%s, %s, %s, %s, %s, %s)",
             (stat['user'], stat['date'], stat['follow_count'],
              stat['followed_count'], stat['tweet_count'], stat['mutual_follow_count']))
+        self.conn.commit()
 
     def remove_statistic(self, email):
         email = email.strip()

@@ -355,7 +355,8 @@ class Aster:
                     _logger.error("failed to add crawler task, url:(%s), %s"
                                   % (source.base_url, err))
 
-                _logger.info("%d task in DB" % self.agent.crawler_task_count())
+            _logger.info("%d task in DB" % self.agent.crawler_task_count())
+            print "%d task in DB" % self.agent.crawler_task_count()
 
             temp_list = []
             now = datetime.now()
@@ -363,6 +364,8 @@ class Aster:
                 duration = util.total_seconds(now - worker.get_heartbeat())
                 _logger.debug('worker %d inactive for %d seconds, pending_input:%d' 
                               % (worker.pid, duration, worker.is_pending_input()))
+                print 'worker %d inactive for %d seconds, pending_input:%d' 
+                              % (worker.pid, duration, worker.is_pending_input())
 
             
                 if not worker.is_pending_input() and duration > 10 * 60:
