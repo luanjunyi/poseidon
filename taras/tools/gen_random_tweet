@@ -11,7 +11,7 @@ def main(argv):
     daemon = taras.WeiboDaemon(noselenium=True)
     try:
         tweet, image_path = daemon.create_random_tweet()
-        print tweet
+        print tweet[:139]
         print image_path
     except Exception, err:
         print 'failed: %s' % err
