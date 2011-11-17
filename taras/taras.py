@@ -330,7 +330,12 @@ class WeiboDaemon:
         Given an Email address, return the user's API object
         """
         user = self.agent.get_user_by_email(email)
-        app = random.choice(self.agent.get_all_app())
+
+        if hasattr(self, 'app'):
+            app = self.app
+        else:
+            app = random.choice(self.agent.get_all_app())
+
         token = self.get_token(user, app)
         handle = sina_auth.OAuthHandler(app.consumer_key, app.consumer_secret)
         handle.setToken(token=token.key, tokenSecret=token.secret)

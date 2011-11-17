@@ -227,7 +227,7 @@ class SQLAgent:
 
 
     def get_all_app(self):
-        self.cursor.execute('select * from sina_app')
+        self.cursor.execute('select * from sina_app order by token')
         apps = self.cursor.fetchall()
         return [AppAccount(app) for app in apps]
         
