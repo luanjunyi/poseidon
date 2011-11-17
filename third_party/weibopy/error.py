@@ -9,7 +9,7 @@ class WeibopError(Exception):
         if hasattr(reason, 'encode'):
             self.reason = reason.encode('utf-8')
         else:
-            self.reason = reason
+            self.reason = reason.__str__()
 
     def __str__(self):
         return self.reason
