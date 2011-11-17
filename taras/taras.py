@@ -1227,11 +1227,11 @@ class WeiboDaemon:
                             self.assign_user(user)
 
                         except WeibopError, err:
-                            _logger.error('get_api_by_user failed: %s, will freeze user and remove stat of today', err)
+                            _logger.error('assign failed: %s, will freeze user and remove stat of today', err)
                             self.agent.remove_statistic(user.uname)
                             self.freeze_user(user)
                         except Exception, err:
-                            _logger.error('get_api_by_user failed, but not WeibopError: %s', err)
+                            _logger.error('assign failed, but not WeibopError: %s %s', (err, traceback.format_exc()))
                         else:
                             _logger.debug("api generated for user(%s)" % self.user.uname)
                             for func in self.func_array:
