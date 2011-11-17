@@ -1227,7 +1227,7 @@ class WeiboDaemon:
                             self.assign_user(user)
 
                         except WeibopError, err:
-                            _logger.error('assign failed: %s, will freeze user and remove stat of today', err)
+                            _logger.error('assign failed: %s, will freeze user and remove stat of today' % err)
                             self.agent.remove_statistic(user.uname)
                             self.freeze_user(user)
                         except Exception, err:
