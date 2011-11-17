@@ -1,15 +1,14 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-import sys,os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
-from taras import taras
+import sys
+import taras
 
 def usage():
     print 'usage: gen_random_tweet'
     sys.exit(0)
 
 def main(argv):
-    daemon = taras.WeiboDaemon()
+    daemon = taras.WeiboDaemon(noselenium=True)
     try:
         tweet, image_path = daemon.create_random_tweet()
         print tweet

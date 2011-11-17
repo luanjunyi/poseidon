@@ -1376,8 +1376,12 @@ class WeiboDaemon:
         Like create_tweet_on_the_fly(), but with no URL and XPath. Will pick up
         a source from DB
         """
-        source = self.agent.get_random_source()
-        return self.create_tweet(source, u'热门')
+        raw_tweet = self.agent.pop_tweet_stack(None)
+        _logger.debug('raw tweet fetched from tweet_stack in DB')
+        return self._compose_tweet(raw_tweet)
+        
+
+
 
     def handle_int(self, signum, frame):
         _logger.info('got signal(%d), will shutdown gracefully' % signum)

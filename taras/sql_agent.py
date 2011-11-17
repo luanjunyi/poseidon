@@ -558,13 +558,24 @@ image_bin, image_ext, href_md5) values(%s, %s, %s, %s, %s, %s, %s)',
         self.conn.commit()
 
     def pop_tweet_stack(self, email):
-        self.cursor.execute('select tweet_id from tweet_stack where user_email = %s order by tweet_id desc',
-                            email)
+        if email != None:
+            self.cursor.execute('select tweet_id from tweet_stack where user_email = %s',
+                                email)
+        else:
+            self.cursor.execute('select tweet_id from tweet_stack order by tweet_id desc')
+
         if self.cursor.rowcount == 0:
             _logger.debug('failed to pop tweet stack, it\'s empty, email=%s' % email)
             return None
 
-        all_rows = self.cursor.fetchall()
+
+        if email == None:
+            all_rows = list(self.cursor.fetchall())
+            random.shuffle(all_rows)
+        else:
+            all_rows = self.cursor.fetchall()
+
+            
         for cur_row in all_rows:
             tweet_id = cur_row['tweet_id']
             self.cursor.execute('delete from tweet_stack where tweet_id = %s', tweet_id)
