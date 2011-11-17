@@ -1161,8 +1161,7 @@ class WeiboDaemon:
         all_app = self.agent.get_all_app()
         self.app = all_app[user.shard_id % len(all_app)]
         self.user = user
-
-        _logger.debug('getting api')
+        _logger.debug('getting api, app token: %s' % self.app.consumer_key)
         self.weibo = self.get_api_by_user(user.uname)
         user.sina_id = self.me.id
         self.agent.update_sina_id(user)
