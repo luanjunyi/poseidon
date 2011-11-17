@@ -1231,7 +1231,7 @@ class WeiboDaemon:
                             self.agent.remove_statistic(user.uname)
                             self.freeze_user(user)
                         except Exception, err:
-                            _logger.error('assign failed, but not WeibopError: %s %s', (err, traceback.format_exc()))
+                            _logger.error('assign failed, but not WeibopError: %s %s' % (err, traceback.format_exc()))
                         else:
                             _logger.debug("api generated for user(%s)" % self.user.uname)
                             for func in self.func_array:
