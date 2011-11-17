@@ -1,8 +1,8 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-import sys
-import taras
-
+import sys, os, traceback
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
+from taras import taras
 def usage():
     print 'usage: gen_random_tweet'
     sys.exit(0)
