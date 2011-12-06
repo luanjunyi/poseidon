@@ -812,3 +812,11 @@ values(%s, %s, %s, %s, %s, %s)",
             config[cfg['name']] = cfg['value']
         return config
             
+
+    # custom tasks
+    def get_tasks_for_user(self, email):
+        self.cursor.execute("select * from task where email = %s", email)
+        return self.cursor.fetchall();
+
+    def remove_task(self, task_id):
+        self.cursor.execute("delete from task where id = %s", task_id)

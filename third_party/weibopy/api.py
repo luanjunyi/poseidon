@@ -1,5 +1,3 @@
-
-
 # Copyright 2009-2010 Joshua Roesslein
 # See LICENSE for details.
 

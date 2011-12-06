@@ -37,9 +37,6 @@ class WeiboDaemon:
         if (len(self.config.sections()) < 1):
             _logger.fatal('failed to read config file from %s' % config_path)
         self.FRIENDS_COUNT_SAFE_LEVEL = self.config.getint("global", "friends_count_safe_level")
-        self.VALID_PROXY_FAIL_RATE = self.config.getfloat("global", "valid_proxy_fail_rate")
-        self.MAX_ACCOUNT_PER_PROXY = self.config.getint("global", "max_account_per_proxy")
-        self.PROXY_TRYOUT_COUNT = self.config.getint("global", 'proxy_tryout_count')
 
         if treefile == '':
             treefile = os.path.dirname(os.path.abspath(__file__)) + '/tree.txt'
@@ -65,6 +62,22 @@ class WeiboDaemon:
 
         # Set shard_id
         self.shard_id = 0
+
+    def custom_task(self):
+        tasks = self.agent.get_tasks_for_user(self.user.uname)
+        for task in tasks:
+            _logger.info("custom task: email(%s), type(%s), content(%s)"
+                         % (task['email'], task['type'], task['content']))
+            try:
+                if task['type'] == 'retweet':
+                    tweet_id = int(task['content'])
+                    self.weibo.retweet(id=tweet_id)
+                    self.agent.remove_task(task['id'])
+                else:
+                    _logger.error("unknown custom task type(%s)" % task['type'])
+            except Exception, err:
+                _logger.error("custom task failed: email(%s), type(%s), content(%s), error: %s"
+                         % (task['email'], task['type'], task['content'], err))
 
     def restart_mysql_agent(self):
         self.agent.stop()
