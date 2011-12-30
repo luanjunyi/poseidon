@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="1.0" toolsVersion="1938" systemVersion="11C74" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" initialViewController="2">
+    <dependencies>
+        <development defaultVersion="4200" identifier="xcode"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="933"/>
+    </dependencies>
+    <scenes>
+        <scene sceneID="5">
+            <objects>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="4" sceneMemberID="firstResponder"/>
+                <viewController id="2" customClass="ViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="3">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="default.jpg" id="Nde-jP-po2">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
+                                <gestureRecognizers/>
+                            </imageView>
+                            <view hidden="YES" alpha="0.0" contentMode="scaleToFill" id="2Gj-uV-B0u">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" cocoaTouchSystemColor="darkTextColor"/>
+                        <gestureRecognizers/>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="6tM-Cu-dVj" appends="YES" id="jae-Zt-q2L"/>
+                            <outletCollection property="gestureRecognizers" destination="mXs-x8-nda" appends="YES" id="fJi-De-glG"/>
+                            <outletCollection property="gestureRecognizers" destination="Q9d-Ex-jSY" appends="YES" id="gbG-1a-USC"/>
+                        </connections>
+                    </view>
+                    <connections>
+                        <outlet property="curtainView" destination="2Gj-uV-B0u" id="NLn-Pu-G8t"/>
+                        <outlet property="imageView" destination="Nde-jP-po2" id="kb8-c3-tRR"/>
+                        <outlet property="leftSwipeRecognizer" destination="6tM-Cu-dVj" id="Xce-dd-vNk"/>
+                        <outlet property="panRecgonizer" destination="Q9d-Ex-jSY" id="HaE-Rm-Tu5"/>
+                        <outlet property="view" destination="3" id="h5m-fu-6fH"/>
+                    </connections>
+                </viewController>
+                <swipeGestureRecognizer direction="left" id="6tM-Cu-dVj">
+                    <connections>
+                        <action selector="swipeLeft:" destination="2" id="ejy-u2-Peu"/>
+                        <outlet property="delegate" destination="2" id="ZQG-0o-waq"/>
+                    </connections>
+                </swipeGestureRecognizer>
+                <tapGestureRecognizer enabled="NO" numberOfTapsRequired="2" id="mXs-x8-nda">
+                    <connections>
+                        <outlet property="delegate" destination="2" id="nsv-0i-O8c"/>
+                    </connections>
+                </tapGestureRecognizer>
+                <panGestureRecognizer minimumNumberOfTouches="1" id="Q9d-Ex-jSY">
+                    <connections>
+                        <action selector="panDetected:" destination="2" id="MOA-nB-t3h"/>
+                    </connections>
+                </panGestureRecognizer>
+            </objects>
+            <point key="canvasLocation" x="277" y="220"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="default.jpg" width="615" height="440"/>
+    </resources>
+    <classes>
+        <class className="ViewController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="panDetected:" candidateClass="UIPanGestureRecognizer"/>
+                <relationship kind="action" name="swipeLeft:"/>
+                <relationship kind="action" name="tapped:" candidateClass="UITapGestureRecognizer"/>
+                <relationship kind="action" name="twoTapDetected:"/>
+                <relationship kind="outlet" name="curtainView" candidateClass="UIView"/>
+                <relationship kind="outlet" name="imageView" candidateClass="UIImageView"/>
+                <relationship kind="outlet" name="leftSwipeRecognizer" candidateClass="UISwipeGestureRecognizer"/>
+                <relationship kind="outlet" name="panRecgonizer" candidateClass="UIPanGestureRecognizer"/>
+                <relationship kind="outlet" name="singleTapRecognizer" candidateClass="UITapGestureRecognizer"/>
+            </relationships>
+        </class>
+    </classes>
+    <simulatedMetricsContainer key="defaultSimulatedMetrics">
+        <nil key="statusBar"/>
+        <simulatedOrientationMetrics key="orientation"/>
+        <simulatedScreenMetrics key="destination"/>
+    </simulatedMetricsContainer>
+</document>
