@@ -1,0 +1,11 @@
+#! /usr/bin/python
+
+import glob, random, os
+
+PICFUL_ROOT = '/home/luanjunyi/run/tuchong'
+
+dirs = glob.glob("%s/2011-??-??" % PICFUL_ROOT)
+cur_dir = random.choice(dirs)
+cur_pic = random.choice(glob.glob(os.path.join(cur_dir, "*" )))
+
+print cur_pic

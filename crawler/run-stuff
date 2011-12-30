@@ -1,0 +1,84 @@
+y#!/bin/bash
+
+function read_config {
+    echo -e "loading config file from $1, config:\n"
+    source $1
+
+    echo "shard count:$shard_count"
+
+    echo "run directory:$run_dir"
+    echo "executable binary path:$bin_path"
+    echo "logging config path:$logger_conf"
+}
+
+function start {
+    read_config $config_path
+    echo -e "\nstarting crawler instances...\n"
+    
+    # go to run_dir
+    if [ ! -d ${run_dir} ]; then
+        echo 'making directory ${run_dir}'
+        mkdir -p $run_dir
+    fi
+    cd $run_dir
+    echo "moved to $(pwd)"
+
+    # make directory for each instance
+    for (( i=0; i<${shard_count}; i++  ))
+    do
+        dir="${run_dir}/inst$i"
+        if [ ! -d $dir ]; then
+            mkdir -p $dir
+        fi
+        cd $dir
+        cp $logger_conf "./logger.conf"
+        inst_cmd="python ${bin_path} --shard=$i --all-shard=${shard_count}"
+        echo "starting ${inst_cmd}..."
+        bash -i -c "$inst_cmd & echo \$!"
+        cd - > /dev/null
+        sleep 1
+    done
+    echo -e "all instances kicked off\n"
+}
+
+function usage {
+    echo "Usage: run-stuff [-c config-file] [-t start|monitor|stop|restart] [-r refresh-rate=5]"
+    echo "Start(or moniter) several Taras instances according to configuration file. By default find taras.conf from current working directory."
+    echo -e "Example: \nrun-taras -c /var/run/taras.conf"
+}
+
+
+set -u
+set -e
+config_path="./crawl.conf"
+cmd="monitor"
+sleep_time=5
+
+while getopts "c:t:r:" opt
+do
+    case $opt in
+        c)
+            config_path=$OPTARG
+            ;;
+        t)
+            cmd=$OPTARG
+            ;;
+        r)
+            sleep_time=$OPTARG
+            ;;
+        :)
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+case $cmd in
+    "start")
+        start
+        ;;
+    :)
+        usage
+        exit 1
+        ;;
+esac

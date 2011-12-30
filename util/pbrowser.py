@@ -447,7 +447,7 @@ class ParadomoBrowser(mechanize.Browser):
     def __init__(self, factory=None, history=None, request_class=None):
         mechanize.Browser.__init__(self, factory, history, request_class)
 
-    def download_image(self, url, base_url = None):
+    def download_image(self, url, base_url = None, timeout = 30):
         try:
             if base_url != None:
                 referer = base_url
@@ -459,7 +459,7 @@ class ParadomoBrowser(mechanize.Browser):
         except Exception, err:
             _logger.debug('download image without set referer: %s', err)
             request = mechanize.Request(url=url)
-        return self.open_novisit(request)
+        return self.open_novisit(request, timeout=timeout)
 
     def abs_url(self, url):
         try:
