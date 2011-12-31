@@ -431,14 +431,6 @@ CGFloat kCurtainAlphaMax = 0.85f;
 - (IBAction)twoTapDetected:(id)sender {
     NSLog(@"Double Tapped");
     
-    [UIView animateWithDuration:5.0 animations:^{
-       self.imageView.transform = CGAffineTransformMakeRotation(M_PI / 2);   
-    } completion:^(BOOL finished) {
-        self.imageView.transform = CGAffineTransformIdentity;
-    }];
-    
-    return;
-    
     if (self.imageView.contentMode == UIViewContentModeScaleToFill) {
         self.imageView.contentMode = UIViewContentModeScaleAspectFit;
     } else if (self.imageView.contentMode == UIViewContentModeScaleAspectFit) {
