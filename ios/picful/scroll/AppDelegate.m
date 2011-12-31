@@ -19,11 +19,13 @@
 {
     // Override point for customization after application launch.
     NSLog(@"Application Did Finish launching");
-    imageLoader = [[ImageLoader alloc] init];
+
     ViewController *viewController = (ViewController *)self.window.rootViewController;
+    imageLoader = [[ImageLoader alloc] init];
     viewController.imageLoader = self.imageLoader;
     imageLoader->delegate = viewController;
     [imageLoader loadMoreImages];
+
     return YES;
 }
 							

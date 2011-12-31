@@ -7,17 +7,18 @@
 //
 
 #import "ViewController.h"
+#import "BlackAlertView.h"
 #import <QuartzCore/CAAnimation.h>
 #import <CoreGraphics/CoreGraphics.h>
 
 @implementation ViewController
 
+
 @synthesize panRecgonizer;
 @synthesize singleTapRecognizer;
 @synthesize imageView;
-@synthesize curtainView;
+@synthesize curtainView, launchView, ratingStat;
 @synthesize leftSwipeRecognizer;
-
 @synthesize waitingAlert, imageLoader;
 
 
@@ -28,11 +29,13 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 - (void) disableUI {
     self.panRecgonizer.enabled = NO;
+    self.leftSwipeRecognizer.enabled = NO;
     NSLog(@"UI disabled");
 }
 
 - (void) enableUI {
     self.panRecgonizer.enabled = YES;
+    self.leftSwipeRecognizer.enabled = YES;
     NSLog(@"UI enabled");
 }
 
@@ -140,8 +143,6 @@ CGFloat kCurtainAlphaMax = 0.85f;
     @try {
 
         if ([ratingStat isEqualToString:@"heart"]) {  // Showing 'heart'
-                            
-            
             [UIView animateWithDuration:1.0 animations:^{
                 CATransition* animation = [CATransition animation];
                 animation.type = @"rippleEffect";
@@ -196,6 +197,15 @@ CGFloat kCurtainAlphaMax = 0.85f;
                 [self resetCurtainWithouthMovement];
                 ratingStat = @"";
             }];            
+        } else if ([ratingStat isEqualToString:@"launching"]) {
+            [UIView animateWithDuration:1.0 animations:^{
+                self.launchView.alpha = 0;
+            } completion:^(BOOL finished) {
+                ratingStat = @"";
+                [self enableUI];
+                self.launchView.hidden = YES;
+            }];
+
         } else {
             NSLog(@"rating stat is %@, error?", ratingStat);
         }
@@ -219,19 +229,23 @@ CGFloat kCurtainAlphaMax = 0.85f;
 #pragma mark - Rating image
 
 - (void) startWaitLoading {
-    waitingAlert = [[UIAlertView alloc] initWithTitle:@"Downloading Pictures\nPlease Wait..." message:@"" delegate:self cancelButtonTitle:nil otherButtonTitles:nil, nil];
-    [waitingAlert show];
+    if (self.launchView.hidden == NO) {
+        return;
+    }
     
-    UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-    indicator.center = CGPointMake(waitingAlert.bounds.size.width / 2, waitingAlert.bounds.size.height - 50);
-    [indicator startAnimating];
-    [waitingAlert addSubview:indicator];
-    [indicator startAnimating];
+    NSString *message = NSLocalizedString(@"Downloading Pictures\nPlease Wait...", @"downloading, please wait");
+    waitingAlert = [waitingAlert initWithMessage:message];
+    waitingAlert.center = self.view.center;
+    waitingAlert.hidden = NO;
+    [self disableUI];
 }
 
 - (void) endWaitLoading {
-    [waitingAlert dismissWithClickedButtonIndex:0 animated:YES];
-    waitingAlert = nil;
+    if (waitingAlert != nil) {
+        waitingAlert.hidden = YES;
+    }
+    self.launchView.hidden = YES;
+    [self enableUI];
 }
 
 - (void) heartImage {
@@ -255,10 +269,9 @@ CGFloat kCurtainAlphaMax = 0.85f;
 #pragma ImageLoader delegate
 
 -(void) newPictureDidArrive:(ImageLoader *)loader {
-    if (waitingAlert == nil) {
+    if (waitingAlert.hidden && launchView.hidden) {
         return;
     }
-    
     UIImage *img = [imageLoader getNextImage];
     if (img != nil) {
         [self performSelectorOnMainThread:@selector(updateMainImage:)withObject:img waitUntilDone:YES]; 
@@ -268,6 +281,39 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 
 #pragma mark - Utils
+
+- (void) showSplashScreen {
+    launchView = [[UIView alloc] initWithFrame:self.view.frame];
+    launchView.backgroundColor = [UIColor blackColor];
+    
+    int rowNum = 6;
+    int colNum = 4;
+    if (UIInterfaceOrientationIsLandscape(self.interfaceOrientation)) {
+        colNum = 6;
+        rowNum = 4;
+    }
+    NSLog(@"orientation: %d", self.interfaceOrientation);
+    [self disableUI];  // Protect the splash screen from random gestures
+    for (int i = 0; i < rowNum; i++) {
+        
+        for (int j = 0; j < colNum; j++) {
+            int imageId = i * 4 + j;
+            UIImage *image = [UIImage imageNamed:[NSString stringWithFormat:@"%d.jpg", imageId + 1]];
+            UIImageView *curImageView = [[UIImageView alloc] initWithImage:image];
+            curImageView.frame = CGRectMake(j * 80, i * 80, 80, 80);
+            curImageView.alpha = 0;
+            [launchView addSubview:curImageView];
+            CGFloat delay = (arc4random() % 100000) / 100000.0 * 3.0;
+            [UIView animateWithDuration:1 delay:delay options: UIViewAnimationOptionTransitionNone animations:^{
+                curImageView.alpha = 1.0;
+            } completion:nil];
+        }
+    }
+    
+    [self.view addSubview:launchView];
+    self.launchView = launchView;
+    self.ratingStat = @"launching";
+}
 
 
 - (void)didReceiveMemoryWarning
@@ -289,11 +335,12 @@ CGFloat kCurtainAlphaMax = 0.85f;
         junkImage = [UIImage imageNamed:@"junk-black.png"];  
     }
     
+    [self showSplashScreen];
+    
     staticSymbol = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width * 0.3, self.view.frame.size.height * 0.3)];
     dynamicSymble = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width * 0.3, self.view.frame.size.height * 0.3)];
     staticSymbol.contentMode = dynamicSymble.contentMode = UIViewContentModeScaleAspectFit;
     staticSymbol.autoresizingMask = dynamicSymble.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
-    
     [self.panRecgonizer requireGestureRecognizerToFail:self.leftSwipeRecognizer];
 }
 
@@ -303,6 +350,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
     [self setLeftSwipeRecognizer:nil];
     [self setSingleTapRecognizer:nil];
     [self setCurtainView:nil];
+    [self setWaitingAlert:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -339,6 +387,14 @@ CGFloat kCurtainAlphaMax = 0.85f;
     }
 }
 
+- (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    if (UIInterfaceOrientationIsLandscape(toInterfaceOrientation)) {
+        self.launchView.center = self.view.center;
+        self.launchView.layer.anchorPoint = CGPointMake(0.5, 0.5);
+        launchView.transform =  CGAffineTransformMakeRotation(M_PI / 2.0);
+    }
+}
+
 #pragma mark - UIGestureRecognizer
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
@@ -349,6 +405,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
    
 
 - (IBAction)swipeLeft:(UISwipeGestureRecognizer *)sender {
+    NSLog(@"Swipe Left");
     ratingStat = @"swipe";
     [self tryUpdateMainImage];
 }
@@ -360,6 +417,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 - (IBAction)twoTapDetected:(id)sender {
     NSLog(@"Double Tapped");
+    
     if (self.imageView.contentMode == UIViewContentModeScaleToFill) {
         self.imageView.contentMode = UIViewContentModeScaleAspectFit;
     } else if (self.imageView.contentMode == UIViewContentModeScaleAspectFit) {
@@ -369,6 +427,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 
 - (IBAction)panDetected:(UIPanGestureRecognizer *)sender {
+    //NSLog(@"Pan Detected");
     if (!panRecgonizer.enabled) {
         return;
     }

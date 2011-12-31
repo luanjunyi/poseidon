@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 #import "ImageLoader.h"
 
+@class BlackAlertView;
+
 @interface UIView(IWantToGetRejected)
 
 + (void) setAnimationPosition:(CGPoint)p ;
@@ -26,11 +28,13 @@
 
 @property (weak, atomic) IBOutlet UIImageView *imageView;
 @property (weak, nonatomic) IBOutlet UIView *curtainView;
-@property (strong, nonatomic) UIAlertView *waitingAlert;
+@property (strong, nonatomic) IBOutlet BlackAlertView *waitingAlert;
 @property (strong, nonatomic) IBOutlet UIPanGestureRecognizer *panRecgonizer;
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *singleTapRecognizer;
 @property (strong, nonatomic) IBOutlet UISwipeGestureRecognizer *leftSwipeRecognizer;
 @property (strong, nonatomic) ImageLoader *imageLoader;
+@property (strong, nonatomic) UIView *launchView;
+@property (strong, nonatomic) NSString *ratingStat;
 
 
 - (IBAction)tapped:(UITapGestureRecognizer *)sender;
@@ -40,6 +44,7 @@
 
 - (void) heartImage;
 - (void) junkImage;
+- (void) disableUI;
 
 - (void) tryUpdateMainImage;
 - (void) endWaitLoading;

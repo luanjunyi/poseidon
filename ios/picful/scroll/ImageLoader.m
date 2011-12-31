@@ -46,17 +46,6 @@
     path = [path stringByAppendingPathComponent:@"images.cache"];
     NSMutableArray *array = (NSMutableArray *)[images subarrayWithRange:NSMakeRange(0, MIN(50, images.count))];
     
-//    if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
-//        NSFileManager *fm = [NSFileManager defaultManager];
-//        NSError *error;
-//        if (![fm removeItemAtPath:path error:&error]) {
-//            NSLog(@"failed to remove old cache from %@, %@", path, error.description);
-//        } else {
-//            NSLog(@"old cache removed from %@", path);
-//        }
-//    }
-
-    
     BOOL writeOK = [array writeToFile:path atomically:YES];
     if (!writeOK) {
         NSLog(@"failed to update local cache:(%@)", path);

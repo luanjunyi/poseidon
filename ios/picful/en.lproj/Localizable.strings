@@ -1,0 +1,10 @@
+/* 
+  Localizable.strings
+  picful
+
+  Created by luanjunyi on 12/31/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+
+"Downloading Pictures\nPlease Wait..." = "图片下载中，请稍后";
