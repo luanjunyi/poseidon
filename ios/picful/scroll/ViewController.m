@@ -204,6 +204,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
                 ratingStat = @"";
                 [self enableUI];
                 self.launchView.hidden = YES;
+                [self endWaitLoading];
             }];
 
         } else {
