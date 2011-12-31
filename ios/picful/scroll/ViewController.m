@@ -235,7 +235,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
     
     NSString *message = NSLocalizedString(@"Downloading Pictures\nPlease Wait...", @"downloading, please wait");
     waitingAlert = [waitingAlert initWithMessage:message];
-    waitingAlert.center = self.view.center;
+    waitingAlert.center = self.imageView.center;
     waitingAlert.hidden = NO;
     [self disableUI];
 }
@@ -342,6 +342,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
     staticSymbol.contentMode = dynamicSymble.contentMode = UIViewContentModeScaleAspectFit;
     staticSymbol.autoresizingMask = dynamicSymble.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
     [self.panRecgonizer requireGestureRecognizerToFail:self.leftSwipeRecognizer];
+    [self performSelector:@selector(tryUpdateMainImage) withObject:nil afterDelay:5.0f];
 }
 
 - (void)viewDidUnload
@@ -389,9 +390,9 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 - (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     if (UIInterfaceOrientationIsLandscape(toInterfaceOrientation)) {
-        self.launchView.center = self.view.center;
-        self.launchView.layer.anchorPoint = CGPointMake(0.5, 0.5);
-        launchView.transform =  CGAffineTransformMakeRotation(M_PI / 2.0);
+//        self.launchView.center = self.view.center;
+//        self.launchView.layer.anchorPoint = CGPointMake(0.5, 0.5);
+//        launchView.transform =  CGAffineTransformMakeRotation(M_PI / 2.0);
     }
 }
 
@@ -406,6 +407,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 - (IBAction)swipeLeft:(UISwipeGestureRecognizer *)sender {
     NSLog(@"Swipe Left");
+    [self disableUI];
     ratingStat = @"swipe";
     [self tryUpdateMainImage];
 }
