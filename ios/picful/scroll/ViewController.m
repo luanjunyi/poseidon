@@ -270,7 +270,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
 #pragma ImageLoader delegate
 
 -(void) newPictureDidArrive:(ImageLoader *)loader {
-    if (waitingAlert.hidden && launchView.hidden) {
+    if (waitingAlert.hidden) {
         return;
     }
     UIImage *img = [imageLoader getNextImage];
@@ -284,9 +284,14 @@ CGFloat kCurtainAlphaMax = 0.85f;
 #pragma mark - Utils
 
 - (void) showSplashScreen {
-    launchView = [[UIView alloc] initWithFrame:self.view.frame];
-    launchView.backgroundColor = [UIColor blackColor];
-    
+    if (launchView == nil) {
+        launchView = [[UIView alloc] initWithFrame:self.view.frame];
+        launchView.backgroundColor = [UIColor blackColor];
+    } else {
+        for (UIView *view in launchView.subviews) {
+            [view removeFromSuperview];
+        }
+    }
     int rowNum = 6;
     int colNum = 4;
     if (UIInterfaceOrientationIsLandscape(self.interfaceOrientation)) {
@@ -390,11 +395,16 @@ CGFloat kCurtainAlphaMax = 0.85f;
 }
 
 - (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (UIInterfaceOrientationIsLandscape(toInterfaceOrientation)) {
-//        self.launchView.center = self.view.center;
-//        self.launchView.layer.anchorPoint = CGPointMake(0.5, 0.5);
-//        launchView.transform =  CGAffineTransformMakeRotation(M_PI / 2.0);
+
+    
+}
+
+-(void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    if (!launchView.hidden) {
+        [self showSplashScreen];
     }
+    
 }
 
 #pragma mark - UIGestureRecognizer
@@ -420,6 +430,14 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 - (IBAction)twoTapDetected:(id)sender {
     NSLog(@"Double Tapped");
+    
+    [UIView animateWithDuration:5.0 animations:^{
+       self.imageView.transform = CGAffineTransformMakeRotation(M_PI / 2);   
+    } completion:^(BOOL finished) {
+        self.imageView.transform = CGAffineTransformIdentity;
+    }];
+    
+    return;
     
     if (self.imageView.contentMode == UIViewContentModeScaleToFill) {
         self.imageView.contentMode = UIViewContentModeScaleAspectFit;
