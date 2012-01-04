@@ -571,6 +571,7 @@
 					"\"$(SRCROOT)/scroll\"",
 				);
 				PRODUCT_NAME = picful;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -586,6 +587,7 @@
 					"\"$(SRCROOT)/scroll\"",
 				);
 				PRODUCT_NAME = picful;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
