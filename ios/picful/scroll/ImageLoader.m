@@ -12,7 +12,7 @@
 
 @synthesize images;
 
--(void) removerImageFromLocalCache {
+-(void) recoverImageFromLocalCache {
     // Recover images cache, if any
     if (images != nil) {
         NSLog(@"images is not nil, skip recovering");
@@ -79,16 +79,23 @@
     [NSThread detachNewThreadSelector:@selector(synchronouslyLoadPictures) toTarget:self withObject:nil];
 }
 
--(UIImage *)getNextImage {
-    if (images.count == 0) {
-        [self loadMoreImages];
-        return nil;
-    } else {
+-(PicfulImage *)getNextImage {
+    PicfulImage *image = nil;    
+    while (images.count > 0) {
         NSData *data = [images lastObject];
-        UIImage *image = [[UIImage alloc] initWithData:data];
+        image = [[PicfulImage alloc] initWithData:data];
         [images removeLastObject];
-        return image;
+        if (image != nil) {
+            NSLog(@"got next image");
+            break;
+        }
     }
+    
+    if (images.count < 30) {
+        [self loadMoreImages];
+    }
+    
+    return image;
 }
 
 @end

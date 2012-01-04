@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "ImageLoader.h"
+#import "PicfulImage.h"
 
 @class BlackAlertView;
 
@@ -23,6 +24,7 @@
     UIImageView *staticSymbol;
     UIImageView *dynamicSymble;
     NSString *ratingStat;
+    PicfulImage *curImage;
 }
 
 
@@ -35,6 +37,7 @@
 @property (strong, nonatomic) ImageLoader *imageLoader;
 @property (strong, nonatomic) UIView *launchView;
 @property (strong, nonatomic) NSString *ratingStat;
+@property (strong, nonatomic) NSString *macAddr;
 
 
 - (IBAction)tapped:(UITapGestureRecognizer *)sender;

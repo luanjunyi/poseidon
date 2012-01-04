@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "PicfulImage.h"
 
 
 @protocol ImageLoaderDelegate;
@@ -18,11 +19,11 @@
 
 @property (strong, nonatomic) NSMutableArray *images;
 
--(void) removerImageFromLocalCache;
+-(void) recoverImageFromLocalCache;
 -(void) writeToLocalCache;
 
 -(void) loadMoreImages;
--(UIImage *) getNextImage;
+-(PicfulImage *) getNextImage;
 
 @end
 

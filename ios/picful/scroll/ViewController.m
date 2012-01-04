@@ -8,6 +8,9 @@
 
 #import "ViewController.h"
 #import "BlackAlertView.h"
+#import "PicfulImage.h"
+#import "NICInfo.h"
+#import "NICInfoSummary.h"
 #import <QuartzCore/CAAnimation.h>
 #import <CoreGraphics/CoreGraphics.h>
 
@@ -19,7 +22,7 @@
 @synthesize imageView;
 @synthesize curtainView, launchView, ratingStat;
 @synthesize leftSwipeRecognizer;
-@synthesize waitingAlert, imageLoader;
+@synthesize waitingAlert, imageLoader, macAddr;
 
 
 #pragma mark - Curtain related utils
@@ -132,13 +135,14 @@ CGFloat kCurtainAlphaMax = 0.85f;
     }
 }
 
-- (void) updateMainImage:(UIImage *)image {
+- (void) updateMainImage:(PicfulImage *)pic {
 
-    if (image == nil) {
+    if (pic == nil) {
         return;
     }
 
-    self.imageView.image = image;
+    self.imageView.image = pic.image;
+    self->curImage = pic;
 
     @try {
 
@@ -219,7 +223,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
 }
 
 - (void) tryUpdateMainImage {
-    UIImage *img = [imageLoader getNextImage];
+    PicfulImage *img = [imageLoader getNextImage];
     if (img != nil) {
         [self updateMainImage:img];
     } else {
@@ -251,29 +255,27 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 - (void) heartImage {
     [self disableUI];
-    // Send hearting info to server
-    
+    // Send hearting info to serve
+    [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://hq2006.3322.org/picful/rate.php?img_id=%d&rate=heart&user_id=%@", self->curImage.DBid, macAddr]]] delegate:nil];
     // Get next image
     [self performSelector:@selector(tryUpdateMainImage) withObject:nil afterDelay:0.2f];
-    //[self tryUpdateMainImage];
 }
 
 - (void) junkImage {
     [self disableUI];
     // Send junking info to server 
-
+    [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://hq2006.3322.org/picful/rate.php?img_id=%d&rate=junk&user_id=%@", self->curImage.DBid, macAddr]]] delegate:nil];
     // Get next image
     [self performSelector:@selector(tryUpdateMainImage) withObject:nil afterDelay:0.2f];
-    //[self tryUpdateMainImage];
 }
 
 #pragma ImageLoader delegate
 
 -(void) newPictureDidArrive:(ImageLoader *)loader {
-    if (waitingAlert.hidden) {
+    if (waitingAlert.hidden && self.launchView.hidden) {
         return;
     }
-    UIImage *img = [imageLoader getNextImage];
+    PicfulImage *img = [imageLoader getNextImage];
     if (img != nil) {
         [self performSelectorOnMainThread:@selector(updateMainImage:)withObject:img waitUntilDone:YES]; 
 
@@ -342,6 +344,14 @@ CGFloat kCurtainAlphaMax = 0.85f;
     }
     
     [self showSplashScreen];
+    
+    // Get mac address
+    NICInfoSummary* summary = [[NICInfoSummary alloc] init];
+    // en0 is for WiFi 
+    NICInfo* wifi_info = [summary findNICInfo:@"en0"];
+    // you can get mac address in 'XX-XX-XX-XX-XX-XX' form
+    macAddr = [wifi_info getMacAddressWithSeparator:@""];
+    NSLog(@"MAC addr:%@", macAddr);
     
     staticSymbol = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width * 0.3, self.view.frame.size.height * 0.3)];
     dynamicSymble = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width * 0.3, self.view.frame.size.height * 0.3)];
