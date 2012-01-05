@@ -23,7 +23,8 @@
 		3C7F242814B1D995008C998C /* Wee.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7F242714B1D995008C998C /* Wee.m */; };
 		3C7F243214B1E530008C998C /* WeeDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7F243114B1E52F008C998C /* WeeDetailViewController.m */; };
 		3C7F243414B291B5008C998C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C7F243314B291B5008C998C /* QuartzCore.framework */; };
-		3C7F243814B29738008C998C /* like.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C7F243714B29738008C998C /* like.png */; };
+		3CBCF7B814B5514800883253 /* heart.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CBCF7B714B5514800883253 /* heart.png */; };
+		3CBCF7BA14B551A100883253 /* junk.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CBCF7B914B551A100883253 /* junk.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,7 +53,8 @@
 		3C7F243014B1E52F008C998C /* WeeDetailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeeDetailViewController.h; sourceTree = "<group>"; };
 		3C7F243114B1E52F008C998C /* WeeDetailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WeeDetailViewController.m; sourceTree = "<group>"; };
 		3C7F243314B291B5008C998C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		3C7F243714B29738008C998C /* like.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = like.png; sourceTree = "<group>"; };
+		3CBCF7B714B5514800883253 /* heart.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = heart.png; sourceTree = "<group>"; };
+		3CBCF7B914B551A100883253 /* junk.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = junk.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,7 +138,8 @@
 		3C7F241D14B1B153008C998C /* img */ = {
 			isa = PBXGroup;
 			children = (
-				3C7F243714B29738008C998C /* like.png */,
+				3CBCF7B914B551A100883253 /* junk.png */,
+				3CBCF7B714B5514800883253 /* heart.png */,
 				3C7F241E14B1B16D008C998C /* sample.jpg */,
 			);
 			name = img;
@@ -197,7 +200,8 @@
 				3C7F240E14B1AAD6008C998C /* first.png in Resources */,
 				3C7F241014B1AAD6008C998C /* first@2x.png in Resources */,
 				3C7F241F14B1B16D008C998C /* sample.jpg in Resources */,
-				3C7F243814B29738008C998C /* like.png in Resources */,
+				3CBCF7B814B5514800883253 /* heart.png in Resources */,
+				3CBCF7BA14B551A100883253 /* junk.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,6 +330,7 @@
 				3C7F241C14B1AAD7008C998C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -27,7 +27,7 @@
 
 #pragma mark - Curtain related utils
 
-CGFloat kCurtainScrollThreshold = 90.0f;
+CGFloat kCurtainScrollThreshold = 0.38f;
 CGFloat kCurtainAlphaMax = 0.85f;
 
 - (void) disableUI {
@@ -46,11 +46,12 @@ CGFloat kCurtainAlphaMax = 0.85f;
     if (stat == @"heart") {
         ratingStat = @"heart";
         staticSymbol.image = dynamicSymble.image = heartImage;
-        dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.view.frame.size.height + dynamicSymble.frame.size.height / 2.0f);
+        dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y + self.view.frame.size.height * kCurtainScrollThreshold * 0.2);
+
     } else if (stat == @"junk") {
         ratingStat = @"junk";
         staticSymbol.image = dynamicSymble.image = junkImage;
-        dynamicSymble.center = CGPointMake(self.curtainView.center.x, -dynamicSymble.frame.size.height / 2.0f);
+        dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y - self.view.frame.size.height * kCurtainScrollThreshold);
     } else {
         NSLog(@"unrecognized curtain type: %@", stat);
     }
@@ -63,18 +64,20 @@ CGFloat kCurtainAlphaMax = 0.85f;
 }
 
 - (void) resetCurtain {
+    [self disableUI];
     [UIView animateWithDuration:0.4f animations:^{
         self.curtainView.alpha = 0.0f;
         if ([ratingStat isEqualToString:@"heart"]) {  // Showing 'heart'
-            dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.view.frame.size.height + dynamicSymble.frame.size.height / 2.0f);
+            dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y + self.view.frame.size.height * kCurtainScrollThreshold);
         } else { // Showing 'junk'
-            dynamicSymble.center = CGPointMake(self.curtainView.center.x, -dynamicSymble.frame.size.height / 2.0f);           
+            dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y - self.view.frame.size.height * kCurtainScrollThreshold);         
         }
     } completion:^(BOOL finished) {
         self.curtainView.hidden = YES;
         for (UIView* subview in [self.curtainView subviews]) {
             [subview removeFromSuperview];
         }
+        [self enableUI];
     }];
 }
 
@@ -84,9 +87,9 @@ CGFloat kCurtainAlphaMax = 0.85f;
     } completion:^(BOOL finished) {
         self.curtainView.hidden = YES;
         if (dynamicSymble.center.y > self.curtainView.center.y) {  // Showing 'heart'
-            dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.view.frame.size.height + dynamicSymble.frame.size.height / 2.0f);
+            dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y + self.view.frame.size.height * kCurtainScrollThreshold);
         } else { // Showing 'junk'
-            dynamicSymble.center = CGPointMake(self.curtainView.center.x, -dynamicSymble.frame.size.height / 2.0f);           
+            dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y - self.view.frame.size.height * kCurtainScrollThreshold);           
         }
         for (UIView* subview in [self.curtainView subviews]) {
             [subview removeFromSuperview];
@@ -95,44 +98,47 @@ CGFloat kCurtainAlphaMax = 0.85f;
 }
 
 - (void) handlePanDown:(CGFloat)offset {
-    offset = ABS(offset);
-    
-    if (self.curtainView.hidden == YES) {
-        [self prepareCurtainForType:@"heart"];
-    }
-    
-    CGFloat cur = offset / kCurtainScrollThreshold;
-    if (cur >= 0.999999999999) {
-        cur = 1.0;
-    }
 
-    self.curtainView.alpha = kCurtainAlphaMax * cur;
-    CGFloat totalMoveLength = (self.view.frame.size.height + dynamicSymble.frame.size.height) / 2.0;
-    dynamicSymble.center = CGPointMake(dynamicSymble.center.x, self.curtainView.center.y + (1 - cur) * totalMoveLength);
-    
-    if (cur == 1.0) {
-        [self heartImage];
-    }
-}
-
-- (void) handlePanUp:(CGFloat)offset {
     offset = ABS(offset);
     
     if (self.curtainView.hidden == YES) {
         [self prepareCurtainForType:@"junk"];
     }
     
-    CGFloat cur = offset / kCurtainScrollThreshold;
+    
+    CGFloat cur = offset / (self.view.frame.size.height * kCurtainScrollThreshold);
     if (cur >= 0.9999999999999) {
         cur = 1.0;
     }
-
+    
     self.curtainView.alpha = kCurtainAlphaMax * cur;
-    CGFloat totalMoveLength = (self.view.frame.size.height + dynamicSymble.frame.size.height) / 2.0;
+    CGFloat totalMoveLength = self.curtainView.frame.size.height * kCurtainScrollThreshold;
     dynamicSymble.center = CGPointMake(dynamicSymble.center.x, self.curtainView.center.y - (1 - cur) * totalMoveLength);
     if (cur == 1.0) {
         [self junkImage];
     }
+  }
+
+- (void) handlePanUp:(CGFloat)offset {
+    offset = ABS(offset);
+    
+    if (self.curtainView.hidden == YES) {
+        [self prepareCurtainForType:@"heart"];
+    }
+    
+    CGFloat cur = offset / (self.view.frame.size.height * kCurtainScrollThreshold);
+    if (cur >= 0.999999999999) {
+        cur = 1.0;
+    }
+    
+    self.curtainView.alpha = kCurtainAlphaMax * cur;
+    CGFloat totalMoveLength = self.curtainView.frame.size.height * kCurtainScrollThreshold;
+    dynamicSymble.center = CGPointMake(dynamicSymble.center.x, self.curtainView.center.y + (1 - cur) * totalMoveLength);
+    
+    if (cur == 1.0) {
+        [self heartImage];
+    }
+
 }
 
 - (void) updateMainImage:(PicfulImage *)pic {
@@ -163,10 +169,15 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
         } else if ([ratingStat isEqualToString:@"junk"]) { // Showing 'junk'
             [UIView animateWithDuration:1.0 animations:^{
-                CATransition* animation = [CATransition animation];
-                animation.type = @"rippleEffect";
-                animation.duration = 0.5;
-                [self.imageView.layer addAnimation:animation forKey:@"anim.heart"];
+//                CATransition* animation = [CATransition animation];
+//                animation.type = @"rippleEffect";
+//                animation.duration = 0.5;
+//                [self.imageView.layer addAnimation:animation forKey:@"anim.heart"];
+                [UIView beginAnimations:@"suck" context:NULL];
+                [UIView setAnimationDuration:1.0];
+                [UIView setAnimationTransition:103 forView:self.imageView cache:YES];
+                [UIView setAnimationPosition:self.view.center];
+                [UIView commitAnimations];
                 
             } completion:^(BOOL finished) {
                 [self enableUI];
@@ -175,11 +186,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
                 ratingStat = @"";
             }];  
             
-//            [UIView beginAnimations:@"suck" context:NULL];
-//            [UIView setAnimationDuration:1.0];
-//            [UIView setAnimationTransition:1 forView:self.imageView cache:YES];
-//            [UIView setAnimationPosition:self.view.center];
-//            [UIView commitAnimations];
+
 //            
 //            self.imageView.image = image;
 //            [self enableUI];
@@ -190,7 +197,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
         } else if ([ratingStat isEqualToString:@"swipe"]) {
             [UIView animateWithDuration:1.0 animations:^{
                 CATransition* animation = [CATransition animation];
-                animation.type = kCATransitionMoveIn;
+                animation.type = @"cube";
                 animation.subtype = kCATransitionFromRight;
                 animation.duration = 0.5;
                 [self.imageView.layer addAnimation:animation forKey:@"anim.heart"];
@@ -450,7 +457,6 @@ CGFloat kCurtainAlphaMax = 0.85f;
 
 
 - (IBAction)panDetected:(UIPanGestureRecognizer *)sender {
-    //NSLog(@"Pan Detected");
     if (!panRecgonizer.enabled) {
         return;
     }
@@ -458,9 +464,8 @@ CGFloat kCurtainAlphaMax = 0.85f;
     CGPoint translate = [sender translationInView:self.view];
     
     CGFloat offset = translate.y;
-    //NSLog(@"pan: %.2f", offset);
     
-    if (offset == 0) {
+    if (ABS(offset) < 1.0f) {
         [self resetCurtain];
     } else if (offset > 0) { // Pulling down
         [self handlePanDown:offset];
@@ -468,7 +473,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
         [self handlePanUp:offset];
     }
     
-    if (sender.state == UIGestureRecognizerStateEnded && ABS(offset) < kCurtainScrollThreshold) {
+    if (sender.state == UIGestureRecognizerStateEnded && ABS(offset) < kCurtainScrollThreshold * self.view.frame.size.height) {
         [self resetCurtain];
     }
 }

@@ -81,26 +81,6 @@
             <point key="canvasLocation" x="277" y="220"/>
         </scene>
     </scenes>
-    <classes>
-        <class className="BlackAlertView" superclassName="UIView">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/BlackAlertView.h"/>
-        </class>
-        <class className="ViewController" superclassName="UIViewController">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
-            <relationships>
-                <relationship kind="action" name="panDetected:" candidateClass="UIPanGestureRecognizer"/>
-                <relationship kind="action" name="swipeLeft:"/>
-                <relationship kind="action" name="tapped:" candidateClass="UITapGestureRecognizer"/>
-                <relationship kind="action" name="twoTapDetected:"/>
-                <relationship kind="outlet" name="curtainView" candidateClass="UIView"/>
-                <relationship kind="outlet" name="imageView" candidateClass="UIImageView"/>
-                <relationship kind="outlet" name="leftSwipeRecognizer" candidateClass="UISwipeGestureRecognizer"/>
-                <relationship kind="outlet" name="panRecgonizer" candidateClass="UIPanGestureRecognizer"/>
-                <relationship kind="outlet" name="singleTapRecognizer" candidateClass="UITapGestureRecognizer"/>
-                <relationship kind="outlet" name="waitingAlert" candidateClass="BlackAlertView"/>
-            </relationships>
-        </class>
-    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <nil key="statusBar"/>
         <simulatedOrientationMetrics key="orientation"/>

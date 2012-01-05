@@ -58,6 +58,7 @@
 }
 
 - (void) synchronouslyLoadPictures {
+    loading++;
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://hq2006.3322.org/picful/get_image.php"]];
     
     NSLog(@"Loading 20 more pictures");
@@ -73,6 +74,7 @@
             [delegate newPictureDidArrive:self];
         }
     }
+    loading--;
 }
 
 -(void) loadMoreImages {
@@ -91,7 +93,7 @@
         }
     }
     
-    if (images.count < 30) {
+    if (images.count < 30 && loading <= 3) {
         [self loadMoreImages];
     }
     

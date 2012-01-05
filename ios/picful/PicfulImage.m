@@ -18,7 +18,7 @@
     
     SBJsonParser *parser = [[SBJsonParser alloc] init];
     NSString *json_string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    NSLog(@"json string:%@", [json_string substringToIndex:40]);
+    NSLog(@"json string:%@", [json_string substringToIndex:MIN(40, [json_string length])]);
 
     NSError *error;
     NSDictionary *json = [parser objectWithString:json_string error:&error];

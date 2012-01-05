@@ -15,6 +15,7 @@
 @interface ImageLoader: NSObject {
     @public
     id delegate;
+    int loading;
 }
 
 @property (strong, nonatomic) NSMutableArray *images;
