@@ -1,0 +1,171 @@
+#!/bin/bash
+
+function read_config {
+    echo -e "loading config file from $1, config:"
+    source $1
+
+    echo "shard count:$shard_count"
+    # defaults for shard_start and shard_end
+    if [ -z "${shard_start+xxx}" ]; then
+        shard_start=0
+        shard_end=$(($shard_count-1))
+    fi
+
+    echo "shard start:$shard_start"
+    echo "shard end:$shard_end"
+
+    echo "run directory:$run_dir"
+    echo "executable path:$executable"
+    echo "logging config path:$logger_conf"
+    echo "dead minite:$dead_minute"
+    echo "refresh rate:$sleep_time"
+}
+
+function get_pid {
+    key="${executable} --shard=$1 --all-shard=${shard_count}"
+    echo `ps aux | grep -E "[${key:0:1}]${key:1}" | awk '{print $2}'`
+    return 0
+}
+
+function restart {
+    stop
+    start
+}
+
+function start_shard {
+    dir="${run_dir}/shard.$1"
+    if [ ! -d $dir ]; then
+        mkdir -p $dir
+    fi
+    cd $dir
+    cp $logger_conf "./logger.conf"
+    exe_cmd="${executable} --shard=$1 --all-shard=${shard_count}"
+    echo "starting ${executable} ..."
+    bash -i -c "$exe_cmd & echo \$!"
+    cd - > /dev/null
+}
+
+function monitor_one_shard {
+    if [ `date +%H:%M` == "23:59" -o `date +%H:%M` == "00:00" ]; then
+        echo "log switching time, stop monitoring"
+        return 0
+    fi
+
+    dir="${run_dir}/shard.$1"
+    cd $dir
+    heartbeat_file="${dir}/heart-beat-$1-${shard_count}"
+    log_time=`cat ${heartbeat_file}`
+    cur_time=`date +%s`
+    elapsed=$(( ${cur_time} - ${log_time} ))
+
+    echo "process $1 heartbeat: $elapsed sec "
+
+    # retart it if blocked
+    if (( $elapsed > $(( ${dead_minute} * 60 )) )); then
+        pid=`get_pid $1`
+        echo "need restart, pid=$pid"
+        kill -INT $pid || true
+        start_shard $i
+    fi
+    cd - > /dev/null
+}
+
+function monitor {
+    read_config $1
+    echo -e "\nmonitoring...\n"
+    trap 'echo "got SIGINT"' SIGINT
+    while [ true ]
+    do
+        source $config_path
+        for (( i=$shard_start; i<=$shard_end; i++  ))
+        do
+            monitor_one_shard $i
+        done
+        echo "sleeping for ${sleep_time} seconds"
+        sleep $sleep_time
+    done
+    echo "caught SIGINT"
+}
+
+function start {
+    read_config $config_path
+
+    echo -e "\nstarting Taras instances...\n"
+    
+    # go to run_dir
+    if [ ! -d ${run_dir} ]; then
+        echo 'making directory ${run_dir}'
+        mkdir -p $run_dir
+    fi
+    cd $run_dir
+    echo "moved to $(pwd)"
+
+    # make directory for each Taras instance
+    for (( i=$shard_start; i<=$shard_end; i++  ))
+    do
+        start_shard $i
+        sleep 1
+    done
+    echo -e "all instances kicked off\n"
+    echo -e "start monitor\n"
+    
+    monitor $config_path
+}
+
+function stop {
+    source $config_path
+    echo 'stoping all instance'
+    ps aux | grep -E "[${executable:0:1}]${executable:1}" | awk '{print $2}' | xargs kill -INT || true
+    echo 'stopped'
+}
+
+function usage {
+    echo "Usage: run-stuff [-c config-file] [-t start|monitor|stop|restart] [-r refresh-rate=5]"
+    echo "Start(or moniter) several Taras instances according to configuration file. By default find taras.conf from current working directory."
+    echo -e "Example: \nrun-taras -c /var/run/taras.conf"
+}
+
+set -u
+set -e
+config_path="./launcher.conf"
+master_log="`pwd`/master_log"
+cmd="monitor"
+sleep_time=5
+
+while getopts "c:t:r:" opt
+do
+    case $opt in
+        c)
+            config_path=$OPTARG
+            ;;
+        t)
+            cmd=$OPTARG
+            ;;
+        r)
+            sleep_time=$OPTARG
+            ;;
+        :)
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+case $cmd in
+    "start")
+        start
+        ;;
+    "monitor")
+        monitor $config_path
+        ;;
+    "restart")
+        restart
+        ;;
+    "stop")
+        stop
+        ;;
+    :)
+        usage
+        exit 1
+        ;;
+esac
