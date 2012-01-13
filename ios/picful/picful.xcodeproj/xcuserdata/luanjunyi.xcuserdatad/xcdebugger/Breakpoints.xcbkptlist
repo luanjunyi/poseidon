@@ -51,11 +51,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "77"
-         endingLineNumber = "77"
+         startingLineNumber = "79"
+         endingLineNumber = "79"
          landmarkName = "-resetCurtain"
          landmarkType = "5">
       </FileBreakpoint>
@@ -65,11 +65,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "120"
-         endingLineNumber = "120"
+         startingLineNumber = "122"
+         endingLineNumber = "122"
          landmarkName = "-handlePanDown:"
          landmarkType = "5">
       </FileBreakpoint>
@@ -79,11 +79,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "264"
-         endingLineNumber = "264"
+         startingLineNumber = "266"
+         endingLineNumber = "266"
          landmarkName = "-heartImage"
          landmarkType = "5">
       </FileBreakpoint>
@@ -93,11 +93,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "285"
-         endingLineNumber = "285"
+         startingLineNumber = "287"
+         endingLineNumber = "287"
          landmarkName = "-newPictureDidArrive:"
          landmarkType = "5">
       </FileBreakpoint>
@@ -107,11 +107,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "85"
-         endingLineNumber = "85"
+         startingLineNumber = "87"
+         endingLineNumber = "87"
          landmarkName = "-resetCurtainWithouthMovement"
          landmarkType = "5">
       </FileBreakpoint>
@@ -121,11 +121,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "233"
-         endingLineNumber = "233"
+         startingLineNumber = "235"
+         endingLineNumber = "235"
          landmarkName = "-tryUpdateMainImage"
          landmarkType = "5">
       </FileBreakpoint>
@@ -135,11 +135,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "222"
-         endingLineNumber = "222"
+         startingLineNumber = "224"
+         endingLineNumber = "224"
          landmarkName = "-updateMainImage:"
          landmarkType = "5">
       </FileBreakpoint>
@@ -175,11 +175,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "scroll/ViewController.m"
-         timestampString = "347439267.092241"
+         timestampString = "347781321.646809"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "266"
-         endingLineNumber = "266"
+         startingLineNumber = "268"
+         endingLineNumber = "268"
          landmarkName = "-heartImage"
          landmarkType = "5">
       </FileBreakpoint>

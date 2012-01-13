@@ -46,17 +46,19 @@ CGFloat kCurtainAlphaMax = 0.85f;
     if (stat == @"heart") {
         ratingStat = @"heart";
         staticSymbol.image = dynamicSymble.image = heartImage;
-        dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y + self.view.frame.size.height * kCurtainScrollThreshold * 0.2);
+        dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y + self.view.frame.size.height * kCurtainScrollThreshold);
+        staticSymbol.center = self.curtainView.center;
 
     } else if (stat == @"junk") {
         ratingStat = @"junk";
         staticSymbol.image = dynamicSymble.image = junkImage;
-        dynamicSymble.center = CGPointMake(self.curtainView.center.x, self.curtainView.center.y - self.view.frame.size.height * kCurtainScrollThreshold);
+        staticSymbol.center = CGPointMake(curtainView.center.x, self.view.frame.size.height - dynamicSymble.frame.size.height / 2);
+        dynamicSymble.center = CGPointMake(staticSymbol.center.x, staticSymbol.center.y - self.view.frame.size.height * kCurtainScrollThreshold);
     } else {
         NSLog(@"unrecognized curtain type: %@", stat);
     }
     
-    staticSymbol.center = self.curtainView.center;
+ 
     
     self.curtainView.hidden = NO;
     [self.curtainView addSubview:staticSymbol];
@@ -113,7 +115,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
     
     self.curtainView.alpha = kCurtainAlphaMax * cur;
     CGFloat totalMoveLength = self.curtainView.frame.size.height * kCurtainScrollThreshold;
-    dynamicSymble.center = CGPointMake(dynamicSymble.center.x, self.curtainView.center.y - (1 - cur) * totalMoveLength);
+    dynamicSymble.center = CGPointMake(dynamicSymble.center.x, staticSymbol.center.y - (1 - cur) * totalMoveLength);
     if (cur == 1.0) {
         [self junkImage];
     }
@@ -174,9 +176,9 @@ CGFloat kCurtainAlphaMax = 0.85f;
 //                animation.duration = 0.5;
 //                [self.imageView.layer addAnimation:animation forKey:@"anim.heart"];
                 [UIView beginAnimations:@"suck" context:NULL];
-                [UIView setAnimationDuration:1.0];
+                [UIView setAnimationDuration:0.5];
                 [UIView setAnimationTransition:103 forView:self.imageView cache:YES];
-                [UIView setAnimationPosition:self.view.center];
+                [UIView setAnimationPosition:staticSymbol.center];
                 [UIView commitAnimations];
                 
             } completion:^(BOOL finished) {
@@ -465,7 +467,7 @@ CGFloat kCurtainAlphaMax = 0.85f;
     
     CGFloat offset = translate.y;
     
-    if (ABS(offset) < 1.0f) {
+    if (ABS(offset) < 0.5f) {
         [self resetCurtain];
     } else if (offset > 0) { // Pulling down
         [self handlePanDown:offset];
