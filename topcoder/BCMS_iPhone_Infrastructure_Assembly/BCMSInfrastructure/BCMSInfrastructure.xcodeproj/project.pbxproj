@@ -1,0 +1,397 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3C0BFDA114C6E15500146AD1 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C0BFDA014C6E15500146AD1 /* UIKit.framework */; };
+		3C0BFDA314C6E15500146AD1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C0BFDA214C6E15500146AD1 /* Foundation.framework */; };
+		3C0BFDA514C6E15500146AD1 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C0BFDA414C6E15500146AD1 /* CoreGraphics.framework */; };
+		3C0BFDAB14C6E15500146AD1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3C0BFDA914C6E15500146AD1 /* InfoPlist.strings */; };
+		3C0BFDAD14C6E15500146AD1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C0BFDAC14C6E15500146AD1 /* main.m */; };
+		3C0BFDB114C6E15500146AD1 /* BCMSAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C0BFDB014C6E15500146AD1 /* BCMSAppDelegate.m */; };
+		3C0BFDB414C6E15500146AD1 /* BCMSViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C0BFDB314C6E15500146AD1 /* BCMSViewController.m */; };
+		3C0BFDB714C6E15500146AD1 /* BCMSViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3C0BFDB514C6E15500146AD1 /* BCMSViewController.xib */; };
+		3C0BFDC214C6E21F00146AD1 /* BCMSBackEndFacade.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C0BFDC114C6E21F00146AD1 /* BCMSBackEndFacade.m */; };
+		3C0BFE4114C70AEC00146AD1 /* libBCMSServices.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C0BFE3A14C70A7600146AD1 /* libBCMSServices.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3C0BFE3914C70A7600146AD1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3C0BFE2D14C70A7500146AD1 /* BCMSServices.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1E6C6F3D149388AA003811D2;
+			remoteInfo = BCMSServices;
+		};
+		3C0BFE3B14C70A7600146AD1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3C0BFE2D14C70A7500146AD1 /* BCMSServices.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1E6C6F4D149388AA003811D2;
+			remoteInfo = BCMSServicesTests;
+		};
+		3C0BFE4214C70B2000146AD1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3C0BFE2D14C70A7500146AD1 /* BCMSServices.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 1E6C6F3C149388AA003811D2;
+			remoteInfo = BCMSServices;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		3C0BFD9C14C6E15500146AD1 /* BCMSInfrastructure.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BCMSInfrastructure.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C0BFDA014C6E15500146AD1 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		3C0BFDA214C6E15500146AD1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		3C0BFDA414C6E15500146AD1 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		3C0BFDA814C6E15500146AD1 /* BCMSInfrastructure-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BCMSInfrastructure-Info.plist"; sourceTree = "<group>"; };
+		3C0BFDAA14C6E15500146AD1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		3C0BFDAC14C6E15500146AD1 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		3C0BFDAE14C6E15500146AD1 /* BCMSInfrastructure-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BCMSInfrastructure-Prefix.pch"; sourceTree = "<group>"; };
+		3C0BFDAF14C6E15500146AD1 /* BCMSAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BCMSAppDelegate.h; sourceTree = "<group>"; };
+		3C0BFDB014C6E15500146AD1 /* BCMSAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BCMSAppDelegate.m; sourceTree = "<group>"; };
+		3C0BFDB214C6E15500146AD1 /* BCMSViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BCMSViewController.h; sourceTree = "<group>"; };
+		3C0BFDB314C6E15500146AD1 /* BCMSViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BCMSViewController.m; sourceTree = "<group>"; };
+		3C0BFDB614C6E15500146AD1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/BCMSViewController.xib; sourceTree = "<group>"; };
+		3C0BFDC014C6E21F00146AD1 /* BCMSBackEndFacade.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BCMSBackEndFacade.h; sourceTree = "<group>"; };
+		3C0BFDC114C6E21F00146AD1 /* BCMSBackEndFacade.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BCMSBackEndFacade.m; sourceTree = "<group>"; };
+		3C0BFE2D14C70A7500146AD1 /* BCMSServices.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = BCMSServices.xcodeproj; path = BCMSInfrastructure/BCMServices_fixed/BCMSServices.xcodeproj; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3C0BFD9914C6E15500146AD1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C0BFE4114C70AEC00146AD1 /* libBCMSServices.a in Frameworks */,
+				3C0BFDA114C6E15500146AD1 /* UIKit.framework in Frameworks */,
+				3C0BFDA314C6E15500146AD1 /* Foundation.framework in Frameworks */,
+				3C0BFDA514C6E15500146AD1 /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3C0BFD9114C6E15400146AD1 = {
+			isa = PBXGroup;
+			children = (
+				3C0BFE2D14C70A7500146AD1 /* BCMSServices.xcodeproj */,
+				3C0BFDA614C6E15500146AD1 /* BCMSInfrastructure */,
+				3C0BFD9F14C6E15500146AD1 /* Frameworks */,
+				3C0BFD9D14C6E15500146AD1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3C0BFD9D14C6E15500146AD1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3C0BFD9C14C6E15500146AD1 /* BCMSInfrastructure.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3C0BFD9F14C6E15500146AD1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3C0BFDA014C6E15500146AD1 /* UIKit.framework */,
+				3C0BFDA214C6E15500146AD1 /* Foundation.framework */,
+				3C0BFDA414C6E15500146AD1 /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		3C0BFDA614C6E15500146AD1 /* BCMSInfrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				3C0BFDC314C6E22C00146AD1 /* Services */,
+				3C0BFDBF14C6E1F900146AD1 /* classes */,
+				3C0BFDBD14C6E1C400146AD1 /* Resources */,
+				3C0BFDAF14C6E15500146AD1 /* BCMSAppDelegate.h */,
+				3C0BFDB014C6E15500146AD1 /* BCMSAppDelegate.m */,
+				3C0BFDB214C6E15500146AD1 /* BCMSViewController.h */,
+				3C0BFDB314C6E15500146AD1 /* BCMSViewController.m */,
+				3C0BFDA714C6E15500146AD1 /* Supporting Files */,
+			);
+			path = BCMSInfrastructure;
+			sourceTree = "<group>";
+		};
+		3C0BFDA714C6E15500146AD1 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				3C0BFDA814C6E15500146AD1 /* BCMSInfrastructure-Info.plist */,
+				3C0BFDA914C6E15500146AD1 /* InfoPlist.strings */,
+				3C0BFDAC14C6E15500146AD1 /* main.m */,
+				3C0BFDAE14C6E15500146AD1 /* BCMSInfrastructure-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		3C0BFDBD14C6E1C400146AD1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3C0BFDBE14C6E1D700146AD1 /* xib */,
+				3C0BFDB514C6E15500146AD1 /* BCMSViewController.xib */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		3C0BFDBE14C6E1D700146AD1 /* xib */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = xib;
+			sourceTree = "<group>";
+		};
+		3C0BFDBF14C6E1F900146AD1 /* classes */ = {
+			isa = PBXGroup;
+			children = (
+				3C0BFDC014C6E21F00146AD1 /* BCMSBackEndFacade.h */,
+				3C0BFDC114C6E21F00146AD1 /* BCMSBackEndFacade.m */,
+			);
+			name = classes;
+			sourceTree = "<group>";
+		};
+		3C0BFDC314C6E22C00146AD1 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
+		3C0BFE2E14C70A7500146AD1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3C0BFE3A14C70A7600146AD1 /* libBCMSServices.a */,
+				3C0BFE3C14C70A7600146AD1 /* BCMSServicesTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3C0BFD9B14C6E15500146AD1 /* BCMSInfrastructure */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3C0BFDBA14C6E15500146AD1 /* Build configuration list for PBXNativeTarget "BCMSInfrastructure" */;
+			buildPhases = (
+				3C0BFD9814C6E15500146AD1 /* Sources */,
+				3C0BFD9914C6E15500146AD1 /* Frameworks */,
+				3C0BFD9A14C6E15500146AD1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3C0BFE4314C70B2000146AD1 /* PBXTargetDependency */,
+			);
+			name = BCMSInfrastructure;
+			productName = BCMSInfrastructure;
+			productReference = 3C0BFD9C14C6E15500146AD1 /* BCMSInfrastructure.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3C0BFD9314C6E15400146AD1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
+			buildConfigurationList = 3C0BFD9614C6E15400146AD1 /* Build configuration list for PBXProject "BCMSInfrastructure" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 3C0BFD9114C6E15400146AD1;
+			productRefGroup = 3C0BFD9D14C6E15500146AD1 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 3C0BFE2E14C70A7500146AD1 /* Products */;
+					ProjectRef = 3C0BFE2D14C70A7500146AD1 /* BCMSServices.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				3C0BFD9B14C6E15500146AD1 /* BCMSInfrastructure */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		3C0BFE3A14C70A7600146AD1 /* libBCMSServices.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libBCMSServices.a;
+			remoteRef = 3C0BFE3914C70A7600146AD1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3C0BFE3C14C70A7600146AD1 /* BCMSServicesTests.octest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = BCMSServicesTests.octest;
+			remoteRef = 3C0BFE3B14C70A7600146AD1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3C0BFD9A14C6E15500146AD1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C0BFDAB14C6E15500146AD1 /* InfoPlist.strings in Resources */,
+				3C0BFDB714C6E15500146AD1 /* BCMSViewController.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3C0BFD9814C6E15500146AD1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C0BFDAD14C6E15500146AD1 /* main.m in Sources */,
+				3C0BFDB114C6E15500146AD1 /* BCMSAppDelegate.m in Sources */,
+				3C0BFDB414C6E15500146AD1 /* BCMSViewController.m in Sources */,
+				3C0BFDC214C6E21F00146AD1 /* BCMSBackEndFacade.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3C0BFE4314C70B2000146AD1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = BCMSServices;
+			targetProxy = 3C0BFE4214C70B2000146AD1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		3C0BFDA914C6E15500146AD1 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3C0BFDAA14C6E15500146AD1 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		3C0BFDB514C6E15500146AD1 /* BCMSViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3C0BFDB614C6E15500146AD1 /* en */,
+			);
+			name = BCMSViewController.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		3C0BFDB814C6E15500146AD1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		3C0BFDB914C6E15500146AD1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3C0BFDBB14C6E15500146AD1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "BCMSInfrastructure/BCMSInfrastructure-Prefix.pch";
+				INFOPLIST_FILE = "BCMSInfrastructure/BCMSInfrastructure-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				USER_HEADER_SEARCH_PATHS = "BCMSInfrastructure/BCMServices_fixed/**";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		3C0BFDBC14C6E15500146AD1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "BCMSInfrastructure/BCMSInfrastructure-Prefix.pch";
+				INFOPLIST_FILE = "BCMSInfrastructure/BCMSInfrastructure-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				USER_HEADER_SEARCH_PATHS = "BCMSInfrastructure/BCMServices_fixed/**";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3C0BFD9614C6E15400146AD1 /* Build configuration list for PBXProject "BCMSInfrastructure" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C0BFDB814C6E15500146AD1 /* Debug */,
+				3C0BFDB914C6E15500146AD1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3C0BFDBA14C6E15500146AD1 /* Build configuration list for PBXNativeTarget "BCMSInfrastructure" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C0BFDBB14C6E15500146AD1 /* Debug */,
+				3C0BFDBC14C6E15500146AD1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3C0BFD9314C6E15400146AD1 /* Project object */;
+}

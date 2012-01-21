@@ -1,0 +1,35 @@
+{
+    "Id":2,
+    "Name":"IncidentCategory #5",
+    "IsmContacts":[
+                   {
+                   "Id":20,
+                   "Name":"Contact #20",
+                   "JobTitle":null,
+                   "PrimaryNumber":"PrimaryNumber #20",
+                   "Role":{
+                   "Id":2,
+                   "Name":"Secondary"
+                   },
+                   "SecondaryNumber":"SecondaryNumber #20",
+                   "User":null
+                   },
+                   {
+                   "Id":21,
+                   "Name":"Contact #21",
+                   "JobTitle":null,
+                   "PrimaryNumber":"PrimaryNumber #21",
+                   "Role":null,
+                   "SecondaryNumber":"SecondaryNumber #21",
+                   "User":{
+                   "Id":1,
+                   "Email":"user21@test.com",
+                   "EmployeeName":"EmployeeName #21",
+                   "Groups":[
+                   
+                   ],
+                   "Username":"user21"
+                   }
+                   }
+                   ]
+}

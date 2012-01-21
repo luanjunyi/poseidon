@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>User</key>
+	<string>user5</string>
+	<key>Password</key>
+	<string>password5</string>
+	<key>LogInAsGroup</key>
+	<integer>2</integer>
+	<key>ServiceBaseURL</key>
+	<string>http://ec2-50-17-63-160.compute-1.amazonaws.com/Services/</string>
+	<key>BCMUserServiceTest</key>
+	<dict>
+		<key>logoutUserId</key>
+		<integer>11</integer>
+		<key>createUserId</key>
+		<integer>1100</integer>
+		<key>deleteUserId</key>
+		<integer>1101</integer>
+		<key>updateUserId</key>
+		<integer>1102</integer>
+	</dict>
+	<key>BCMHelpDocumentServiceTest</key>
+	<dict>
+		<key>downloadDocumentId</key>
+		<integer>1</integer>
+	</dict>
+</dict>
+</plist>
