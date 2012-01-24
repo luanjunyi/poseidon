@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys, os, time, random, string, re, htmllib
-from urlparse import urlparse
+from urlparse import urlparse, urljoin
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
 from log import _logger
@@ -14,7 +14,6 @@ import BeautifulSoup
 from BeautifulSoup import BeautifulSoup as BSoup
 
 import util
-
 
 def html_unescape(html):
     p = HTMLParser()
@@ -406,26 +405,14 @@ def abs_url(base_url, url):
         return url
 
     _logger.debug('relative url:(%s), baseurl:(%s)' % (url, base_url))
+    basep = urlparse(base_url)
+    filename = basep.path.split("/")[-1]
 
-    if url[0] == '/':
-        basep = urlparse(base_url)
-        if basep.path != '':
-            base_url = base_url.replace(basep.path, '/')
-        if base_url[-1] != '/':
-            base_url += '/'
+    # For URL is direcotry but not end with '/', append '/'
+    if filename != '' and not "." in filename and filename[-1] != '/':
+        base_url += '/'
         _logger.debug('baseurl changed to %s' % base_url)
-        url = url[1:]
-    else:
-        b = re.search('.+://.+/', base_url)
-        if b != None:
-            base_url = b.group()
-        else:
-            base_url = base_url + '/'
-        _logger.debug('baseurl changed to %s' % base_url)
-
-    url = base_url + url
-    _logger.debug('got absolute url:%s' % url)
-    return url
+    return urljoin(base_url, url)
 
 def get_all_href(url, encoding = 'utf-8'):
     br = get_browser()
