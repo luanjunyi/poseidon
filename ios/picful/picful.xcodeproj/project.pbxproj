@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3C0EF7431504C624002954C6 /* icon-picful-144-144.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C0EF7421504C624002954C6 /* icon-picful-144-144.png */; };
+		3C0EF7451504C62E002954C6 /* icon-picful -57-57.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C0EF7441504C62E002954C6 /* icon-picful -57-57.png */; };
+		3C0EF7471504C68D002954C6 /* icon-picful-72-72.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C0EF7461504C68D002954C6 /* icon-picful-72-72.png */; };
 		3CBCF7AB14B45F2E00883253 /* NICInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CBCF7A814B45F2E00883253 /* NICInfo.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc "; }; };
 		3CBCF7AC14B45F2E00883253 /* NICInfoSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CBCF7AA14B45F2E00883253 /* NICInfoSummary.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc "; }; };
 		3CC059571498464100EA57AE /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC059561498464100EA57AE /* UIKit.framework */; };
@@ -69,6 +72,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3C0EF7421504C624002954C6 /* icon-picful-144-144.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-picful-144-144.png"; sourceTree = "<group>"; };
+		3C0EF7441504C62E002954C6 /* icon-picful -57-57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-picful -57-57.png"; sourceTree = "<group>"; };
+		3C0EF7461504C68D002954C6 /* icon-picful-72-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-picful-72-72.png"; sourceTree = "<group>"; };
 		3CBCF7A714B45F2E00883253 /* NICInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NICInfo.h; sourceTree = "<group>"; };
 		3CBCF7A814B45F2E00883253 /* NICInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NICInfo.m; sourceTree = "<group>"; };
 		3CBCF7A914B45F2E00883253 /* NICInfoSummary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NICInfoSummary.h; sourceTree = "<group>"; };
@@ -171,6 +177,9 @@
 		3CC059471498464000EA57AE = {
 			isa = PBXGroup;
 			children = (
+				3C0EF7461504C68D002954C6 /* icon-picful-72-72.png */,
+				3C0EF7441504C62E002954C6 /* icon-picful -57-57.png */,
+				3C0EF7421504C624002954C6 /* icon-picful-144-144.png */,
 				3CF0F3F114AEE7FC00680191 /* Default@2x.png */,
 				3CF0F3EF14AEE7EC00680191 /* Default.png */,
 				3CC0595C1498464100EA57AE /* picful */,
@@ -424,6 +433,9 @@
 				3CF0F48514B4494A00680191 /* 22.jpg in Resources */,
 				3CF0F48614B4494A00680191 /* 23.jpg in Resources */,
 				3CF0F48714B4494A00680191 /* 24.jpg in Resources */,
+				3C0EF7431504C624002954C6 /* icon-picful-144-144.png in Resources */,
+				3C0EF7451504C62E002954C6 /* icon-picful -57-57.png in Resources */,
+				3C0EF7471504C68D002954C6 /* icon-picful-72-72.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -566,6 +578,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "scroll/picful-Prefix.pch";
 				INFOPLIST_FILE = "scroll/picful-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/scroll\"",
@@ -582,6 +595,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "scroll/picful-Prefix.pch";
 				INFOPLIST_FILE = "scroll/picful-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/scroll\"",
