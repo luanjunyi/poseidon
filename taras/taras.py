@@ -70,14 +70,17 @@ class WeiboDaemon:
                          % (task['email'], task['type'], task['content']))
             try:
                 if task['type'] == 'retweet':
-                    tweet_id = int(task['content'])
-                    self.weibo.retweet(id=tweet_id)
+                    tweet_id_and_content = task['content']
+                    tweet_id_and_content_array = tweet_id_and_content.split('#')
+                    tweet_id = int(tweet_id_and_content_array[0])
+                    retweet_content = tweet_id_and_content_array[1]
+                    self.weibo.repost(id=tweet_id, cid=int(0), comment=retweet_content)
                     self.agent.remove_task(task['id'])
                 else:
                     _logger.error("unknown custom task type(%s)" % task['type'])
             except Exception, err:
-                _logger.error("custom task failed: email(%s), type(%s), content(%s), error: %s"
-                         % (task['email'], task['type'], task['content'], err))
+                _logger.error("custom task failed: email(%s), type(%s), content(%s), error: %s, tweet_id: %s, retweet_content: %s"
+                         % (task['email'], task['type'], task['content'], err, tweet_id, retweet_content))
 
     def restart_mysql_agent(self):
         self.agent.stop()
