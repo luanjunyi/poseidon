@@ -74,7 +74,7 @@ class WeiboDaemon:
                     tweet_id_and_content_array = tweet_id_and_content.split('#')
                     tweet_id = int(tweet_id_and_content_array[0])
                     retweet_content = tweet_id_and_content_array[1]
-                    self.weibo.repost(id=tweet_id, cid=int(0), comment=retweet_content)
+                    self.weibo.repost(id=tweet_id, status=retweet_content)
                     self.agent.remove_task(task['id'])
                 else:
                     _logger.error("unknown custom task type(%s)" % task['type'])
