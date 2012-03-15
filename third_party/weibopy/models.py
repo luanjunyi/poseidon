@@ -47,6 +47,8 @@ class Status(Model):
             elif k == 'screen_name':
                 setattr(status, k, v)
             elif k == 'created_at':
+                if (v == ''): # When the retweeted tweet is deleted, v is ''
+                    v = 'Wed Feb 15 03:15:52 +0800 2012'
                 setattr(status, k, parse_datetime(v))
             elif k == 'source':
                 if '<' in v:

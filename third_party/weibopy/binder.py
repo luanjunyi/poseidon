@@ -19,9 +19,7 @@ re_path_template = re.compile('{\w+}')
 
 
 def bind_api(**config):
-
     class APIMethod(object):
-        
         path = config['path']
         payload_type = config.get('payload_type', None)
         payload_list = config.get('payload_list', False)
@@ -211,7 +209,7 @@ def bind_api(**config):
                 raise WeibopError(error_msg)
             
             # Parse the response payload
- 
+            #print 'body: %s' % body
             result = self.api.parser.parse(self, body)
 
             # Store result into cache if one is available.
