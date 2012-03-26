@@ -12,49 +12,47 @@ from util import pbrowser
 from sdk import qqweibo as qq_sdk
 from sdk import weibopy as sina_sdk
 
-def adapte_api_method(adapter, method_dict):
-    if not adapter.type in method_dict:
-        _logger.error("failed to find type(%s) in method_dict" % adapter.type)
-        return None
+def create_auth_adapted(api_type):
+    if api_type == "sina":
+        auth_type = sina_sdk.OAuthHandler
+    elif api_type == "qq":
+        auth_type = qq_sdk.OAuthHandler
 
-    native_method = method_dict[adapter.type]
-    api = adapter.api
+    def method(adapter, api_key, api_secret):
+        adapter.auth = auth_type(api_key, api_secret)
+    return method
+
+def create_api_from_token_adapted(api_type):
+    if api_type == "sina":
+        api_class = sina_sdk.API
+    elif api_type == "qq":
+        api_class = qq_sdk.API
+
+    def method(adapter, token):
+        adapter.auth.setToken(token.key, token.secret)
+        return api_class(adapter.auth)
+
+    return method
+        
+def adapte_api_method(native_method, arg_map):
 
     def method(adapter, *args, **kwargs):
-        native_method(adapter.api, *args, **kwargs)
+        return native_method(adapter.api, *args, **kwargs)
 
     return method
 
+
+
 def create_adapted_api(api_type):
+    method_dict = {'public_timeline':
+                       {"sina": sina_sdk.API.public_timeline,
+                        "qq": qq_sdk.API._statuses_public_timeline}}
+
     if api_type == "sina":
         _logger.info("creating api from sina sdk")
 
     elif api_type == "qq":
         _logger.info("creating api from qq sdk")
-
-
-    def _create_auth_adapted():
-        if api_type == "sina":
-            auth_type = sina_sdk.OAuthHandler
-        elif api_type == "qq":
-            auth_type = qq_sdk.OAuthHandler
-
-        def method(adapter, api_key, api_secret):
-            adapter.auth = auth_type(api_key, api_secret)
-        return method
-
-    def create_api_from_token_adapted():
-        if api_type == "sina":
-            api_class = sina_sdk.API
-        elif api_type == "qq":
-            api_class = qq_sdk.API
-
-        def method(adapter, token):
-            adapter.auth.setToken(token.key, token.secret)
-            return api_class(adapter.auth)
-
-        return method
-        
 
     class TarasAPI:
         def __init__(self, api_key, api_secret):
@@ -63,8 +61,8 @@ def create_adapted_api(api_type):
             self.auth = None
             self._create_auth(api_key, api_secret)
 
-        _create_auth = _create_auth_adapted()
-        create_api_from_token = create_api_from_token_adapted()
+        _create_auth = create_auth_adapted(api_type)
+        create_api_from_token = create_api_from_token_adapted(api_type)
 
 
         def _get_authorization_url(self):
@@ -97,20 +95,21 @@ def create_adapted_api(api_type):
             self.api = self.create_api_from_token(token)
 
         # API bindings
-        public_timeline = adapte_api_method({'sina': self.api.public_timeline,
-                                             'qq': self.api._statuses_public_timeline})
-
+        public_timeline = adapte_api_method(method_dict['public_timeline'][api_type],
+                                            {})
 
     return TarasAPI
 
 
 def test_api(api):
-    me = api.api.me()
+    print "timeline:" + str(api.public_timeline())
 
-    if hasattr(me, 'screen_name'):
-        print api.public_timeline()[0]
-    else:
-        print me.nick
+    # me = api.api.me()
+
+    # if hasattr(me, 'screen_name'):
+    #     print "timeline:" + str(api.public_timeline())
+    # else:
+    #     print me.nick
 
 if __name__ == "__main__":
     _logger.info("debugging api_adapter.py")
