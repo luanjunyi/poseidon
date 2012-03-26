@@ -8,7 +8,6 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Paracode 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../taras/sdk')
 
 from util.log import _logger
-from util import pbrowser
 from sdk import qqweibo as qq_sdk
 from sdk import weibopy as sina_sdk
 
@@ -156,7 +155,7 @@ if __name__ == "__main__":
     
     # Testing Sina api
     api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
-    api.create_api_from_scratch("luanjunyi@gmail.com", "admin123")
+    api.create_api_from_scratch("", "")
     #test_api(api)
 
     # Testing QQ api
