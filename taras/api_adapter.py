@@ -12,6 +12,16 @@ from util import pbrowser
 from sdk import qqweibo as qq_sdk
 from sdk import weibopy as sina_sdk
 
+method_dict = {'public_timeline':
+                   {"sina": sina_sdk.API.public_timeline,
+                    "qq": qq_sdk.API._statuses_public_timeline}}
+
+result_conert_dict = {'Tweet': 
+                      {'sina': {},
+                       'qq': {},
+                       },
+                      }
+
 def create_auth_adapted(api_type):
     if api_type == "sina":
         auth_type = sina_sdk.OAuthHandler
@@ -34,19 +44,18 @@ def create_api_from_token_adapted(api_type):
 
     return method
         
-def adapte_api_method(native_method, arg_map):
+def adapte_api_method(native_method, arg_map, result_map):
 
     def method(adapter, *args, **kwargs):
-        return native_method(adapter.api, *args, **kwargs)
+        ret = native_method(adapter.api, *args, **kwargs)
+        if (not result_map):
+            
 
     return method
 
 
 
 def create_adapted_api(api_type):
-    method_dict = {'public_timeline':
-                       {"sina": sina_sdk.API.public_timeline,
-                        "qq": qq_sdk.API._statuses_public_timeline}}
 
     if api_type == "sina":
         _logger.info("creating api from sina sdk")
@@ -96,20 +105,13 @@ def create_adapted_api(api_type):
 
         # API bindings
         public_timeline = adapte_api_method(method_dict['public_timeline'][api_type],
-                                            {})
+                                            None, result_conert_dict['Tweet'][api_type])
 
     return TarasAPI
 
 
 def test_api(api):
     print "timeline:" + str(api.public_timeline())
-
-    # me = api.api.me()
-
-    # if hasattr(me, 'screen_name'):
-    #     print "timeline:" + str(api.public_timeline())
-    # else:
-    #     print me.nick
 
 if __name__ == "__main__":
     _logger.info("debugging api_adapter.py")
