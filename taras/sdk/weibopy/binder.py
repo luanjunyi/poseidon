@@ -72,7 +72,7 @@ def bind_api(**config):
                 try:
                     self.parameters[self.allowed_param[idx]] = convert_to_utf8_str(arg)
                 except IndexError:
-                    raise WeibopError('Too many parameters supplied!')
+                    raise WeibopError('Too many parameters supplied!(index=%d)' % idx)
 
             for k, arg in kargs.items():
                 if arg is None:

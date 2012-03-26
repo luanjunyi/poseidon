@@ -13,14 +13,21 @@ from sdk import qqweibo as qq_sdk
 from sdk import weibopy as sina_sdk
 
 method_dict = {'public_timeline':
-                   {"sina": sina_sdk.API.public_timeline,
-                    "qq": qq_sdk.API._statuses_public_timeline}}
+                   {"name": {"sina": sina_sdk.API.public_timeline,
+                          "qq": qq_sdk.API._statuses_public_timeline},
+                    "arg_convert": {},
+                    "ret_convert": {"sina": {"content": "text"},
+                                    "qq": {"content": "text"},}
+                   },
 
-result_conert_dict = {'Tweet': 
-                      {'sina': {},
-                       'qq': {},
-                       },
-                      }
+               'update_status':
+                   {"name": {"sina": sina_sdk.API.update_status,
+                           "qq": qq_sdk.API._t_add},
+                    "arg_convert": {"sina": {"text": "status"},
+                                    "qq": {'text': "content"}},
+                    "ret_convert": {},
+                    },
+               }
 
 def create_auth_adapted(api_type):
     if api_type == "sina":
@@ -43,13 +50,41 @@ def create_api_from_token_adapted(api_type):
         return api_class(adapter.auth)
 
     return method
+
+def convert_obj(ret_dict, obj):
+    class TarasApiResult(object):
+        pass
+    output = TarasApiResult()
+    for key, value in ret_dict.items():
+        setattr(output, key, getattr(obj, value))
+    return output
         
-def adapte_api_method(native_method, arg_map, result_map):
+def adapte_api_method(method_info, api_type):
+    native_method = method_info["name"][api_type]
+    arg_dict = method_info["arg_convert"][api_type] if ("arg_convert" in method_info and api_type in method_info["arg_convert"]) else {}
+    ret_dict = method_info["ret_convert"][api_type] if ("ret_convert" in method_info and api_type in method_info["ret_convert"]) else {}
 
     def method(adapter, *args, **kwargs):
-        ret = native_method(adapter.api, *args, **kwargs)
-        if (not result_map):
+        arguments = {}
+        if len(args) > 0:
+            raise Exception("args is not empty, adapted API can't be called using positional arguments")
             
+        for key, value in arg_dict.items():
+            if key != value:
+                kwargs[value] = kwargs[key]
+                del kwargs[key]
+
+        ret = native_method(adapter.api, *args, **kwargs)
+
+        if hasattr(ret, '__iter__'): #fixme
+            result = list()
+            for obj in ret:
+                result.append(convert_obj(ret_dict, obj))
+            ret = result
+        else:
+            ret = convert_obj(ret_dict, ret)
+        
+        return ret
 
     return method
 
@@ -103,27 +138,30 @@ def create_adapted_api(api_type):
             token = self.create_token_from_web(username, password)
             self.api = self.create_api_from_token(token)
 
-        # API bindings
-        public_timeline = adapte_api_method(method_dict['public_timeline'][api_type],
-                                            None, result_conert_dict['Tweet'][api_type])
+    # API bindings
+    for key, value in method_dict.items():
+        setattr(TarasAPI, key, adapte_api_method(method_dict[key], api_type))
 
     return TarasAPI
 
 
 def test_api(api):
-    print "timeline:" + str(api.public_timeline())
+    print "timeline:" + api.public_timeline()[0].content.encode('utf-8')
+    api.update_status(text=u"今天星期一，很多事情啊!")
 
 if __name__ == "__main__":
     _logger.info("debugging api_adapter.py")
     QQApi = create_adapted_api("qq")
     SinaApi = create_adapted_api("sina")
-    # Testing QQ api
-    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    api.create_api_from_scratch("2603698377", "youhao2006")
-    test_api(api)
     
     # Testing Sina api
     api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
     api.create_api_from_scratch("luanjunyi@gmail.com", "admin123")
+    #test_api(api)
+
+    # Testing QQ api
+    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
+    api.create_api_from_scratch("2603698377", "youhao2006")
     test_api(api)
+
     
