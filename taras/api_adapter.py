@@ -97,8 +97,8 @@ def create_adapted_api(api_type):
             self.api = self.create_api_from_token(token)
 
         # API bindings
-        public_timeline = adapte_api_method(self, {'sina': self.api.public_timeline,
-                                                   'qq': self.api._statuses_public_timeline})
+        public_timeline = adapte_api_method({'sina': self.api.public_timeline,
+                                             'qq': self.api._statuses_public_timeline})
 
 
     return TarasAPI
