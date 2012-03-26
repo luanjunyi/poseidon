@@ -121,7 +121,6 @@ def create_adapted_api(api_type):
 
         def create_token_from_web(self, username, password):
             casper_path = os.path.dirname(os.path.abspath(__file__)) + "/verify_weibo.js"
-            br = pbrowser.get_browser()
             url = self._get_authorization_url()
             _logger.info("casperJS is processing authorization URL:" + url)
             casper_cmd = "casperjs %s '%s' --user='%s' --passwd='%s' --type=%s " % (casper_path, url, username, password, self.type)
