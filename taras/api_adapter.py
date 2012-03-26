@@ -145,7 +145,7 @@ def create_adapted_api(api_type):
 
 def test_api(api):
     print "timeline:" + api.public_timeline()[0].content.encode('utf-8')
-    api.update_status(text=u"今天星期一，很多事情啊!")
+    #api.update_status(text=u"今天星期一，很多事情啊!")
 
 if __name__ == "__main__":
     _logger.info("debugging api_adapter.py")
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     
     # Testing Sina api
     api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
-    api.create_api_from_scratch("", "")
+    #api.create_api_from_scratch("diyidawang@163.com", "wjb0371")
     #test_api(api)
 
     # Testing QQ api
