@@ -28,28 +28,6 @@ method_dict = {'public_timeline':
                     },
                }
 
-def create_auth_adapted(api_type):
-    if api_type == "sina":
-        auth_type = sina_sdk.OAuthHandler
-    elif api_type == "qq":
-        auth_type = qq_sdk.OAuthHandler
-
-    def method(adapter, api_key, api_secret):
-        adapter.auth = auth_type(api_key, api_secret)
-    return method
-
-def create_api_from_token_adapted(api_type):
-    if api_type == "sina":
-        api_class = sina_sdk.API
-    elif api_type == "qq":
-        api_class = qq_sdk.API
-
-    def method(adapter, token):
-        adapter.auth.setToken(token.key, token.secret)
-        return api_class(adapter.auth)
-
-    return method
-
 def convert_obj(ret_dict, obj):
     class TarasApiResult(object):
         pass
@@ -88,25 +66,29 @@ def adapte_api_method(method_info, api_type):
     return method
 
 
-
 def create_adapted_api(api_type):
 
     if api_type == "sina":
         _logger.info("creating api from sina sdk")
+        sdk_type = sina_sdk
 
     elif api_type == "qq":
         _logger.info("creating api from qq sdk")
+        sdk_type = qq_sdk
 
     class TarasAPI:
         def __init__(self, api_key, api_secret):
             self.type = api_type
             self.api = None
             self.auth = None
-            self._create_auth(api_key, api_secret)
+            self._create_auth_adapted(api_key, api_secret)
 
-        _create_auth = create_auth_adapted(api_type)
-        create_api_from_token = create_api_from_token_adapted(api_type)
+        def _create_auth_adapted(self, api_key, api_secret):
+            self.auth = sdk_type.OAuthHandler(api_key, api_secret)
 
+        def create_api_from_token(self, token):
+            self.auth.setToken(token.key, token.secret)
+            return sdk_type.API(self.auth)
 
         def _get_authorization_url(self):
             return self.auth.get_authorization_url()
