@@ -155,7 +155,8 @@ class API(object):
 
     """ statuses/show """
     get_status = bind_api(
-        path = '/statuses/show.json',
+        #path = '/statuses/show.json',
+        path = '/statuses/show/{id}.json',
         payload_type = 'status',
         allowed_param = ['id']
     )

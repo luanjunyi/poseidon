@@ -346,6 +346,7 @@ class API(object):
     """ 2.user/update 更新用户信息 """
     _user_update = bind_api(
         path = '/user/update',
+        payload_type = 'json',
         method = 'POST',
         allowed_param = ['nick', 'sex', 'year', 'month',
                          'day', 'countrycode', 'provincecode',
@@ -361,6 +362,7 @@ class API(object):
 
         return bind_api(
             path = '/user/update_head',
+            payload_type = 'json',
             method = 'POST',
             require_auth = True,
             allowed_param = allowed_param
@@ -446,6 +448,7 @@ class API(object):
     """ 5.friends/add 收听某个用户 """
     _friends_add = bind_api(
         path = '/friends/add',
+        payload_type = 'json',
         method = 'POST',
         allowed_param = ['name'],
         require_auth = True
@@ -454,6 +457,7 @@ class API(object):
     """ 6.friends/del取消收听某个用户 """
     _friends_del = bind_api(          # fix confilicts with del
         path = '/friends/del',
+        payload_type = 'json',
         method = 'POST',
         allowed_param = ['name'],
         require_auth = True
@@ -498,6 +502,14 @@ class API(object):
         allowed_param = ['names', 'flag'],
         require_auth = True
     )
+
+    def is_user_following_me(self, user):
+        ret = self._friends_check(names=[user], flag=0)
+        return getattr(ret, user)
+
+    def is_following_user(felf, user):
+        ret = self.friendsJ_check(names=[user], flag=1)
+        return getattr(ret, user)
 
     """ 12.friends/user_fanslist 其他帐户听众列表 """
     _friends_user_fanslist = bind_api(

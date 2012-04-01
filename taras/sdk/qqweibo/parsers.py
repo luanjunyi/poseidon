@@ -91,6 +91,9 @@ class ModelParser(JSONParser):
         json = JSONParser.parse(self, method, payload)
         data = json['data']
 
+        if method.path == '/user/update_head' or method.path == '/user/update' or method.path == '/friends/add' or method.path == '/friends/del':
+            data = json
+
         # TODO: add pager
         if 'pagetime' in method.allowed_param:
             pass
