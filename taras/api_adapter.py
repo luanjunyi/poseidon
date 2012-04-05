@@ -50,8 +50,7 @@ method_dict = {'public_timeline':
                     {"name": {"sina": sina_sdk.API.comment,
                               "qq": qq_sdk.API._t_comment},
                      "arg_convert": {"sina": {"id": "id",
-                                              "text": "comment",
-                                              "cid": "cid"},
+                                              "text": "comment"},
                                      "qq": {"id": "reid",
                                             "text": "content"}},
                      "ret_convert": {"sina": {"message": "text"},
@@ -310,7 +309,7 @@ def test_sina():
     token = api.auth.get_access_token(pin)
     print token 
     api.api = api.create_api_from_token(token)
-    return api.get_user(uid='2119096435')
+    return api.comment(id='3429965100251372', text='好美啊')
 
 def test_qq():
     QQApi = create_adapted_api("qq")
