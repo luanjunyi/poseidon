@@ -19,7 +19,6 @@ class SQLAgent:
         self.db_pass = db_pass
         self.db_host = host
         self.use_sscursor = sscursor
-        self.start()
 
     def start(self):
         _logger.info('connecting DB... host:%s %s@%s:%s' % (self.db_host, self.db_user, self.db_name, self.db_pass))

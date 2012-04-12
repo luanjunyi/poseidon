@@ -135,6 +135,6 @@ def main():
         except Exception, err:
             _logger.error("main loop failed: %s" % traceback.format_exc())
         finally:
-            time.sleep(60)
+            time.sleep(3600)
 if __name__ == "__main__":
     main()

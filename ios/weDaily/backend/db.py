@@ -64,3 +64,39 @@ values(%s, %s, %s, %s, %s, %s, %s)', (source_id, url, title, text, updated_time,
         self.cursor.execute("update wee set image_bin = %s where url = %s",
                             (image, url))
         self.conn.commit()
+
+    def get_all_unindexed_wee(self):
+        self.cursor.execute("select * from wee where indexed = 0")
+        return self.cursor.fetchall()
+
+    def get_all_indexed_wee(self):
+        self.cursor.execute("select * from wee where indexed = 1")
+        return self.cursor.fetchall()
+
+    def get_all_wee(self):
+        self.cursor.execute("select * from wee")
+        return self.cursor.fetchall()
+
+    def get_wee_count(self):
+        self.cursor.execute("select count(id) as count from wee")
+        return self.cursor.fetchone()['count']
+
+    def get_num_wee_contain_term(self, term):
+        self.cursor.execute("select count(id) as count from inverted_index where word = %s", term)
+        return self.cursor.fetchone()['count']
+
+    def add_inverted_index(self, term, wee_id, weight):
+        self.cursor.execute("insert into inverted_index(word, wee_id, weight) values(%s, %s, %s)", (term, wee_id, weight))
+        self.conn.commit()
+
+    def get_index_count(self):
+        self.cursor.execute("select count(id) as count from inverted_index")
+        return self.cursor.fetchone()['count']
+
+    def get_all_custom_tags(self):
+        self.cursor.execute("select * from custom_tags")
+        return self.cursor.fetchall()
+
+    def mark_wee_as_indexed(self, wee):
+        self.cursor.execute("update wee set indexed = 1 where id = %s", wee['id'])
+        self.conn.commit()
