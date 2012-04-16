@@ -5,7 +5,8 @@
 # no change can take effect for innodb engine
 
 import sys, os, cPickle, random, hashlib, re
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Paracode root
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), './../')) # Paracode root
+import common.sql_agent
 from datetime import datetime, timedelta, date
 from util.log import _logger
 from third_party import chardet
@@ -52,7 +53,8 @@ class UserAccount:
         """
         Initialize user from DB. 
         """
-        self.uname = user['email']
+        self.id = user['id']
+        self.identity = user['identity']
         self.passwd = user['passwd']
 
         self.tags = self._split_by_sharp(user['tags'])
@@ -61,20 +63,16 @@ class UserAccount:
         self.sources = self._split_by_sharp(user['sources'])
         self.categories = self._split_by_sharp(user['categories'])
 
-        self.start_time = user['work_time_start']
-        self.end_time = user['work_time_end']
         if user['next_action_time'] != -1:
             self.next_action_time = datetime.fromtimestamp(user['next_action_time'])
         else:
             self.next_action_time = datetime.now()
 
-        if user.has_key('sina_id'):
-            self.sina_id = user['sina_id']
+        if user.has_key('local_id'):
+            self.local_id = user['local_id']
         else:
-            self.sina_id = 0
+            self.local_id = None
         self.enabled = (user['enabled'] == 1)
-
-        self.shard_id = user['less_id']
         self.freeze_to = user['freeze_to']
                 
 
@@ -87,53 +85,8 @@ class RaceUserAccount:
         self.uname = user['account'];
         self.passwd = user['passwd']
 
-class AppAccount:
-    def __init__(self, app):
-        self.id = app['id']
-        self.consumer_key = app['token']
-        self.consumer_secret = app['secret']
 
-class ForceAction:
-    def __init__(self, fa):
-        self.type = fa['type']
-        self.value = fa['value']
-        categories = filter(lambda i: len(i) > 0, fa['affected_categories'].split('#'))
-        self.categories = map(lambda i: i.decode('utf-8'), categories)
-
-class SQLAgent:
-    # set sscursor to True if want to store the result set in server. It's for large result set
-    def __init__(self, db_name, db_user, db_pass, host = "localhost", sscursor = False):
-        self.db_name = db_name
-        self.db_user = db_user
-        self.db_pass = db_pass
-        self.db_host = host
-        self.use_sscursor = sscursor
-        self.start()
-
-    def start(self):
-        _logger.info('connecting DB... host:%s %s@%s:%s' % (self.db_host, self.db_user, self.db_name, self.db_pass))
-        self.conn = MySQLdb.connect(host = self.db_host,
-                                    user = self.db_user,
-                                    passwd = self.db_pass,
-                                    db = self.db_name,
-                                    )
-        if self.use_sscursor: # store result in server
-            self.cursor = self.conn.cursor(MySQLdb.cursors.SSDictCursor)
-        else:
-            self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-
-        self.cursor.execute('set names utf8')
-        self.conn.commit()
-
-    def stop(self):
-        self.cursor.close()
-        self.conn.close()
-
-    def restart(self):
-        self.stop()
-        self.start()
-        
-
+class SQLAgent(common.sql_agent.SQLAgent):
     def update_user_keywords(self, user):
         self.cursor.execute('delete from user_keyword_index where email = %s', user.uname)
         for keyword in user.categories:
@@ -182,15 +135,16 @@ class SQLAgent:
                 raw_users.append(raw)
         return self.get_all_user_internal(raw_users)
 
-    def get_all_user(self, shard_id = 0, shard_count = 1):
+    def get_all_user(self):
         """
         Get all enabled, non-frozen users from DB
         Side-effect: release frozen user if freeze_to date is passed
         """
-        self.cursor.execute('select * from sina_user where enabled = 1 and id %% %d = %d' %
-                            (shard_count, shard_id))
+        self.cursor.execute('select * from local_user where enabled = 1')
         raw_users = self.cursor.fetchall()
-        return self.get_all_user_internal(raw_users)
+        users = [UserAccount(user) for user in raw_users]
+        random.shuffle(users)
+        return users
 
     def get_all_user_including_disabled(self, shard_id = 0, shard_count = 1):
         self.cursor.execute('select * from sina_user where id %% %d = %d' %
@@ -227,34 +181,23 @@ class SQLAgent:
 
 
     def get_all_app(self):
-        self.cursor.execute('select * from sina_app order by token')
-        apps = self.cursor.fetchall()
-        return [AppAccount(app) for app in apps]
+        self.cursor.execute('select * from local_app order by token')
+        return self.cursor.fetchall()
+
         
-    def get_token(self, user_email, app_id):
-        self.cursor.execute("select value from sina_token where user_email = %s and app_id = %s",
-                            (user_email, app_id))
+    def get_token(self, user_id, app_id):
+        self.cursor.execute("select value from app_auth_token where user_id = %s and app_id = %s",
+                            (user_id, app_id))
         if self.cursor.rowcount == 0:
             return None
         r = self.cursor.fetchone()
         return r['value']
 
-    def update_token(self, user_email, app_id, value):
-        try:
-            self.cursor.execute("insert into sina_token values(%s, %s, %s)",
-                                (user_email, app_id, value))
-            self.conn.commit()
-            return True
-        except Exception, err:
-            _logger.error("failed to update new token using insert:%s, will try update" % err)
-        try:
-            self.cursor.execute("update sina_token set value=%s where user_email=%s and app_id=%s",
-                                (value, user_email, app_id))
-            self.conn.commit()
-            return True
-        except Exception, err:
-            _logger.error("failed to update token using update:%s, will give up" % err)
-            return False
+    def update_token(self, user_id, app_id, value):
+        self.cursor.execute("insert into app_auth_token values(%s, %s, %s)\
+on duplicate key update value=%s",
+                            (user_id, app_id, value, value))
+        self.conn.commit()
 
     def get_all_source(self):
         self.cursor.execute('select id from source')
@@ -321,11 +264,6 @@ class SQLAgent:
         return SourceItem(random.choice(items))
         
 
-    def add_comment_request(self, tweet_id, content, user_email):
-        self.cursor.execute('insert comment_request(tweet_id, content, user_email) values(%s, %s, %s)',
-                            (tweet_id, content, user_email))
-        self.conn.commit()
-
     def add_tweet_log(self, content, email):
         self.cursor.execute('insert tweet_published(content, user_email) values(%s, %s)',
                             (content, email))
@@ -375,18 +313,6 @@ class SQLAgent:
         self.cursor.execute('select create_date from follow_date where user_email = %s', (user.uname))
         return self.cursor.rowcount
 
-    def get_random_comment(self):
-        self.cursor.execute('select content from random_comment')
-        if self.cursor.rowcount == 0:
-            raise Exception('random comment table is empty')
-        comment = random.choice(map(lambda i: i['content'], self.cursor.fetchall()))
-
-        self.cursor.execute('select content from random_follow_request')
-        if self.cursor.rowcount == 0:
-            raise Exception('random_follow_request table is empty')
-        return comment + ' ' + random.choice(map(lambda i: i['content'], self.cursor.fetchall()))
-
-
     def update_sina_id(self, user, sina_id=0):
         if sina_id == 0:
             sina_id = user.sina_id
@@ -400,10 +326,6 @@ class SQLAgent:
                             (sina_id))
         return self.cursor.rowcount > 0
 
-    def get_all_force_action(self):
-        self.cursor.execute('select * from force_action')
-        actions = self.cursor.fetchall()
-        return [ForceAction(action) for action in actions]
 
     # About user statistics
     def update_db_statistic(self, stat):
@@ -766,37 +688,6 @@ email = %s', (user.uname))
     def update_proxy_slot(self, slot, proxy):
         self.cursor.execute("update proxy set slot_id = %s where id = %s", (slot, proxy['id']))
         self.conn.commit()
-
-    # Aster's tasks
-    def add_crawler_task(self, anchor_url, anchor_text, encoding, domain, ttl):
-        self.cursor.execute("insert into crawler_task (anchor_url, anchor_text, encoding, domain, ttl, url_md5) \
-values(%s, %s, %s, %s, %s, %s)",
-                            (anchor_url, anchor_text, encoding, domain, ttl, hashlib.md5(anchor_url).hexdigest()))
-        self.conn.commit()
-
-    def remove_crawler_task(self, task_id):
-        self.cursor.execute("delete from crawler_task where id = %s", task_id)
-        self.conn.commit()
-
-    def get_all_crawler_task(self):
-        self.cursor.execute('select * from crawler_task')
-        return self.cursor.fetchall()
-
-    def crawler_task_count(self):
-        self.cursor.execute("select count(*) as count from crawler_task")
-        return self.cursor.fetchone()['count']
-
-    def url_in_crawler_task(self, url):
-        md5 = hashlib.md5(url).hexdigest()
-        self.cursor.execute("select count(*) as count from crawler_task where url_md5 = %s", md5)
-        return self.cursor.fetchone()['count'] > 0
-
-    def anchor_in_crawler_task(self, anchor):
-        if anchor.strip() == '':
-            return False
-        self.cursor.execute("select count(*) as count from crawler_task where anchor_text = %s", anchor)
-        return self.cursor.fetchone()['count'] > 0
-        
 
     # global bad words
     def get_global_bad_words(self):

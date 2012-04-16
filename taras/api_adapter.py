@@ -4,192 +4,15 @@ from datetime import datetime, timedelta, date
 from functools import partial
 from BeautifulSoup import BeautifulSoup
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Paracode root
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../taras/sdk')
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),  './sdk'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), './../')) # Paracode root
+
 
 from util.log import _logger
 from sdk import qqweibo as qq_sdk
 from sdk import weibopy as sina_sdk
+from api_method import method_dict
 
-method_dict = {'public_timeline':
-                   {"name": {"sina": sina_sdk.API.public_timeline,
-                             "qq": qq_sdk.API._statuses_public_timeline},
-                    "arg_convert": {},
-                    "ret_convert": {"sina": {"text": "text"},
-                                    "qq": {"text": "text"},}
-                   },
-
-                'home_timeline':
-                    {"name": {"sina": sina_sdk.API.friends_timeline,
-                              "qq": qq_sdk.API._statuses_home_timeline}, 
-                     "arg_convert": {}, 
-                     "ret_convert": {"sina": {"text": "text"},
-                                     "qq": {"text": "text"}},
-                    },
-
-                'user_timeline':
-                    {"name": {"sina": sina_sdk.API.user_timeline,
-                              "qq": qq_sdk.API._statuses_user_timeline},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"text": "text"},
-                                     "qq": {"text": "text"}}
-                    },
-                
-
-                'update_status':
-                   {"name": {"sina": sina_sdk.API.update_status,
-                             "qq": qq_sdk.API._t_add},
-                    "arg_convert": {"sina": {"text": "status"},
-                                    "qq": {'text': "content"}},
-                    "ret_convert": {"sina": {"message": "text"},
-                                    "qq": {"message": "id"}}
-                   },
-
-                'comment':
-                    {"name": {"sina": sina_sdk.API.comment,
-                              "qq": qq_sdk.API._t_comment},
-                     "arg_convert": {"sina": {"id": "id",
-                                              "text": "comment"},
-                                     "qq": {"id": "reid",
-                                            "text": "content"}},
-                     "ret_convert": {"sina": {"message": "text"},
-                                     "qq": {"message": "id"}}
-                    },
-
-                'get_status':
-                    {"name": {"sina": sina_sdk.API.get_status,
-                              "qq": qq_sdk.API._t_show},
-                     "arg_convert": {"sina": {"id": "id"},
-                                     "qq": {"id": "id"}},
-                     "ret_convert": {"sina": {"text": "text"},
-                                     "qq": {"text": "text"}}
-                    },
-
-                'post_image_text':
-                    {"name": {"sina": sina_sdk.API.upload,
-                              "qq": qq_sdk.API._t_add_pic},
-                     "arg_convert": {"sina": {"text": "status",
-                                              "image": "filename"},
-                                     "qq": {"text": "content",
-                                            "image": "filename"}},
-                     "ret_convert": {"sina": {"message": "text"},
-                                     "qq": {"message": "id"}}
-                    },
-
-                'retweet':
-                    {"name": {"sina": sina_sdk.API.repost,
-                              "qq": qq_sdk.API._t_re_add},
-                     "arg_convert": {"sina": {"id": "id",
-                                              "text": "status"},
-                                     "qq": {"id": "reid",
-                                            "text": "content"}},
-                     "ret_convert": {"sina": {"message": "text"},
-                                     "qq": {"message": "id"}}
-                     },
-
-                'get_user':
-                    {"name": {"sina": sina_sdk.API.get_user,
-                              "qq": qq_sdk.API._user_other_info},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"screen_name": "screen_name"},
-                                     "qq": {"screen_name": "name"}}
-                    },
-
-                'search_users':
-                    {"name": {"sina": sina_sdk.API.search_users,
-                              "qq": qq_sdk.API._search_user},
-                     "arg_convert": {"sina": {"keyword": "q"},
-                                     "qq": {"keyword": "keyword"}},
-                     "ret_convert": {"sina": {"screen_name": "name"},
-                                     "qq": {"screen_name": "name"}}
-                    },
-                    
-                'following':
-                    {"name": {"sina": sina_sdk.API.friends,
-                              "qq": qq_sdk.API._friends_user_idollist},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"screen_name": "name"},
-                                     "qq": {"screen_name": "name"}}
-                     },
-                
-                'follower':
-                    {"name": {"sina": sina_sdk.API.followers,
-                              "qq": qq_sdk.API._friends_user_fanslist},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"screen_name": "name"},
-                                     "qq": {"screen_name": "name"}}
-                    },
-
-                'follow':
-                    {"name": {"sina": sina_sdk.API.create_friendship,
-                              "qq": qq_sdk.API._friends_add},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"message": "screen_name"},
-                                     "qq": {"message": "msg"}}
-                    },
-                
-                'unfollow':
-                    {"name": {"sina": sina_sdk.API.destroy_friendship,
-                              "qq": qq_sdk.API._friends_del},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"message": "screen_name"},
-                                     "qq": {"message": "msg"}}
-                    },
-
-                'is_user_following_me':
-                    {"name": {"sina": sina_sdk.API.exists_friendship,
-                              "qq": qq_sdk.API.is_user_following_me},
-                     "arg_convert": {"sina": {"user_uid": "user_a",
-                                              "my_uid": "user_b"},
-                                     "qq": {"user_uid": "user"}},
-                     "ret_convert": {"sina": {"friends": "friends"},
-                                     "qq": {}}
-                    },
-                    
-                'is_following_user':
-                    {"name": {"sina": sina_sdk.API.exists_friendship,
-                              "qq": qq_sdk.API.is_following_user},
-                     "arg_convert": {"sina": {"user_uid": "user_b",
-                                              "my_uid": "user_a"},
-                                     "qq": {"user_uid": "user"}},
-                     "ret_convert": {"sina": {"friends": "friends"},
-                                     "qq": {}}
-                    },
-
-                'update_profile':
-                    {"name": {"sina": sina_sdk.API.update_profile,
-                              "qq": qq_sdk.API._user_update},
-                     "arg_convert": {"sina": {"screen_name": "name",
-                                              "description": "description"},
-                                     "qq": {"screen_name": "nick",
-                                            "description": "introduction"}},
-                    "ret_convert": {"sina": {"message": "screen_name"},
-                                    "qq": {"message": "msg"}}
-                    },
-
-                'update_profile_image': 
-                    {"name": {"sina": sina_sdk.API.update_profile_image,
-                              "qq": qq_sdk.API._user_update_head},
-                     "arg_convert": {"sina": {"image": "filename"},
-                                     "qq": {"image": "filename"}},
-                     "ret_convert": {"sina": {"message": "screen_name"},
-                                     "qq": {"message": "msg"}}
-                    },
-
-                'me':
-                    {"name": {"sina": sina_sdk.API.me,
-                              "qq": qq_sdk.API.me},
-                    "arg_convert": {},
-                    "ret_convert": {"sina": {"message": "screen_name"},
-                                    "qq": {"message": "msg"}}
-                    }
-               }
 
 def convert_obj(ret_dict, obj):
     class TarasApiResult(object):
@@ -253,7 +76,8 @@ def create_adapted_api(api_type):
 
         def create_api_from_token(self, token):
             self.auth.setToken(token.key, token.secret)
-            return sdk_type.API(self.auth)
+            self.api = sdk_type.API(self.auth)
+            return self.api
 
         def _get_authorization_url(self):
             return self.auth.get_authorization_url()
@@ -269,7 +93,7 @@ def create_adapted_api(api_type):
         def create_token_from_web(self, username, password):
             casper_path = os.path.dirname(os.path.abspath(__file__)) + "/verify_weibo.js"
             url = self._get_authorization_url()
-            _logger.info("casperJS is processing authorization URL:" + url)
+            _logger.info("(%s:%s), casperJS is processing authorization URL:%s" % (username, password, url))
             casper_cmd = "casperjs %s '%s' --user='%s' --passwd='%s' --type=%s " % (casper_path, url, username, password, self.type)
             casper_out = commands.getoutput(casper_cmd)
             #_logger.debug("casperjs output:{%s}" % casper_out)
@@ -321,11 +145,14 @@ def test_qq():
 
 if __name__ == "__main__":
     _logger.info("debugging api_adapter.py")
-    test_sina()
-    sys.exit(0)
-
     QQApi = create_adapted_api("qq")
     SinaApi = create_adapted_api("sina")
+
+    # Testing QQ api
+    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
+    api.create_api_from_scratch("2603698377", "youhao2006")
+    print api.me()
+
     
     # Testing Sina api
     api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
@@ -344,4 +171,4 @@ if __name__ == "__main__":
     # Testing QQ api
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
     api.create_api_from_scratch("2603698377", "youhao2006")
-    test_api(api)
+    print api.api.me()
