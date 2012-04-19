@@ -1,25 +1,57 @@
-import os, sys, time, traceback
+LOOP_INTERVEL = 60
+TWEET_DB_NAME = 'weDaily'
+TWEET_DB_USER = 'junyi'
+TWEET_DB_PASS = 'admin123'
+TWEET_DB_HOST = 'grampro.com'
+
+import os, sys, time, traceback 
+import eventlet
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + './../') # Poseidon root
 
-from sql_agent import SQLAgent
+import sql_agent
+import ios.weDaily.backend.db
 from taras import Taras
 import api_adapter
 from util.log import _logger
 
+eventlet.monkey_patch()
 
-def crawl_victim(dbuser, dbpass, dbname, dbhost, api_type):
-    agent = SQLAgent(dbname, dbuser, dbpass, dbhost)
-    agent.start()
+tweet_agent = ios.weDaily.backend.db.init(TWEET_DB_NAME,
+                                          TWEET_DB_USER,
+                                          TWEET_DB_PASS,
+                                          TWEET_DB_HOST)
+
+def index_tweet(agent, user):
     taras = Taras(api_type, agent)
+    taras.assign_user(user) 
+    taras.find_tweet(tweet_agent)
+    _logger.debug("user(%d) finished indexing tweet" % user.id)
+
+def crawl_victim(agent, user):
+    taras = Taras(api_type, agent)
+    taras.assign_user(user) 
+    taras.crawl_victim(tweet_agent)
+    _logger.debug("user(%d) finished crawling victims" % user.id)
+
+def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
+    agent = sql_agent.init(dbname, dbuser, dbpass, dbhost)
+
+    agent.start()
+    pool = eventlet.GreenPool()
+    loop_id = 1
     while True:
         try:
             all_user = agent.get_all_user()
             for user in all_user:
-                taras.assign_user(user) 
-                taras.crawl_victim()
-            time.sleep(5)
+                _logger.debug("user(%d) added to pool" % user.id)
+                pool.spawn(action_func, agent, user)
+            _logger.info("waiting for all user to finish")
+            pool.waitall()
+            _logger.info('#%d action loop finished, will sleep for %d' % (loop_id, LOOP_INTERVEL))
+            loop_id += 1
+            time.sleep(LOOP_INTERVEL)
         except Exception, err:
-            _logger.error('crawl victim loop failed once:%s', traceback.format_exc())
+            _logger.error('action loop failed once:%s', traceback.format_exc())
         except KeyboardInterrupt, err:
             _logger.info('got SIGINT, will stop daemon')
             break
@@ -34,6 +66,10 @@ def usage():
     sys.exit(2)
 
 if __name__ == "__main__":
+    actions = {'crawl_victim': crawl_victim,
+               'index_tweet': index_tweet}
+
+
     from getopt import getopt
     try:
         opts, args = getopt(sys.argv[1:], 'hs:u:p:d:c:t:', ['help', 'db-host=', 'user=', 'passwd=', 'database=', 'command=', 'type='])
@@ -85,9 +121,12 @@ if __name__ == "__main__":
     _logger.info('db-host:%s db-user:%s, db-pass:%s, db-name:%s, command = (%s), api-type=%s' % 
                  (dbhost, dbuser, dbpass, dbname, command, api_type))
 
+    if command == 'index_tweet':
+        tweet_agent.start()
 
-    if command == 'crawl_victim':
-        crawl_victim(dbuser, dbpass, dbname, dbhost, api_type)
-    else:
-        _logger.error('unknown command: (%s)' % command)
+
+    if command not in actions:
+        _logger.error("unknown command:(%s)" % command)
         usage()
+    else:
+        action(dbuser, dbpass, dbname, dbhost, api_type, actions[command])

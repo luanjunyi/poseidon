@@ -161,7 +161,6 @@ def bind_api(**config):
                     )
                 # Execute request
                 try:
-                    print "URL:(%s)" % ( self.scheme + self.host + url)
                     resp, content = conn.request(uri = self.scheme + self.host + url,
                                                  method = self.method,
                                                  headers = self.headers,

@@ -6,7 +6,7 @@
 # Time-stamp: <2011-09-05 19:40:35 wangshuyu>
 
 import time
-import re
+import re, traceback
 
 from qqweibo.compat import Request, urlopen, quote, urlencode
 from qqweibo.error import QWeiboError
@@ -180,16 +180,33 @@ def bind_api(**config):
                     # BUG: API BUG, refer api.doc.rst
                     if body.endswith('out of memery'):
                         body = body[:body.rfind('}')+1]
+                    # BUG: There are occassionally some char between \u000a(\n) and \u0009(\t)
+                    #      that can't be decoded. Chardet detect them as Windows-1252 with 50%
+                    #      confidence and the decoded string is gerbish. So we remove it here.
+                    body, n = re.subn('\u000a.+\u0009', '\u000a\u0009', body)
+
                     json = self.api.parser.parse_error(self, body)
                     retcode = json.get('ret', 0)
                     msg = json.get('msg', '')
                     # only in some post request
                     errcode = json.get('errcode', 0)
                 except ValueError as e:
+                    estr = str(e)
+                    # m = re.search(u"'utf8' codec can't decode byte .+ in position (.+): unexpected code byte", estr)
+                    # if m:
+                    #     bad_pos = int(m.group(1))
+                    #     print "body len(%d), fail at %d" % (len(body), bad_pos)
+
                     retcode = -1
                     msg = "Bad json format (%s)" % e
+
                 finally:
                     if retcode + errcode != 0:
+                        print traceback.format_exc()
+                        # if m:
+                        #     print "bad exerpt: %s\n good part: %s" % (body[bad_pos - 100: bad_pos + 500], body[bad_pos - 100: bad_pos])
+                        #     for i in range(bad_pos - 6, bad_pos + 6):
+                        #         print "%d:(%x)(%s)" % (i, ord(body[i]), body[i])
                         raise QWeiboError("Response error: %s. (ret=%s, errcode=%s)" % \
                                           (msg, retcode, errcode))
 

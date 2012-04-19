@@ -173,6 +173,20 @@ method_dict = {'public_timeline':
                                      "qq": {"message": "msg"}}
                     },
 
+               'search_tweet':
+                   {"name": {"sina": sina_sdk.API.trends_statuses,
+                             "qq": qq_sdk.API._search_t},
+                    "arg_convert": {"sina": {"query": "trend_name"},
+                                    "qq": {"query": "keyword"}},
+                    "ret_convert": {"sina": {"text": "text",
+                                             "user_id": "user.id",
+                                             "tweet_id": "mid"},
+                                    "qq": {"text": "text",
+                                           "user_id": "name",
+                                           "tweet_id": "id"}}
+
+                    },
+
                 'me':
                     {"name": {"sina": sina_sdk.API.me,
                               "qq": qq_sdk.API.me},

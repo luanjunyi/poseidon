@@ -19,7 +19,10 @@ def convert_obj(ret_dict, obj):
         pass
     output = TarasApiResult()
     for key, value in ret_dict.items():
-        setattr(output, key, getattr(obj, value))
+        cur = obj
+        for attr in value.split('.'):
+            cur = getattr(cur, attr)
+        setattr(output, key, cur)
     return output
         
 def adapte_api_method(method_info, api_type):
@@ -113,36 +116,6 @@ def create_adapted_api(api_type):
 
     return TarasAPI
 
-def test_api(api):
-    #print "timeline:" + api.public_timeline()[0].content.encode('utf-8')
-    #api.update_status(text="今天星期一，很多事情啊!")
-    return api.home_timeline()
-
-#test sina and qq API
-def test_sina():
-    SinaApi = create_adapted_api("sina")
-    api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
-    import sdk.weibopy.oauth
-    #token = sdk.weibopy.oauth.OAuthToken('5dcc868e8794b3c2b70e4ca925a158f7','4ac088935496b3290c1be52df71ce97b')
-    #api.create_api_from_scratch('sunyayuan610@163.com', 'f_rank610')
-    #api.api = api.create_api_from_token(token)
-    #api = api.create_api_from_token(token)
-    #print api.api.me()
-    print api._get_authorization_url()
-    pin = raw_input("Enter the pin:")
-    token = api.auth.get_access_token(pin)
-    print token 
-    api.api = api.create_api_from_token(token)
-    return api.comment(id='3429965100251372', text='好美啊')
-
-def test_qq():
-    QQApi = create_adapted_api("qq")
-    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    api.create_api_from_scratch("2603698377", "youhao2006")
-    #print api.is_user_following_me(user_name="minitalks")
-    #return api.api._user_update_head(filename="/var/www/ipshow/res/index_background.jpg")
-    return api.retweet(id="118099061141747", text='')
-
 if __name__ == "__main__":
     _logger.info("debugging api_adapter.py")
     QQApi = create_adapted_api("qq")
@@ -151,24 +124,14 @@ if __name__ == "__main__":
     # Testing QQ api
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
     api.create_api_from_scratch("2603698377", "youhao2006")
-    print api.me()
-
+    print api.me().name
+    print api.search_tweet(query='林书豪')[0].user_id
     
     # Testing Sina api
     api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
-    #print api._get_authorization_url()
-    #pin = raw_input("Enter the pin:")
-    #token = api.auth.get_access_token(pin)
-    #print token
     import sdk.weibopy.oauth
     token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
-    #api.api = api.create_api_from_token(token)
-    #api.create_api_from_scratch("diyidawang@163.com", "wjb0371")
     api.api = api.create_api_from_token(token)
-    print api.api.me()
-    #test_api(api)
+    print api.api.me().name
+    print api.search_tweet(query='林书豪')[8].user_id
 
-    # Testing QQ api
-    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    api.create_api_from_scratch("2603698377", "youhao2006")
-    print api.api.me()
