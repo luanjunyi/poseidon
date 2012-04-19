@@ -49,6 +49,7 @@ class Taras(object):
         self.api = APIClass(app.token, app.secret)
         token = self.get_token(user, app)
         self.api.create_api_from_token(token)
+        self.api.api.user_id = self.user.id
         _logger.debug("%s assigned as user" % self.api.me().name)
 
 # Crawl victim
@@ -140,6 +141,9 @@ if __name__ == "__main__":
     for user in all_users:
         taras = Taras("qq", agent)
         taras.assign_user(user, all_app[0])
+        tweet_text = '心情很好，愿世界永远和平! %f' % time.time()
+        taras.api.update_status(text=tweet_text)
+        _logger.debug('%s published' % tweet_text)
 
     agent.stop()
 

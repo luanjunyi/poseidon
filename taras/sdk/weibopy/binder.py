@@ -132,8 +132,6 @@ def bind_api(**config):
             retries_performed = 0
             while retries_performed < self.retry_count + 1:
                 # Open connection
-                # FIXME: add timeout
-
                 # Use taras proxy
 
                 if 'taras_proxy_addr' in os.environ:

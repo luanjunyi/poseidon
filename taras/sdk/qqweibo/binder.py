@@ -12,6 +12,7 @@ from qqweibo.compat import Request, urlopen, quote, urlencode
 from qqweibo.error import QWeiboError
 from qqweibo.utils import convert_to_utf8_str
 
+import httplib2, socks
 
 re_path_template = re.compile('{\w+}')
 
@@ -138,29 +139,46 @@ def bind_api(**config):
                         self.method, self.headers, self.parameters
                     )
                 try:
+                    conn = httplib2.Http(timeout = 20)
                     if self.method == 'POST':
-                        req = Request(url_full, data=self.post_data, headers=self.headers)
+                        resp, content = conn.request(uri = url_full,
+                                                     method = self.method,
+                                                     headers = self.headers,
+                                                     body = self.post_data)
                     else:
-                        req = Request(url_full)
-                    resp = urlopen(req)
+                        resp, content = conn.request(uri = url_full,
+                                                     method = self.method,
+                                                     headers = self.headers)
+                    # if self.method == 'POST':
+                    #     req = Request(url_full, data=self.post_data, headers=self.headers)
+                    # else:
+                    #     req = Request(url_full)
+                    # resp = urlopen(req)
                 except Exception as e:
                     raise QWeiboError("Failed to request %s headers=%s %s" % \
                                       (url, self.headers, e))
 
                 # Exit request loop if non-retry error code
+                # if self.retry_errors:
+                #     if resp.code not in self.retry_errors:
+                #         break
+                # else:
+                #     if resp.code == 200:
+                #         break
+
                 if self.retry_errors:
-                    if resp.code not in self.retry_errors:
-                        break
+                    if int(resp['status']) not in self.retry_errors: break
                 else:
-                    if resp.code == 200:
-                        break
+                    if resp['status'] == '200': break
 
                 # Sleep before retrying request again
                 time.sleep(self.retry_delay)
                 retries_performed += 1
 
             # If an error was returned, throw an exception
-            body = resp.read()
+            #body = resp.read()
+            body = content
+
             self.api.last_response = resp
             if self.api.log is not None:
                 requestUrl = "URL:http://" + self.host + url
