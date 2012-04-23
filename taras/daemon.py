@@ -30,8 +30,15 @@ def index_tweet(agent, user):
 def crawl_victim(agent, user):
     taras = Taras(api_type, agent)
     taras.assign_user(user) 
-    taras.crawl_victim(tweet_agent)
+    taras.crawl_victim()
     _logger.debug("user(%d) finished crawling victims" % user.id)
+
+def perform_routine(agent, user):
+    taras = Taras(api_type, agent)
+    taras.assign_user(user) 
+    taras.routine()
+    _logger.debug("user(%d) finished routine" % user.id)
+
 
 def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
     agent = sql_agent.init(dbname, dbuser, dbpass, dbhost)
@@ -67,7 +74,8 @@ def usage():
 
 if __name__ == "__main__":
     actions = {'crawl_victim': crawl_victim,
-               'index_tweet': index_tweet}
+               'index_tweet': index_tweet,
+               'routine': perform_routine}
 
 
     from getopt import getopt
@@ -123,7 +131,6 @@ if __name__ == "__main__":
 
     if command == 'index_tweet':
         tweet_agent.start()
-
 
     if command not in actions:
         _logger.error("unknown command:(%s)" % command)

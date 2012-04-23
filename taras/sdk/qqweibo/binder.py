@@ -124,6 +124,13 @@ def bind_api(**config):
             # or maximum number of retries is reached.
             sTime = time.time()
             retries_performed = 0
+
+            if hasattr(self.api, 'proxy_manager'):
+                conn = self.api.proxy_manager.get_proxied_connection_for_user(self.api.user_id)
+            else:
+                conn = httplib2.Http(timeout = 20)
+
+
             while retries_performed < self.retry_count + 1:
                 # Open connection
                 # FIXME: add timeout
@@ -139,7 +146,7 @@ def bind_api(**config):
                         self.method, self.headers, self.parameters
                     )
                 try:
-                    conn = httplib2.Http(timeout = 20)
+
                     if self.method == 'POST':
                         resp, content = conn.request(uri = url_full,
                                                      method = self.method,

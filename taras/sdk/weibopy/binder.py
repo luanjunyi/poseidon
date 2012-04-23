@@ -130,26 +130,14 @@ def bind_api(**config):
             # or maximum number of retries is reached.
             sTime = time.time()
             retries_performed = 0
+
+            if hasattr(self.api, 'proxy_manager'):
+                conn = self.api.proxy_manager.get_proxied_connection_for_user(self.api.user_id)
+            else:
+                conn = httplib2.Http(timeout = 20)
+
             while retries_performed < self.retry_count + 1:
                 # Open connection
-                # Use taras proxy
-
-                if 'taras_proxy_addr' in os.environ:
-                    proxy_addr = os.environ['taras_proxy_addr']
-                    proxy_port = int(os.environ['taras_proxy_port'])
-                    proxy_user = os.environ['taras_proxy_user']
-                    proxy_passwd = os.environ['taras_proxy_passwd']
-                else:
-                    proxy_addr = ''
-
-
-                proxy_info = None if proxy_addr == '' else httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5,
-                                                                              proxy_addr, proxy_port,
-                                                                              proxy_user = proxy_user,
-                                                                              proxy_pass = proxy_passwd)
-
-
-                conn = httplib2.Http(proxy_info = proxy_info, timeout = 20)
 
                 # Apply authentication
                 if self.api.auth:
@@ -158,23 +146,11 @@ def bind_api(**config):
                             self.method, self.headers, self.parameters
                     )
                 # Execute request
-                try:
-                    resp, content = conn.request(uri = self.scheme + self.host + url,
-                                                 method = self.method,
-                                                 headers = self.headers,
-                                                 body = self.post_data)
-                except ProxyError, err:
-                    self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
-                    raise Exception("Got ProxyError: %s, IP:%s, port:%d, user:%s, passwd:%s" % 
-                                    (err, proxy_addr, proxy_port, proxy_user, proxy_passwd))
-                except socket.error, err:
-                    self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
-                    raise Exception("Got ProxyError: %s, IP:%s, port:%d, user:%s, passwd:%s" % 
-                                    (err, proxy_addr, proxy_port, proxy_user, proxy_passwd))
-                except Exception, e:
-                    if str(e) == "timed out":
-                        self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
-                    raise WeibopError('Failed to send request: %s' % e + ", url=" + str(url) +",self.headers="+ str(self.headers) + " %s" % traceback.format_exc())
+
+                resp, content = conn.request(uri = self.scheme + self.host + url,
+                                             method = self.method,
+                                             headers = self.headers,
+                                             body = self.post_data)
 
                 # Exit request loop if non-retry error code
                 if self.retry_errors:

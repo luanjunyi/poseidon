@@ -62,6 +62,34 @@ class TarasSQLAgent(common.sql_agent.SQLAgent):
         self.conn.commit()
         return self.cursor.rowcount
 
+    def update_proxy_log(self, proxy_addr, log_type):
+        cur_date = datetime.now().strftime("%Y-%m-%d")
+
+        self.cursor.execute("select * from proxy_log where proxy_ip = %s and collect_date = %s", (proxy_addr, cur_date))
+
+        row = self.proxy_log.find({'proxy_ip': proxy_addr,
+                                   'collect_date': cur_date})
+        if not row:
+            use = 0
+            fail = 0
+        else:
+            use = row.use_count
+            fail = row.fail_count
+
+        if log_type == "use":
+            use += 1
+        elif log_type == "fail":
+            fail += 1
+            use += 1
+        else:
+            _logger.error("unknown proxy log type: %s" % log_type)
+            return
+
+        self.proxy_log.add({'proxy_ip': proxy_addr,
+                            'collect_date': cur_date,
+                            'use_count': use,
+                            'fail_count': fail},
+                           force=True)
 
 def init(dbname, dbuser, dbpass, dbhost='localhost', sscursor=False):
     global TarasSQLAgent

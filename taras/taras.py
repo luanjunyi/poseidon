@@ -1,9 +1,11 @@
 # coding=utf-8
-import os, sys, re, random, cPickle, traceback, urllib, time, signal, hashlib, math
+import os, sys, re, random, cPickle, traceback, time, math
+import urllib2, socks
 
 from ConfigParser import RawConfigParser
 from datetime import datetime, timedelta, date
 from functools import partial
+from proxy_manager import ProxyManager
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Paracode root
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../third_party')
@@ -13,8 +15,6 @@ from util.log import _logger
 import sql_agent
 import api_adapter
 
-def handle_sig(sig, frame):
-    pass
 
 class Taras(object):
     def __init__(self, api_type, agent):
@@ -22,6 +22,7 @@ class Taras(object):
         self.agent = agent
         self.api = None
         self.user = None
+        self.proxy_manager = ProxyManager(agent)
 
 # Authorization
     def get_token(self, user, app):
@@ -33,7 +34,7 @@ class Taras(object):
         token = self.api.create_token_from_web(user.identity, user.passwd)
         self.agent.app_auth_token.add({'user_id': user.id,
                                        'app_id': app.id,
-                                       'value': cPickle.dumps(token)})
+                                       'value': cPickle.dumps(token)}, force=True)
         return token
             
     def select_app_for_user(self, user):
@@ -49,7 +50,12 @@ class Taras(object):
         self.api = APIClass(app.token, app.secret)
         token = self.get_token(user, app)
         self.api.create_api_from_token(token)
-        self.api.api.user_id = self.user.id
+
+        # Pass user ID to native API, so that binder will use proxy manger to get
+        # a properly proxied connection
+        self.api.api.proxy_manager = self.proxy_manager
+        self.api.api.user_id = self.user.id  
+
         _logger.debug("%s assigned as user" % self.api.me().name)
 
 # Crawl victim
@@ -119,7 +125,7 @@ class Taras(object):
                          }
                 if not self.agent.tweet_crawled.exists({'title': store['title']}):
                     try:
-                        self.agent.tweet_crawled.add(store, force=True)
+                        self.agent.tweet_crawled.add(store)
                     except Exception, err:
                         _logger.debug("adding tweet to DB failed: %s" % err)
                         wee_ids.remove(tweet.id)
@@ -129,6 +135,10 @@ class Taras(object):
 
         self.user.index_date = int(time.time())
         self.user.save()
+
+# Action routine
+    def routine(self):
+        pass
 
 if __name__ == "__main__":
     _logger.info("Testing Taras functions")
@@ -141,87 +151,13 @@ if __name__ == "__main__":
     for user in all_users:
         taras = Taras("qq", agent)
         taras.assign_user(user, all_app[0])
-        tweet_text = '心情很好，愿世界永远和平! %f' % time.time()
-        taras.api.update_status(text=tweet_text)
-        _logger.debug('%s published' % tweet_text)
+        t = taras.api.public_timeline()[0]
+        print t.text
+        # tweet_text = '心情很好，愿世界永远和平! %f' % time.time()
+        # taras.api.update_status(text=tweet_text)
+        # _logger.debug('%s published' % tweet_text)
 
     agent.stop()
 
     sys.exit(0)
 
-
-    # parse config
-    config_path = os.path.dirname(os.path.abspath(__file__)) + '/config'
-    _logger.info('reading config from %s' % config_path)
-    config = RawConfigParser()
-    config.read(config_path)
-    if (len(config.sections()) < 1):
-        _logger.fatal('failed to read config file from %s' % config_path)
-
-    from getopt import getopt
-    try:
-        opts, args = getopt(sys.argv[1:], 'hu:p:d:s:a:c:', ['help', 'user=', 'passwd=', 'database=', 'shard=', 'all-shard=', 'command='])
-    except Exception, err:
-        print "getopt error:%s" % err
-        usage()
-
-    usage_only = False
-    dbname = 'taras'
-    dbuser = 'taras'
-    dbpass = 'admin123'
-    shard_id = 0
-    shard_count = 1
-    command = 'unset'
-    for opt, arg in opts:
-        if opt in ('-h', '--help'):
-            usage_only = True
-        if opt in ('-u', '--user'):
-            dbuser = arg
-        if opt in ('-p', '--passwd'):
-            dbpass = arg
-        if opt in ('-d', '--database'):
-            dbname = arg
-        if opt in ('-s', '--shard'):
-            shard_id = int(arg)
-        if opt in ('-a', '--all-shard'):
-            shard_count = int(arg)
-        if opt in ('-c', '--command'):
-            command = arg
-
-
-    if usage_only:
-        usage()
-
-    if dbuser == "":
-        print '-u(--user=) must be provided'
-        usage()
-    if dbname == "":
-        print '-d(--database=) must be provided'
-        usage()
-    if dbpass == "":
-        print '-p(--passwd=) must be provided'
-        usage()
-
-    _logger.info('shard_id = %d, shard_count = %d, command = (%s)' % (shard_id, shard_count, command))
-
-    noselenium = True
-    if command == 'daemon':
-        daemon = WeiboDaemon(dbname, dbuser, dbpass, noselenium = noselenium, mysql_host = config.get('global', 'mysql_host_for_daemon'))
-        signal.signal(signal.SIGINT, daemon.handle_int)
-        daemon.daemon(shard_id=shard_id, shard_count=shard_count)
-    elif command == 'crawl-tweet':
-        noselenium = False
-        daemon = WeiboDaemon(dbname, dbuser, dbpass, noselenium = noselenium)
-        signal.signal(signal.SIGINT, daemon.handle_int)
-        daemon.crawl_tweet_daemon(shard_id, shard_count)
-    elif command == 'crawl-victim':
-        daemon = WeiboDaemon(dbname, dbuser, dbpass, noselenium = noselenium)
-        signal.signal(signal.SIGINT, daemon.handle_int)
-        daemon.crawl_victim_daemon(shard_id, shard_count)
-    elif command == 'index-tweet':
-        import tindexer
-        indexer = tindexer.TIndexer()
-        indexer.start_indexer_daemon(dbname, dbuser, dbpass)
-    else:
-        _logger.error('unknown command: (%s)' % command)
-        usage()
