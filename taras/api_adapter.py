@@ -13,7 +13,6 @@ from sdk import qqweibo as qq_sdk
 from sdk import weibopy as sina_sdk
 from api_method import method_dict
 
-
 def convert_obj(ret_dict, obj):
     class TarasApiResult(object):
         pass
@@ -126,6 +125,7 @@ if __name__ == "__main__":
     api.create_api_from_scratch("2603698377", "youhao2006")
     print api.me().name
     print api.search_tweet(query='林书豪')[0].user_id
+    print api.get_user(uid='minitalks').nick
     
     # Testing Sina api
     api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
@@ -135,3 +135,16 @@ if __name__ == "__main__":
     print api.api.me().name
     print api.search_tweet(query='林书豪')[8].user_id
 
+def test_qq():
+    QQApi = create_adapted_api("qq")
+    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
+    api.create_api_from_scratch("2603698377", "youhao2006")
+    return api.get_status(id="127060067309168")
+
+def test_sina():
+    SinaApi = create_adapted_api("sina")
+    api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
+    import sdk.weibopy.oauth
+    token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
+    api.api = api.create_api_from_token(token)
+    return api.get_status(id='3436639437475743')

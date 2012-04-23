@@ -40,8 +40,7 @@ method_dict = {'public_timeline':
                     {"name": {"sina": sina_sdk.API.comment,
                               "qq": qq_sdk.API._t_comment},
                      "arg_convert": {"sina": {"id": "id",
-                                              "text": "comment",
-                                              "cid": "cid"},
+                                              "text": "comment"},
                                      "qq": {"id": "reid",
                                             "text": "content"}},
                      "ret_convert": {"sina": {"message": "text"},
@@ -53,8 +52,12 @@ method_dict = {'public_timeline':
                               "qq": qq_sdk.API._t_show},
                      "arg_convert": {"sina": {"id": "id"},
                                      "qq": {"id": "id"}},
-                     "ret_convert": {"sina": {"text": "text"},
-                                     "qq": {"text": "text"}}
+                     "ret_convert": {"sina": {"text": "text",
+                                              "screen_name": "author.name",
+                                              "uid": "author.id"},
+                                     "qq": {"text": "text",
+                                            "screen_name": "nick",
+                                            "uid": "name"}}
                     },
 
                 'post_image_text':
@@ -82,10 +85,22 @@ method_dict = {'public_timeline':
                 'get_user':
                     {"name": {"sina": sina_sdk.API.get_user,
                               "qq": qq_sdk.API._user_other_info},
-                     "arg_convert": {"sina": {"uid": "user_id"},
+                     "arg_convert": {"sina": {"uid": "id"},
                                      "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"screen_name": "screen_name"},
-                                     "qq": {"screen_name": "name"}}
+                     "ret_convert": {"sina": {"screen_name": "screen_name",
+                                              "uid": "id",
+                                              "follow_count": "friends_count",
+                                              "followers_count": "followers_count",
+                                              "tweet_count": "statuses_count",
+                                              "location": "location",
+                                              "gender": "gender"},
+                                     "qq": {"screen_name": "nick",
+                                            "uid": "name",
+                                            "follow_count": "idolnum",
+                                            "followers_count": "fansnum",
+                                            "tweet_count": "tweetnum",
+                                            "location": "location",
+                                            "gender": "sex"}}
                     },
 
                 'search_users':
@@ -191,7 +206,19 @@ method_dict = {'public_timeline':
                     {"name": {"sina": sina_sdk.API.me,
                               "qq": qq_sdk.API.me},
                     "arg_convert": {},
-                    "ret_convert": {"sina": {"name": "screen_name"},
-                                    "qq": {"name": "name"}}
+                    "ret_convert": {"sina": {"screen_name": "name",
+                                             "uid": "id",
+                                             "follow_count": "friends_count",
+                                             "followers_count": "followers_count",
+                                             "tweet_count": "statuses_count",
+                                             "location": "location",
+                                             "gender": "gender"},
+                                    "qq": {"screen_name": "nick",
+                                           "uid": "name",
+                                           "follow_count": "idolnum",
+                                           "followers_count": "fansnum",
+                                           "tweet_count": "tweetnum",
+                                           "location": "location",
+                                           "gender": "sex",}}
                     }
                }
