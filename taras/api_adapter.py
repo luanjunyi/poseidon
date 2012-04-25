@@ -16,6 +16,8 @@ from api_method import method_dict
 def convert_obj(ret_dict, obj):
     class TarasApiResult(object):
         pass
+    if len(ret_dict) == 0:
+        return obj
     output = TarasApiResult()
     for key, value in ret_dict.items():
         cur = obj
