@@ -3,7 +3,7 @@ PROXY_TRYOUT_COUNT = 100
 VALID_PROXY_FAIL_RATE = 0.3
 DEFAULT_HTTP_TIMEOUT_IN_SEC = 20
 
-import os, sys
+import os, sys, traceback
 from datetime import datetime
 import httplib2, socks, socket
 
@@ -38,7 +38,7 @@ def proxy_wrapped(func, proxy_info, agent):
                                  proxy_info.proxy_host, proxy_info.proxy_port,
                                  proxy_info.proxy_user, proxy_info.proxy_pass))
             else:
-                raise err
+                raise Exception(traceback.format_exc())
     return function_wrapped
 
 

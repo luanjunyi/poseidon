@@ -91,6 +91,15 @@ class TarasSQLAgent(common.sql_agent.SQLAgent):
                             'fail_count': fail},
                            force=True)
 
+    def get_user_statistic(self, user_id):
+        stat = self.user_statistic.find({'user_id': user_id,
+                                         'collect_date': datetime.now().date().strftime("%Y-%m-%d")})
+        if stat == None:
+            return common.sql_agent.ORMTableRow({'new_follow': 0, 'new_unfollow': 0, 'new_post': 0},
+                                                self.user_statistic)
+        else:
+            return stat
+
 def init(dbname, dbuser, dbpass, dbhost='localhost', sscursor=False):
     global TarasSQLAgent
     TarasSQLAgent = common.sql_agent.orm_from_connection(dbuser, dbpass, dbname, dbhost, sscursor, 'TarasSQLAgent')

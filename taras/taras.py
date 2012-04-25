@@ -1,4 +1,9 @@
 # coding=utf-8
+
+FILE_UPLOADS_DIR = 'file_uploads/'
+MAX_NEW_FOLLOW_PER_DAY = 80
+
+
 import os, sys, re, random, cPickle, traceback, time, math
 import urllib2, socks
 
@@ -69,8 +74,8 @@ class Taras(object):
         _logger.debug('crawl_victim called for user:(%d)' % (self.user.id))
 
         victim_num = self.agent.victim_crawled.get_row_num({'user_id': self.user.id})
-        if victim_num > 200:
-            _logger.debug("%d vicitm left for user(%d), skip" % (victim_num, self.user.id))
+        if victim_num > MAX_NEW_FOLLOW_PER_DAY:
+            _logger.debug("%d victim left for user(%d), skip" % (victim_num, self.user.id))
             return
 
         victims = set()
@@ -94,7 +99,6 @@ class Taras(object):
         return soup.text[:140].encode('utf-8')
 
     def find_tweet(self, tweet_agent):
-
         _logger.debug("find_tweet called for user:(%s)" % (self.user.id))
         if (self.user.index_date == -1):
             _logger.debug("need add user's tags as custom tags")
@@ -137,8 +141,145 @@ class Taras(object):
         self.user.save()
 
 # Action routine
+# post tweet
+# follow new victim
+# stop following stubborn
+# report status
     def routine(self):
+        _logger.debug("routine called for user:(%d)" % (self.user.id))
+        
+        if int(time.time()) < self.user.next_action_time:
+            _logger.debug("too early, no action until %s" % time.ctime(local_user.next_action_time))
+            return
+
+        stat = self.agent.get_user_statistic(self.user.id)
+        self.post_tweet(stat)
+        _logger.debug("post tweet done for user(%d)" % self.user.id)
+        self.follow_new_victims(stat)
+        _logger.debug("follow new victim done for user(%d)" % self.user.id)
+        self.stop_follow_stubborn(stat)
+        _logger.debug("unfollow stubborn done for user(%d)" % self.user.id)
+
+        online_stat = self.online_user_statistic()
+        stat.dict.update(online_stat)
+        stat.save()
+        _logger.debug('db statuse updated for user:(%d)' % self.user.id)
+        _logger.debug('routine finished for user:(%d)' % self.user.id)
+        
+
+    def online_user_statistic(self):
+        me = self.api.me()
+        stat = { 'user_id': self.user.id,
+                 'collect_date': datetime.now().strftime("%Y-%m-%d"),
+                 'follow_count': me.follow_count,
+                 'followed_count': me.followed_count,
+                 'tweet_count': me.tweet_count
+                 }
+        return stat
+
+
+    def stop_follow_stubborn(self, stat):
         pass
+
+# follow new victim procedure
+    def follow_new_victims(self, db_stat):
+        if db_stat.new_follow >= MAX_NEW_FOLLOW_PER_DAY:
+            _logger.debug("user(%d) already followed %d victims today, will skip following" %
+                          (self.user.id, db_stat.new_follow))
+            return
+
+        limit = MAX_NEW_FOLLOW_PER_DAY - db_stat.new_follow
+        _logger.debug("user(%d) already followed %d victims today, will try %d more" %
+                      (self.user.id, db_stat.new_follow, limit))
+
+        victims = self.agent.victim_crawled.find_all({'user_id': self.user.id,
+                                                      'follow_date': -1}, limit = limit)
+        _logger.debug("%d victims found from DB, user:(%d)" % (len(victims), self.user.id))
+        success_count = 0
+        for victim in victims:
+            _logger.debug("try following (%s)" % victim.victim)
+            try:
+                self.api.follow(target_id = victim.victim)
+                _logger.debug("user(%d) followed new victim(%s)" % (self.user.id, victim.victim))
+                success_count += 1
+            except Exception, err:
+                _logger.error("user(%d) failed to follow (%s):%s" % (self.user.id, victim.victim, traceback.format_exc()))
+                return
+            try:
+                victim.follow_date = int(time.time())
+                victim.save()
+                _logger.debug("victim(%s) marked as followed by user(%d) in DB" % (victim.victim, self.user.id))
+            except Exception, err:
+                _logger.error("failed mark victim(%s) followed by user(%d) in DB: %s" % 
+                              (victim.victim, self.user.id, err))
+
+        db_stat.new_follow += success_count
+        _logger.debug("follow victim done for user(%d), %d new victims followed" % (self.user.id, success_count))
+
+# posting tweet procedure
+    def post_tweet(self, db_stat):
+        if db_stat.new_post >= 5:
+            _logger.debug("user(%d) already posted %d posts today, will skip posting" % (self.user.id, db_stat.new_post))
+            return
+        _logger.debug("user(%d) already posted %d posts today" % (self.user.id, db_stat.new_post))
+
+        ts = self.agent.tweet_stack.find(predicate_dict = {'user_id': self.user.id,
+                                                           'published': 0})
+        if ts == None:
+            _logger.error("no tweet available for user(%d)" % self.user.id)
+            return
+
+        tweet = self.agent.tweet_crawled.find({'id': ts.tweet_id})
+        if tweet == None:
+            _logger.error("tweet(%d) can't be found in DB" % ts.tweet_id)
+            self.agent.tweet_stack.remove(ts)
+            return
+
+        if tweet.image_bin != None:
+            image_path = self.save_tmp_image_for_upload(tweet.image_bin)
+        else:
+            image_path = None
+
+        tweet_text = self.compose_tweet(tweet)
+        try:
+            if image_path != None:
+                _logger.debug('will upload image from (%s)' % image_path)
+                self.api.publish_tweet_with_image(text = tweet_text, image_path = image_path)
+            else:
+                _logger.debug('will publish tweet(%s)' % tweet_text)
+                self.api.publish_tweet(text = tweet_text)
+
+        except Exception, err:
+            _logger.error("failed to post new tweet(%s, image:%s): %s" % (tweet_text, image_path, traceback.format_exc()))
+            return
+
+        db_stat.new_post += 1
+        # update db
+        try:
+            ts.published = 1
+            ts.save()
+            _logger.debug("tweet marked as published in DB")
+        except Exception, err:
+            _logger.error("tweet posted, but failed to mark it as published in DB, may result in duplicate tweet in the future: %s" % err)
+
+
+    def save_tmp_image_for_upload(self, image_bin):
+        if not os.path.exists(FILE_UPLOADS_DIR):
+            os.mkdir(FILE_UPLOADS_DIR)
+        path = os.path.join(FILE_UPLOADS_DIR, "./%d.%d.jpg" % (self.user.id, int(time.time())))
+        with open(path, 'w') as output:
+            output.write(image_bin)
+            return path
+                               
+    def compose_tweet(self, tweet):
+        title = u'【%s】' % tweet.title.decode('utf-8')
+        content = tweet.content.decode('utf-8')
+        href = tweet.href
+
+        content_len = 140 - 25  - len(title)
+        content = "%s%s...%s" % (title, content[:content_len], href)
+        return content.encode('utf-8')
+        
 
 if __name__ == "__main__":
     _logger.info("Testing Taras functions")

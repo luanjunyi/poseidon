@@ -27,7 +27,7 @@ method_dict = {'public_timeline':
                     },
                 
 
-                'update_status':
+                'publish_tweet':
                    {"name": {"sina": sina_sdk.API.update_status,
                              "qq": qq_sdk.API._t_add},
                     "arg_convert": {"sina": {"text": "status"},
@@ -60,13 +60,13 @@ method_dict = {'public_timeline':
                                             "uid": "name"}}
                     },
 
-                'post_image_text':
+                'publish_tweet_with_image':
                     {"name": {"sina": sina_sdk.API.upload,
                               "qq": qq_sdk.API._t_add_pic},
                      "arg_convert": {"sina": {"text": "status",
-                                              "image": "filename"},
+                                              "image_path": "filename"},
                                      "qq": {"text": "content",
-                                            "image": "filename"}},
+                                            "image_path": "filename"}},
                      "ret_convert": {"sina": {"message": "text"},
                                      "qq": {"message": "id"}}
                     },
@@ -133,8 +133,8 @@ method_dict = {'public_timeline':
                 'follow':
                     {"name": {"sina": sina_sdk.API.create_friendship,
                               "qq": qq_sdk.API._friends_add},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
+                     "arg_convert": {"sina": {"target_id": "user_id"},
+                                     "qq": {"target_id": "name"}},
                      "ret_convert": {"sina": {"message": "screen_name"},
                                      "qq": {"message": "msg"}}
                     },
@@ -206,19 +206,13 @@ method_dict = {'public_timeline':
                     {"name": {"sina": sina_sdk.API.me,
                               "qq": qq_sdk.API.me},
                     "arg_convert": {},
-                    "ret_convert": {"sina": {"screen_name": "name",
-                                             "uid": "id",
+                    "ret_convert": {"sina": {"name": "screen_name",
+                                             "followed_count": "followers_count",
                                              "follow_count": "friends_count",
-                                             "followers_count": "followers_count",
-                                             "tweet_count": "statuses_count",
-                                             "location": "location",
-                                             "gender": "gender"},
-                                    "qq": {"screen_name": "nick",
-                                           "uid": "name",
+                                             "tweet_count": "statuses_count"},
+                                    "qq": {"name": "name",
+                                           "followed_count": 'fansnum',
                                            "follow_count": "idolnum",
-                                           "followers_count": "fansnum",
-                                           "tweet_count": "tweetnum",
-                                           "location": "location",
-                                           "gender": "sex",}}
+                                           "tweet_count": "tweetnum"}}
                     }
                }

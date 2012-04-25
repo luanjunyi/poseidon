@@ -966,7 +966,7 @@ class API(object):
         # build headers
         headers = {
             'Content-Type': 'multipart/form-data; boundary=%s' % BOUNDARY,
-            'Content-Length': len(body)
+            'Content-Length': str(len(body))
         }
 
         return headers, body

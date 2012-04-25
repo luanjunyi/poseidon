@@ -24,7 +24,7 @@ def convert_obj(ret_dict, obj):
         setattr(output, key, cur)
     return output
         
-def adapte_api_method(method_info, api_type):
+def adapte_api_method(method_info, api_type, method_name):
     native_method = method_info["name"][api_type]
     arg_dict = method_info["arg_convert"][api_type] if ("arg_convert" in method_info and api_type in method_info["arg_convert"]) else {}
     ret_dict = method_info["ret_convert"][api_type] if ("ret_convert" in method_info and api_type in method_info["ret_convert"]) else {}
@@ -36,6 +36,8 @@ def adapte_api_method(method_info, api_type):
             
         for key, value in arg_dict.items():
             if key != value:
+                if not key in kwargs:
+                    raise Exception('arg(%s) is requried in API method (%s)' % (key, method.__name__))
                 kwargs[value] = kwargs[key]
                 del kwargs[key]
 
@@ -52,6 +54,8 @@ def adapte_api_method(method_info, api_type):
             ret = convert_obj(ret_dict, ret)
         
         return ret
+
+    method.__name__ = method_name
 
     return method
 
@@ -111,7 +115,7 @@ def create_adapted_api(api_type):
 
     # API bindings
     for key, value in method_dict.items():
-        setattr(TarasAPI, key, adapte_api_method(method_dict[key], api_type))
+        setattr(TarasAPI, key, adapte_api_method(method_dict[key], api_type, key))
 
     return TarasAPI
 
@@ -123,8 +127,8 @@ if __name__ == "__main__":
     # Testing QQ api
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
     api.create_api_from_scratch("2603698377", "youhao2006")
-    print api.me().name
-    print api.search_tweet(query='林书豪')[0].user_id
+    me = api.me()
+    print me.name, me.follow_count, me.followed_count
     print api.get_user(uid='minitalks').nick
     
     # Testing Sina api
@@ -132,8 +136,8 @@ if __name__ == "__main__":
     import sdk.weibopy.oauth
     token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
     api.api = api.create_api_from_token(token)
-    print api.api.me().name
-    print api.search_tweet(query='林书豪')[8].user_id
+    me = api.me()
+    print me.name, me.follow_count, me.followed_count
 
 def test_qq():
     QQApi = create_adapted_api("qq")
