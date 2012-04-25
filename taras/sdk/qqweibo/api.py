@@ -507,8 +507,8 @@ class API(object):
         ret = self._friends_check(names=[user], flag=0)
         return getattr(ret, user)
 
-    def is_following_user(felf, user):
-        ret = self.friendsJ_check(names=[user], flag=1)
+    def is_following_user(self, user):
+        ret = self._friends_check(names=[user], flag=1)
         return getattr(ret, user)
 
     """ 12.friends/user_fanslist 其他帐户听众列表 """

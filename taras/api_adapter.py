@@ -143,7 +143,7 @@ def test_qq():
     QQApi = create_adapted_api("qq")
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
     api.create_api_from_scratch("2603698377", "youhao2006")
-    return api.get_status(id="127060067309168")
+    return api.is_user_following_me(user_id="minitalks")
 
 def test_sina():
     SinaApi = create_adapted_api("sina")
@@ -151,4 +151,4 @@ def test_sina():
     import sdk.weibopy.oauth
     token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
     api.api = api.create_api_from_token(token)
-    return api.get_status(id='3436639437475743')
+    return api.is_following_user(user_id='1990074020')

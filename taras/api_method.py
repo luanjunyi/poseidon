@@ -149,22 +149,20 @@ method_dict = {'public_timeline':
                     },
 
                 'is_user_following_me':
-                    {"name": {"sina": sina_sdk.API.exists_friendship,
+                    {"name": {"sina": sina_sdk.API.is_user_following_me,
                               "qq": qq_sdk.API.is_user_following_me},
-                     "arg_convert": {"sina": {"user_uid": "user_a",
-                                              "my_uid": "user_b"},
-                                     "qq": {"user_uid": "user"}},
-                     "ret_convert": {"sina": {"friends": "friends"},
+                     "arg_convert": {"sina": {"user_id": "user_id"},
+                                     "qq": {"user_id": "user"}},
+                     "ret_convert": {"sina": {},
                                      "qq": {}}
                     },
                     
                 'is_following_user':
-                    {"name": {"sina": sina_sdk.API.exists_friendship,
+                    {"name": {"sina": sina_sdk.API.is_following_user,
                               "qq": qq_sdk.API.is_following_user},
-                     "arg_convert": {"sina": {"user_uid": "user_b",
-                                              "my_uid": "user_a"},
-                                     "qq": {"user_uid": "user"}},
-                     "ret_convert": {"sina": {"friends": "friends"},
+                     "arg_convert": {"sina": {"user_id": "user_id"},
+                                     "qq": {"user_id": "user"}},
+                     "ret_convert": {"sina": {},
                                      "qq": {}}
                     },
 

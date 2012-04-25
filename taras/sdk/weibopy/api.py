@@ -349,6 +349,16 @@ class API(object):
         allowed_param = ['user_a', 'user_b']
     )
 
+    def is_user_following_me(self, user_id):
+        ret = self.me()
+        ret = self.exists_friendship(user_a=user_id, user_b=ret.id)
+        return ret.friends
+
+    def is_following_user(self, user_id):
+        ret=self.me()
+        ret=self.exists_friendship(user_a=ret.id, user_b=user_id)
+        return ret.friends
+
     """ friendships/show """
     show_friendship = bind_api(
         path = '/friendships/show.json',
