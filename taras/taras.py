@@ -2,6 +2,8 @@
 
 FILE_UPLOADS_DIR = 'file_uploads/'
 MAX_NEW_FOLLOW_PER_DAY = 80
+FORCE_CLEAN_STOBBORN_LIMIT = 180
+SEEN_AS_STOBBORN_LIMIT_IN_DAY = 5
 
 
 import os, sys, re, random, cPickle, traceback, time, math
@@ -83,10 +85,10 @@ class Taras(object):
         for word in victim_keywords:
             new_victims = self.find_victim_by_keyword(word)
             for victim in new_victims:
-                if not self.agent.victim_crawled.exists({'user_id': self.user.id,
-                                                     'victim': victim}):
+                if (not self.agent.victim_crawled.exists({'user_id': self.user.id,
+                                                         'victim': victim}))
+                and (not self.api.is_following_user(victim)):
                     victims.add(victim)
-
         
         added_count = self.agent.add_victims(self.user.id, victims)
 
@@ -108,7 +110,6 @@ class Taras(object):
             wee_ids = tweet_agent.get_wee_id_containing_term(tag)
             _logger.debug("%d tweets found for tag(%s)" % (len(wee_ids), tag))
             fetch_ids = []
-
 
             for wee_id in wee_ids:
                 if not self.agent.tweet_crawled.exists({'id': wee_id}):
@@ -152,15 +153,16 @@ class Taras(object):
             _logger.debug("too early, no action until %s" % time.ctime(local_user.next_action_time))
             return
 
+        online_stat = self.online_user_statistic()
+
         stat = self.agent.get_user_statistic(self.user.id)
         self.post_tweet(stat)
         _logger.debug("post tweet done for user(%d)" % self.user.id)
         self.follow_new_victims(stat)
         _logger.debug("follow new victim done for user(%d)" % self.user.id)
-        self.stop_follow_stubborn(stat)
+        self.stop_follow_stubborn(stat, online_stat)
         _logger.debug("unfollow stubborn done for user(%d)" % self.user.id)
 
-        online_stat = self.online_user_statistic()
         stat.dict.update(online_stat)
         stat.save()
         _logger.debug('db statuse updated for user:(%d)' % self.user.id)
@@ -177,9 +179,15 @@ class Taras(object):
                  }
         return stat
 
+# stop following stubborn procedure
+    def stop_follow_stubborn(self, stat, online_stat):
+        if online_stat['follow_count'] < FORCE_CLEAN_STOBBORN_LIMIT and self.user.id % SEEN_AS_STOBBORN_LIMIT_IN_DAY != 0:
+            _logger.debug('user(%d) following %d victims, and not must clean day, will skip unfollowing stobborn'
+                          % (self.user.id, online_stat['follow_count']))
+            return
 
-    def stop_follow_stubborn(self, stat):
-        pass
+        force = online_stat['follow_count'] <= FORCE_CLEAN_STOBBORN_LIMIT
+        
 
 # follow new victim procedure
     def follow_new_victims(self, db_stat):
