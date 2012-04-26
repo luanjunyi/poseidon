@@ -230,7 +230,7 @@ def bind_api(**config):
 
                 finally:
                     if retcode + errcode != 0:
-                        print traceback.format_exc()
+                        print 'stack:' + traceback.format_exc()
                         # if m:
                         #     print "bad exerpt: %s\n good part: %s" % (body[bad_pos - 100: bad_pos + 500], body[bad_pos - 100: bad_pos])
                         #     for i in range(bad_pos - 6, bad_pos + 6):
@@ -248,7 +248,9 @@ def bind_api(**config):
 
     def _call(api, *args, **kargs):
         method = APIMethod(api, args, kargs)
-        return method.execute()
+        ret = method.execute()
+        time.sleep(1) # for politeness
+        return ret
 
     # make doc string
     if config.get('payload_list', False):

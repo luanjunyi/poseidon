@@ -96,6 +96,7 @@ class ProxyManager:
 
     def get_proxied_connection_for_user(self, user_id):
         proxy = self.get_proxy_for_user(user_id)
+        _logger.debug("will use %s for user(%d)" % (proxy.addr, user_id))
         proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5,
                                         proxy.addr, proxy.port,
                                         proxy_user = proxy.user_name,

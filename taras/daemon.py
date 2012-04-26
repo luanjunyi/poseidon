@@ -48,7 +48,7 @@ def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
     loop_id = 1
     while True:
         try:
-            all_user = agent.get_all_user()[:1]
+            all_user = agent.get_all_user()
             for user in all_user:
                 _logger.debug("user(%d) added to pool" % user.id)
                 pool.spawn(action_func, agent, user)

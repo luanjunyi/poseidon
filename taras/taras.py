@@ -2,15 +2,17 @@
 
 FILE_UPLOADS_DIR = 'file_uploads/'
 MAX_NEW_FOLLOW_PER_DAY = 80
+MAX_NEW_POST_PER_DAY = 5
 FORCE_CLEAN_STOBBORN_LIMIT = 180
 SEEN_AS_STOBBORN_LIMIT_IN_DAY = 5
+OPERATION_INTERVAL_IN_SEC = 1
 
 
 import os, sys, re, random, cPickle, traceback, time, math
 import urllib2, socks
 
 from ConfigParser import RawConfigParser
-from datetime import datetime, timedelta, date
+import datetime
 from functools import partial
 from proxy_manager import ProxyManager
 
@@ -86,8 +88,8 @@ class Taras(object):
             new_victims = self.find_victim_by_keyword(word)
             for victim in new_victims:
                 if (not self.agent.victim_crawled.exists({'user_id': self.user.id,
-                                                         'victim': victim}))
-                and (not self.api.is_following_user(victim)):
+                                                         'victim': victim})) \
+                and (not self.api.is_following_user(user_id= victim)):
                     victims.add(victim)
         
         added_count = self.agent.add_victims(self.user.id, victims)
@@ -113,6 +115,7 @@ class Taras(object):
 
             for wee_id in wee_ids:
                 if not self.agent.tweet_crawled.exists({'id': wee_id}):
+                    _logger.debug("need to fetch tweet(id=%d) from tweet DB" % wee_id)
                     fetch_ids.append(wee_id)
                 else:
                     _logger.debug("tweet id=%d exists in DB, ignore" % wee_id)
@@ -121,6 +124,7 @@ class Taras(object):
             if len(fetch_ids) != len(fetched_tweets):
                 sys.exit(0)
             for tweet in fetched_tweets:
+                _logger.debug("tweet(id=%d) fetched" % tweet.id)
                 store = {'title': tweet.title,
                          'content': self.clean_content(tweet.html),
                          'href': tweet.url,
@@ -134,6 +138,8 @@ class Taras(object):
                     except Exception, err:
                         _logger.debug("adding tweet to DB failed: %s" % err)
                         wee_ids.remove(tweet.id)
+                else:
+                    wee_ids.remove(tweet.id)
 
             self.agent.tweet_stack.add_many(['user_id', 'tweet_id'],
                                             [(self.user.id, wee_id) for wee_id in wee_ids])
@@ -150,7 +156,7 @@ class Taras(object):
         _logger.debug("routine called for user:(%d)" % (self.user.id))
         
         if int(time.time()) < self.user.next_action_time:
-            _logger.debug("too early, no action until %s" % time.ctime(local_user.next_action_time))
+            _logger.debug("too early, no action until %s" % time.ctime(self.user.next_action_time))
             return
 
         online_stat = self.online_user_statistic()
@@ -162,17 +168,22 @@ class Taras(object):
         _logger.debug("follow new victim done for user(%d)" % self.user.id)
         self.stop_follow_stubborn(stat, online_stat)
         _logger.debug("unfollow stubborn done for user(%d)" % self.user.id)
-
         stat.dict.update(online_stat)
         stat.save()
         _logger.debug('db statuse updated for user:(%d)' % self.user.id)
         _logger.debug('routine finished for user:(%d)' % self.user.id)
-        
+
+        if stat.new_post >= MAX_NEW_POST_PER_DAY and stat.new_follow >= MAX_NEW_FOLLOW_PER_DAY:
+            t = datetime.date.today() + datetime.timedelta(days=1, hours=6)
+            self.user.next_action_time = int(time.mktime(t.timetuple()))
+        else:
+            self.user.next_action_time = int(time.time()) + 3600
+        self.user.save()
 
     def online_user_statistic(self):
         me = self.api.me()
         stat = { 'user_id': self.user.id,
-                 'collect_date': datetime.now().strftime("%Y-%m-%d"),
+                 'collect_date': datetime.datetime.now().strftime("%Y-%m-%d"),
                  'follow_count': me.follow_count,
                  'followed_count': me.followed_count,
                  'tweet_count': me.tweet_count
@@ -186,8 +197,46 @@ class Taras(object):
                           % (self.user.id, online_stat['follow_count']))
             return
 
-        force = online_stat['follow_count'] <= FORCE_CLEAN_STOBBORN_LIMIT
-        
+        force = online_stat['follow_count'] >= FORCE_CLEAN_STOBBORN_LIMIT
+
+        following_list = self.api.following_list()
+        _logger.debug('processing %d followed victims' % len(following_list))
+        epoch_limit = int(time.time()) - SEEN_AS_STOBBORN_LIMIT_IN_DAY * 24 * 3600
+        new_unfollow = 0
+        for name in following_list:
+            if self.api.is_user_following_me(user_id=name):
+                _logger.debug("%s is following me(%d)" % (name, self.user.id))
+                continue
+
+            if force:
+                try:
+                    _logger.debug("force unfollowing (%s)" % name)
+                    self.api.unfollow(uid=name)
+                    new_unfollow += 1
+                    continue
+                except Exception, err:
+                    _logger.error('failed to unfollow %s: %s' % (name, err))
+
+            record = self.agent.victim_crawled.find({'user_id': self.user.id,
+                                                     'victim': name})
+            if record == None:
+                self.agent.victim_crawled.add({'user_id': self.user.id,
+                                               'victim': name,
+                                               'follow_date': follow_date})
+
+            follow_date = int(time.time())
+            
+            if follow_date < epoch_limit:
+                try:
+                    ago = (int(time.time()) - follow_date) / (24 * 3600.0)
+                    _logger.debug("unfollowing victim (%s), followed %.2f days ago" % (name, ago))
+                    self.api.unfollow(uid=name)
+                    new_unfollow += 1
+                    continue
+                except Exception, err:
+                    _logger.error('failed to unfollow %s: %s' % (name, err))
+        stat.new_unfollow += new_unfollow
+        _logger.debug("user(%d) finished unfollowing %d stubborns" % (self.user.id, new_unfollow))
 
 # follow new victim procedure
     def follow_new_victims(self, db_stat):
@@ -212,7 +261,9 @@ class Taras(object):
                 success_count += 1
             except Exception, err:
                 _logger.error("user(%d) failed to follow (%s):%s" % (self.user.id, victim.victim, traceback.format_exc()))
-                return
+                victim.follow_date = 0
+                victim.save()
+                continue
             try:
                 victim.follow_date = int(time.time())
                 victim.save()
@@ -226,7 +277,7 @@ class Taras(object):
 
 # posting tweet procedure
     def post_tweet(self, db_stat):
-        if db_stat.new_post >= 5:
+        if db_stat.new_post >= MAX_NEW_POST_PER_DAY:
             _logger.debug("user(%d) already posted %d posts today, will skip posting" % (self.user.id, db_stat.new_post))
             return
         _logger.debug("user(%d) already posted %d posts today" % (self.user.id, db_stat.new_post))

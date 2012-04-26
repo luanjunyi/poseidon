@@ -50,8 +50,6 @@ def adapte_api_method(method_info, api_type, method_name):
             for obj in ret:
                 result.append(convert_obj(ret_dict, obj))
             ret = result
-        elif type(ret) == bool:
-            pass
         else:
             ret = convert_obj(ret_dict, ret)
         
