@@ -375,6 +375,10 @@ class API(object):
         require_auth = True
     )
 
+    def complete_friends_ids_list(self):
+        ret = self.friends_ids(count=5000)
+        return ret.ids
+
     """ followers/ids """
     followers_ids = bind_api(        
         path = '/followers/ids.json',

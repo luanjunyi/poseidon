@@ -567,6 +567,18 @@ class API(object):
         require_auth = True
     )
 
+    def complete_fanlist_only_name(self):
+        names = list()
+        cursor = 0
+        page_size = 200
+        while True:
+            ret = self._friends_fanslist_name(reqnum=page_size, startindex=cursor)
+            names.extend([item.name for item in ret])
+            if not ret.hasnext:
+                break;
+            cursor += page_size
+        return names
+
     """ 19.idollist_name 我的收听列表，只输出name（200个） """
     _friends_fanslist_name = bind_api(
         path = '/friends/idollist_name',

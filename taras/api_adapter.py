@@ -128,24 +128,28 @@ if __name__ == "__main__":
 
     # Testing QQ api
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    api.create_api_from_scratch("2603698377", "youhao2006")
+    api.create_api_from_scratch("2310663584", "youhao2006")
     me = api.me()
     print me.name, me.follow_count, me.followed_count
-    print api.get_user(uid='minitalks').nick
-    
+    names = api.following_list()
+    print names
+    print len(names)
+
     # Testing Sina api
     api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
     import sdk.weibopy.oauth
     token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
     api.api = api.create_api_from_token(token)
     me = api.me()
-    print me.name, me.follow_count, me.followed_count
+    ids=api.following_list()
+    print ids
+    print len(ids)
 
 def test_qq():
     QQApi = create_adapted_api("qq")
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
     api.create_api_from_scratch("2603698377", "youhao2006")
-    return api.is_user_following_me(user_id="minitalks")
+    return api.following_list()
 
 def test_sina():
     SinaApi = create_adapted_api("sina")
