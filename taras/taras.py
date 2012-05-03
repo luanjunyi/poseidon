@@ -39,8 +39,13 @@ class Taras(object):
                                                     'app_id': app.id})
         if (raw_token):
             return cPickle.loads(raw_token.value)
-        
-        token = self.api.create_token_from_web(user.identity, user.passwd)
+
+        try:
+            token = self.api.create_token_from_web(user.identity, user.passwd)
+        except Exception, err:
+            _logger.error("failed to get token from web(username:(%s), passwd:(%s))"
+                          % (user.identity, user.passwd))
+            return None
         self.agent.app_auth_token.add({'user_id': user.id,
                                        'app_id': app.id,
                                        'value': cPickle.dumps(token)}, force=True)
@@ -58,6 +63,9 @@ class Taras(object):
             app = self.select_app_for_user(user)
         self.api = APIClass(app.token, app.secret)
         token = self.get_token(user, app)
+        if token == None:
+            raise Exception("failed to assign user(%s), can't get token", user.id)
+
         self.api.create_api_from_token(token)
 
         # Pass user ID to native API, so that binder will use proxy manger to get

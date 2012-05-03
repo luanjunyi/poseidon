@@ -1,7 +1,3 @@
-USER_COUNT_PER_IP = 50
-PROXY_TRYOUT_COUNT = 100
-VALID_PROXY_FAIL_RATE = 0.3
-DEFAULT_HTTP_TIMEOUT_IN_SEC = 20
 
 import os, sys, traceback
 from datetime import datetime
@@ -45,14 +41,19 @@ def proxy_wrapped(func, proxy_info, agent):
 class ProxyManager:
     def __init__(self, agent):
         self.agent = agent
+        self.USER_COUNT_PER_IP = self.agent.core_config.find({'name': 'user_count_per_proxy'}).value
+        self.PROXY_TRYOUT_COUNT = self.agent.core_config.find({'name': 'proxy_tryout_count'}).value
+        self.VALID_PROXY_FAIL_RATE = self.agent.core_config.find({'name': 'valid_proxy_fail_rate_limit'}).value
+        self.DEFAULT_HTTP_TIMEOUT_IN_SEC = self.agent.core_config.find({'name': 'default_proxy_timeout_in_second'}).value
+
 
     def _is_proxy_bad(self, proxy):
         proxy_log = self.agent.proxy_log.find({'proxy_ip': proxy.addr,
                                                'collect_date': datetime.now().strftime('%Y-%m-%d')})
 
         if proxy_log == None \
-                or proxy_log.use_count < PROXY_TRYOUT_COUNT\
-                or float(proxy_log.fail_count) / float(proxy_log.use_count) < VALID_PROXY_FAIL_RATE:
+                or proxy_log.use_count < self.PROXY_TRYOUT_COUNT\
+                or float(proxy_log.fail_count) / float(proxy_log.use_count) < self.VALID_PROXY_FAIL_RATE:
             return False
         else:
             _logger.debug("bad proxy: addr=%s, use=%d, fail=%d, fail_rate=%.2f%%" %
@@ -62,7 +63,7 @@ class ProxyManager:
 
     def get_proxy_slot_for_user(self, user_id):
         user_id_rank = self.agent.local_user.get_row_num({'id<': user_id})
-        slot_id = user_id_rank / USER_COUNT_PER_IP
+        slot_id = user_id_rank / self.USER_COUNT_PER_IP
         return slot_id
 
     def fill_slot(self, slot_id):
@@ -101,7 +102,7 @@ class ProxyManager:
                                         proxy.addr, proxy.port,
                                         proxy_user = proxy.user_name,
                                         proxy_pass = proxy.password)
-        conn = httplib2.Http(proxy_info = proxy_info, timeout = DEFAULT_HTTP_TIMEOUT_IN_SEC)
+        conn = httplib2.Http(proxy_info = proxy_info, timeout = self.DEFAULT_HTTP_TIMEOUT_IN_SEC)
         conn.request = proxy_wrapped(conn.request, proxy_info, self.agent)
         return conn
         

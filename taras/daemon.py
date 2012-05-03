@@ -23,21 +23,33 @@ tweet_agent = ios.weDaily.backend.db.init(TWEET_DB_NAME,
 
 def index_tweet(agent, user):
     taras = Taras(api_type, agent)
-    taras.assign_user(user) 
-    taras.find_tweet(tweet_agent)
-    _logger.debug("user(%d) finished indexing tweet" % user.id)
+    try:
+        taras.assign_user(user)
+        taras.find_tweet(tweet_agent)
+    except Exception, err:
+        _logger.error("failed user(%d) indexing tweet: %s" % (user.id, err))
+    else:
+        _logger.debug("user(%d) finished indexing tweet" % user.id)
 
 def crawl_victim(agent, user):
     taras = Taras(api_type, agent)
-    taras.assign_user(user) 
-    taras.crawl_victim()
-    _logger.debug("user(%d) finished crawling victims" % user.id)
+    try:
+        taras.assign_user(user) 
+        taras.crawl_victim()
+    except Exception, err:
+        _logger.error("failed user(%d) crawling victims: %s" % (user.id, err))
+    else:
+        _logger.debug("user(%d) finished crawling victims" % user.id)
 
 def perform_routine(agent, user):
     taras = Taras(api_type, agent)
-    taras.assign_user(user) 
-    taras.routine()
-    _logger.debug("user(%d) finished routine" % user.id)
+    try:
+        taras.assign_user(user) 
+        taras.routine()
+    except Exception, err:
+        _logger.error("failed user(%d) routine: %s" % (user.id, err))
+    else:
+        _logger.debug("user(%d) finished routine" % user.id)
 
 
 def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
