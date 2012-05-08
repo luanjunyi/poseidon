@@ -1,5 +1,5 @@
 
-import os, sys, traceback
+import os, sys, traceback, random
 from datetime import datetime
 import httplib2, socks, socket
 
@@ -41,10 +41,10 @@ def proxy_wrapped(func, proxy_info, agent):
 class ProxyManager:
     def __init__(self, agent):
         self.agent = agent
-        self.USER_COUNT_PER_IP = self.agent.core_config.find({'name': 'user_count_per_proxy'}).value
-        self.PROXY_TRYOUT_COUNT = self.agent.core_config.find({'name': 'proxy_tryout_count'}).value
-        self.VALID_PROXY_FAIL_RATE = self.agent.core_config.find({'name': 'valid_proxy_fail_rate_limit'}).value
-        self.DEFAULT_HTTP_TIMEOUT_IN_SEC = self.agent.core_config.find({'name': 'default_proxy_timeout_in_second'}).value
+        self.USER_COUNT_PER_IP = int(self.agent.core_config.find({'name': 'user_count_per_proxy'}).value)
+        self.PROXY_TRYOUT_COUNT = int(self.agent.core_config.find({'name': 'proxy_tryout_count'}).value)
+        self.VALID_PROXY_FAIL_RATE = float(self.agent.core_config.find({'name': 'valid_proxy_fail_rate_limit'}).value)
+        self.DEFAULT_HTTP_TIMEOUT_IN_SEC = int(self.agent.core_config.find({'name': 'default_proxy_timeout_in_second'}).value)
 
 
     def _is_proxy_bad(self, proxy):
@@ -105,6 +105,10 @@ class ProxyManager:
         conn = httplib2.Http(proxy_info = proxy_info, timeout = self.DEFAULT_HTTP_TIMEOUT_IN_SEC)
         conn.request = proxy_wrapped(conn.request, proxy_info, self.agent)
         return conn
+
+    def get_random_proxy(self):
+        proxyies = self.agent.proxy.findAll()
+        return random.choice(proxies)
         
 
 if __name__ == '__main__':

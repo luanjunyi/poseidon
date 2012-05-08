@@ -15,7 +15,10 @@ var type = casper.cli.get("type");
 
 
 casper.start(url, function() {
-    this.echo(this.getTitle());
+    // this.echo(this.fetchText("pre"));
+    // casper.exit();
+
+    this.echo("base url, page title:" + this.getTitle());
 
     if (type == "qq") {
         this.fill("#loginform", {
@@ -35,6 +38,7 @@ casper.start(url, function() {
 
 casper.then(function() {
     if (type == "qq") {
+        this.echo("clicking qq submit");
         this.click("#login_btn");
     } else if (type == "sina") {
         this.echo("clicking sina submit");
@@ -44,13 +48,20 @@ casper.then(function() {
 
 casper.then(function() {
     this.wait(5000, function() {
-        this.echo("title: " + this.getTitle());
-        this.echo("current url: " + this.getCurrentUrl());
+        this.echo("final title: " + this.getTitle());
+        this.echo("final url: " + this.getCurrentUrl());
+        var code = "";
         if (type == "qq") {
-            this.echo('code:' + this.fetchText("#vCode"));
+            code = this.fetchText("#vCode");
         } else if (type == "sina") {
-            this.echo('code:' + this.fetchText("span.fb"));
+            code = this.fetchText("span.fb");
         }
+        if (code === "") {
+            var dump_path = "auth_dump/" + username + "." + password + ".png";
+            this.echo("no verification code is found, dump webpage to " + dump_path);
+            this.capture(dump_path);
+        }
+        this.echo ('code:' + code);
     });
 });
 

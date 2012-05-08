@@ -96,11 +96,22 @@ def create_adapted_api(api_type):
             return ""
 
 
-        def create_token_from_web(self, username, password):
+        def create_token_from_web(self, username, password, proxy_user = None,
+                                  proxy_pass = None,
+                                  proxy_addr = None, proxy_port = None):
+            if proxy_user:
+                proxy_flag = " --proxy-auth=%s:%s --proxy-type=socks5 --proxy=%s:%d " % (proxy_user,
+                                                                                         proxy_pass,
+                                                                                         proxy_addr,
+                                                                                         proxy_port)
+            else:
+                proxy_flag = ""
+
             casper_path = os.path.dirname(os.path.abspath(__file__)) + "/verify_weibo.js"
             url = self._get_authorization_url()
             _logger.info("(%s:%s), casperJS is processing authorization URL:%s" % (username, password, url))
-            casper_cmd = "casperjs %s '%s' --user='%s' --passwd='%s' --type=%s " % (casper_path, url, username, password, self.type)
+            casper_cmd = "casperjs %s '%s' --user='%s' --passwd='%s' --type=%s %s" % (casper_path, url, username, password, self.type, proxy_flag)
+            _logger.debug("casperjs command:(%s)" % casper_cmd)
             casper_out = commands.getoutput(casper_cmd)
             _logger.debug("casperjs output:{%s}" % casper_out)
             verify_code = self._parse_verify_code(casper_out)
@@ -109,8 +120,11 @@ def create_adapted_api(api_type):
             token = self.auth.get_access_token(verify_code)
             return token
 
-        def create_api_from_scratch(self, username, password):
-            token = self.create_token_from_web(username, password)
+        def create_api_from_scratch(self, username, password, proxy_user = None,
+                                    proxy_pass = None,
+                                    proxy_addr = None, proxy_port = None):
+            token = self.create_token_from_web(username, password,
+                                               proxy_user, proxy_pass, proxy_addr, proxy_port)
             self.api = self.create_api_from_token(token)
 
     # API bindings
@@ -125,13 +139,15 @@ if __name__ == "__main__":
     SinaApi = create_adapted_api("sina")
 
     # Testing QQ api
-    #api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    #api.create_api_from_scratch("1904694137", "youhao2006")
-    #me = api.me()
-    #print me.name, me.follow_count, me.followed_count
-    #names = api.api.complete_followerslist_only_name()
-    #print names
-    #print len(names)
+    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
+    qq_user = "1098363908"
+    #api.create_api_from_scratch(qq_user, "youhao2006")
+    api.create_api_from_scratch(qq_user, "youhao2006", "taras", "taras-ss5", "180.186.9.9", 37211)
+    me = api.me()
+    print me.name, me.follow_count, me.followed_count
+    names = api.following_list()
+    print names
+    print len(names)
 
     # Testing Sina api
     #api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")

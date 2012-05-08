@@ -41,7 +41,13 @@ class Taras(object):
             return cPickle.loads(raw_token.value)
 
         try:
-            token = self.api.create_token_from_web(user.identity, user.passwd)
+            proxy = self.proxy_manager.get_random_proxy()
+
+            token = self.api.create_token_from_web(user.identity, user.passwd,
+                                                   proxy_user = proxy.user_name,
+                                                   proxy_pass = proxy.password,
+                                                   proxy_addr = proxy.addr,
+                                                   proxy_port = proxy.port)
         except Exception, err:
             _logger.error("failed to get token from web(username:(%s), passwd:(%s))"
                           % (user.identity, user.passwd))
@@ -85,7 +91,7 @@ class Taras(object):
     def crawl_victim(self):
         _logger.debug('crawl_victim called for user:(%d)' % (self.user.id))
 
-        victim_num = self.agent.victim_crawled.get_row_num({'user_id': self.user.id})
+        victim_num = self.agent.victim_crawled.get_row_num({'user_id': self.user.id, 'follow_date': -1})
         if victim_num > MAX_NEW_FOLLOW_PER_DAY:
             _logger.debug("%d victim left for user(%d), skip" % (victim_num, self.user.id))
             return
