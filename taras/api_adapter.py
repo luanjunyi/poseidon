@@ -102,7 +102,7 @@ def create_adapted_api(api_type):
             _logger.info("(%s:%s), casperJS is processing authorization URL:%s" % (username, password, url))
             casper_cmd = "casperjs %s '%s' --user='%s' --passwd='%s' --type=%s " % (casper_path, url, username, password, self.type)
             casper_out = commands.getoutput(casper_cmd)
-            #_logger.debug("casperjs output:{%s}" % casper_out)
+            _logger.debug("casperjs output:{%s}" % casper_out)
             verify_code = self._parse_verify_code(casper_out)
             _logger.debug("got verify code:(%s)" % verify_code)
 
@@ -125,29 +125,29 @@ if __name__ == "__main__":
     SinaApi = create_adapted_api("sina")
 
     # Testing QQ api
-    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    api.create_api_from_scratch("2310663584", "youhao2006")
-    me = api.me()
-    print me.name, me.follow_count, me.followed_count
-    names = api.following_list()
-    print names
-    print len(names)
+    #api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
+    #api.create_api_from_scratch("1904694137", "youhao2006")
+    #me = api.me()
+    #print me.name, me.follow_count, me.followed_count
+    #names = api.api.complete_followerslist_only_name()
+    #print names
+    #print len(names)
 
     # Testing Sina api
-    api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
-    import sdk.weibopy.oauth
-    token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
-    api.api = api.create_api_from_token(token)
-    me = api.me()
-    ids=api.following_list()
-    print ids
-    print len(ids)
+    #api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
+    #import sdk.weibopy.oauth
+    #token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
+    #api.api = api.create_api_from_token(token)
+    #me = api.me()
+    #ids=api.following_list()
+    #print ids
+    #print len(ids)
 
 def test_qq():
     QQApi = create_adapted_api("qq")
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    api.create_api_from_scratch("2603698377", "youhao2006")
-    return api.following_list()
+    api.create_api_from_scratch("2411372149", "youhao2006")
+    return api.me()
 
 def test_sina():
     SinaApi = create_adapted_api("sina")
@@ -155,4 +155,4 @@ def test_sina():
     import sdk.weibopy.oauth
     token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
     api.api = api.create_api_from_token(token)
-    return api.is_following_user(user_id='1990074020')
+    return api.api.followers_ids(page=0)

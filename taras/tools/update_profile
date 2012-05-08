@@ -1,118 +1,130 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os, sys, re, time, traceback
+import os, sys, re, time
 from datetime import datetime
 from urlparse import urlparse
+import MySQLdb as mdb
+from random import choice
+import json
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../') # Paracode root
-from taras import taras
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../')
+
+#import taras
 from util import pbrowser
 from util.log import _logger
+import api_adapter
 
 def usage():
-    print 'usage: update_profile -e[USER_EMAIL] -c[NICK_NAME] -d[DESCRIPTION] -i[PHOTO] -t[tags] -u[DBUSER=taras] -p[DBPASSWD=admin123] -n[DBNAME=taras] -h[DBHOST=localhost]\n\
-tags should be delimited by comma'
+    print 'usage: update_profile -i[USER_IDENTITY] -v[USER_PASSWD] -s[SCREEN_NAME] -d[DESCRIPTION] -a[AVATAR] -t[tags] -u[DBUSER] -p[DBPASSWD] -n[DBNAME] -h[DBADDR]'
     sys.exit(0)
 
 def main(argv):
     from getopt import getopt
     try:
-        opts, args = getopt(sys.argv[1:], 'e:c:d:i:t:u:p:n:h:',
-                            ['email=', 'nick=', 'desc=', 'photo=', 'tags=', 'dbuser=', 'dbpass=', 'dbname=', 'mysql_host='])
+        opts, args = getopt(sys.argv[1:], 'i:v:s:d:a:t:u:p:n:h:',
+                            ['identity=', 'user_verify=', 'screen_name=', 'desc=', 'avatar=', 'tags=', 'dbuser=', 'dbpass=', 'dbname=', 'dbaddr='])
     except Exception, err:
         print "getopt error:%s" % err
         usage()
         sys.exit(2)
+        pass
 
-    dbuser = 'taras'
-    db = 'taras'
-    passwd = 'admin123'
-    mysql_host = 'localhost'
-
-    email = ''
+    identity= ''
     desc = ''
-    photo = ''
-    # 'tags' should be delimited by comma, currently, the caller of this program is a PHP script
-    # which will feed comma delimited string
+    avatar= ''
     tags = ''
-    nick = ''
+    screen_name = ''
 
     for opt, arg in opts:
         if opt in ('-u', '--dbuser'):
-            dbuser = arg.strip()
-        if opt in ('-n', '--dbname'):
-            db = arg.strip()
+            db_user = arg.strip()
+        if opt in ('-h', '--dbaddr'):
+            db_addr = arg.strip()
         if opt in ('-p', '--dbpass'):
-            passwd = arg.strip()
-        if opt in ('-h', '--mysql_host'):
-            mysql_host = arg.strip()
-        if opt in ('-e', '--email'):
-            email = arg.strip()
-        if opt in ('-c', '--nick'):
-            nick = arg.strip()
+            db_passwd = arg.strip()
+        if opt in ('-n', '--dbname'):
+            db_name = arg.strip()
+        if opt in ('-v', '--userpasswd'):
+            user_passwd = arg.strip()
+        if opt in ('-i', '--identity'):
+            identity = arg.strip()
+        if opt in ('-s', '--screen_name'):
+            screen_name = arg.strip()
         if opt in ('-d', '--desc'):
             desc = arg.strip()
-        if opt in ('-i', '--photo'):
-            photo = arg.strip()
+        if opt in ('-a', '--avatar'):
+            avatar = arg.strip()
         if opt in ('-t', '--tags'):
             tags = arg.strip()
-        if opt in ('-c', '--nick'):
-            nick = arg.strip()
 
-    if email == '':
-        print 'email is empty'
+    if identity == '':
         usage()
     
-    _logger.info('dbname:%s, dbuser:%s, dbpass:%s, user-email:%s, nick:(%s), desc:(%s), tags:(%s), photo:(%s)'
-                 % (db, dbuser, passwd, email, nick, desc, tags, photo))
-
-    daemon = taras.WeiboDaemon(dbname=db, dbuser = dbuser, dbpass = passwd, noselenium = True, mysql_host = mysql_host)
+    _logger.info('db_addr:%s, db_user:%s, dbpass:%s, identity:%s, screen_name:(%s), desc:(%s), tags:(%s), avatar:(%s)'
+                 % (db_addr, db_user, db_passwd, identity, screen_name, desc, tags, avatar))
     try:
-        api = daemon.get_api_by_user(email)
+        #connet mysql db
+        mysql_connection = mdb.connect(db_addr, db_user, db_passwd, db_name)
+        cursor = mysql_connection.cursor()
+        #get vender type
+        cursor.execute('select value from core_config where name = "vender-type"')
+        vender_type = cursor.fetchall()[0][0] 
+        #randomly get one app
+        cursor.execute('select id from local_app')
+        app_id = choice(cursor.fetchall())[0]
+        sql = 'select token,secret from local_app where id = %s' % app_id
+        cursor.execute(sql)
+        app_data = cursor.fetchall()
+        app_key = app_data[0][0]
+        app_secret = app_data[0][1]
+        mysql_connection.close()
+        #authorize
+        QQapi = api_adapter.create_adapted_api(vender_type)
+        api = QQapi(app_key, app_secret)
+        api.create_api_from_scratch(identity, user_passwd)
+        #print 'authorize success.'
         # update tag
-        if tags != '':
-            api.tag_create(tags)
-        # update nick name, description
-        if nick != '':
-            api.update_profile(name=nick)
-
-        if desc != '':
-            api.update_profile(description=desc)
-
+        #if tags != '':
+        #    api.tag_create(tags)
+        # update screen name, description
+        if screen_name != '':
+            api.update_profile(screen_name=screen_name, description=desc)
+            _logger.debug('screen name updated as (%s)' % api.me().name.encode('utf-8'))
+        #if desc != '':
+        #    api.update_profile(description=desc)
+        #    _logger.debug('description updated as (%s)' % api.me().description.encode('utf-8'))
             
-        # update photo
-        if photo != '':
+        #update avatar
+        if avatar != '':
             br = pbrowser.get_browser()
             # first visit the base url to get a good referer
             try:
-                urlinfo = urlparse(photo)
-                baseurl = photo[:photo.find(urlinfo.path)]
-                _logger.debug('photo url parsed, baseurl:(%s)' % baseurl)
+                urlinfo = urlparse(avatar)
+                baseurl = avatar[:avatar.find(urlinfo.path)]
+                _logger.debug('avatar url parsed, baseurl:(%s)' % baseurl)
                 br.open(baseurl)
             except Exception, err:
                 _logger.error('getting referer failed:(%s), will continue anyway', err)
-            img = br.download_image(photo).read()
+            img = br.download_image(avatar).read()
             # save to disk
-            if not os.path.exists('update_profile'):
-                os.makedirs('update_profile')
+            if not os.path.exists('temp_avatar_folder'):
+                print 'temp folder not exist'
+                os.makedirs('temp_avatar_folder')
+                print 'show tmp'
 
-            tmp_name = "update_profile/tmp_photo.%s%s" % (int(time.mktime(datetime.now().timetuple())),
+            tmp_name = "temp_avatar_folder/tmp_avatar.%s%s" % (int(time.mktime(datetime.now().timetuple())),
                                             os.path.splitext(urlinfo.path)[1])
             with open(tmp_name, 'w') as tmp_img:
                 tmp_img.write(img)
-            api.update_profile_image(tmp_name)
-            os.system('rm -f update_profile/tmp_photo.*')
-        try:
-            me = api.me()
-            _logger.debug('description now is (%s)' % me.description.encode('utf-8'))
-            _logger.debug('nick now is (%s)' % me.name.encode('utf-8'))
-        except Exception, err:
-            _logger.error('got exception when tring api.me() but will continue anyway: %s' % err)
-        print '更新成功'
+            api.update_profile_image(image = tmp_name)
+            os.system('rm -f temp_avatar_folder/tmp_avatar.*')
+        print json.dumps({"update_status": "update profile success"})
             
     except Exception, err:
-        print '更新失败: %s %s' % (err, traceback.format_exc())
+        #print '更新失败: %s' % err
+        print json.dumps({"error": str(err), "update_status": "update profile failed"})
     finally:
         daemon.shutdown()
 

@@ -386,6 +386,10 @@ class API(object):
         allowed_param = ['id', 'page'],
     )
 
+    #def complete_followers_ids_list(self):
+    #    ids = list()
+    #    cursor
+
     """ account/verify_credentials """
     def verify_credentials(self):
         try:
