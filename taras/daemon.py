@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + './../') # Poseidon
 
 import sql_agent
 import ios.weDaily.backend.db
-from taras import Taras
+from taras_func import Taras
 import api_adapter
 from util.log import _logger
 
@@ -27,7 +27,7 @@ def index_tweet(agent, user):
         taras.assign_user(user)
         taras.find_tweet(tweet_agent)
     except Exception, err:
-        _logger.error("failed user(%d) indexing tweet: %s" % (user.id, err))
+        _logger.error("failed user(%d) indexing tweet: %s" % (user.id, traceback.format_exc()))
     else:
         _logger.debug("user(%d) finished indexing tweet" % user.id)
 
@@ -47,7 +47,7 @@ def perform_routine(agent, user):
         taras.assign_user(user) 
         taras.routine()
     except Exception, err:
-        _logger.error("failed user(%d) routine: %s" % (user.id, err))
+        _logger.error("failed user(%d) routine: %s" % (user.id, traceback.format_exc()))
     else:
         _logger.debug("user(%d) finished routine" % user.id)
 
@@ -62,6 +62,8 @@ def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
         try:
             all_user = agent.get_all_user()
             for user in all_user:
+                # if user.id != 8399:
+                #     continue
                 _logger.debug("user(%d) added to pool" % user.id)
                 pool.spawn(action_func, agent, user)
             _logger.info("waiting for all user to finish")

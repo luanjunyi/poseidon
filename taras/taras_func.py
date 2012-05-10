@@ -7,7 +7,6 @@ FORCE_CLEAN_STOBBORN_LIMIT = 180
 SEEN_AS_STOBBORN_LIMIT_IN_DAY = 5
 OPERATION_INTERVAL_IN_SEC = 1
 
-
 import os, sys, re, random, cPickle, traceback, time, math
 import urllib2, socks
 
@@ -21,6 +20,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../third_party')
 
 from BeautifulSoup import BeautifulSoup
 from util.log import _logger
+
 import sql_agent
 import api_adapter
 

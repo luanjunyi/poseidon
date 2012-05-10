@@ -30,6 +30,8 @@ for rec in tokens:
     api = APIClass(app.token, app.secret)
     token = cPickle.loads(rec.value)
 
+    print token.__module__
+    continue
 
     try:
         api.create_api_from_token(token)
