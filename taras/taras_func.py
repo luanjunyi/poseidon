@@ -24,7 +24,6 @@ from util.log import _logger
 import sql_agent
 import api_adapter
 
-
 class Taras(object):
     def __init__(self, api_type, agent):
         self.api_type = api_type
@@ -39,23 +38,26 @@ class Taras(object):
                                                     'app_id': app.id})
         if (raw_token):
             return cPickle.loads(raw_token.value)
-
-        try:
-            proxy = self.proxy_manager.get_random_proxy()
-
-            token = self.api.create_token_from_web(user.identity, user.passwd,
-                                                   proxy_user = proxy.user_name,
-                                                   proxy_pass = proxy.password,
-                                                   proxy_addr = proxy.addr,
-                                                   proxy_port = proxy.port)
-        except Exception, err:
-            _logger.error("failed to get token from web(username:(%s), passwd:(%s))"
-                          % (user.identity, user.passwd))
+        else:
+            _logger.error("failed to find token for user(%d) in DB, will not auth from web" % user.id)
             return None
-        self.agent.app_auth_token.add({'user_id': user.id,
-                                       'app_id': app.id,
-                                       'value': cPickle.dumps(token)}, force=True)
-        return token
+        # Skip authentication from web for now, very instable
+        # try:
+        #     proxy = self.proxy_manager.get_random_proxy()
+
+        #     token = self.api.create_token_from_web(user.identity, user.passwd,
+        #                                            proxy_user = proxy.user_name,
+        #                                            proxy_pass = proxy.password,
+        #                                            proxy_addr = proxy.addr,
+        #                                            proxy_port = proxy.port)
+        # except Exception, err:
+        #     _logger.error("failed to get token from web(username:(%s), passwd:(%s):%s)"
+        #                   % (user.identity, user.passwd, traceback.format_exc()))
+        #     return None
+        # self.agent.app_auth_token.add({'user_id': user.id,
+        #                                'app_id': app.id,
+        #                                'value': cPickle.dumps(token)}, force=True)
+        # return token
             
     def select_app_for_user(self, user):
         all_app = self.agent.local_app.find_all()
@@ -211,6 +213,11 @@ class Taras(object):
                           % (self.user.id, online_stat['follow_count']))
             return
 
+        if online_stat['follow_count'] < FORCE_CLEAN_STOBBORN_LIMIT and self.agent.clean_followee_log.exists({'user_id': self.user.id,
+                                                                                                              'date': datetime.datetime.now().strftime("%Y-%m-%d")}):
+            _logger.debug("user(%d) has cleaned stubborn earilier today, skip for now" % self.user.id)
+            return
+
         force = online_stat['follow_count'] >= FORCE_CLEAN_STOBBORN_LIMIT
 
         following_list = self.api.following_list()
@@ -234,23 +241,31 @@ class Taras(object):
             record = self.agent.victim_crawled.find({'user_id': self.user.id,
                                                      'victim': name})
             if record == None:
+                follow_date = int(time.time())
                 self.agent.victim_crawled.add({'user_id': self.user.id,
                                                'victim': name,
                                                'follow_date': follow_date})
+            else:
+                follow_date = record.follow_date
 
-            follow_date = int(time.time())
-            
+            ago = (int(time.time()) - follow_date) / (24 * 3600.0)            
             if follow_date < epoch_limit:
                 try:
-                    ago = (int(time.time()) - follow_date) / (24 * 3600.0)
                     _logger.debug("unfollowing victim (%s), followed %.2f days ago" % (name, ago))
                     self.api.unfollow(uid=name)
                     new_unfollow += 1
                     continue
                 except Exception, err:
                     _logger.error('failed to unfollow %s: %s' % (name, err))
+            else:
+                _logger.debug("forgive victim (%s), followed %.2f days ago" % (name, ago))
+
         stat.new_unfollow += new_unfollow
         _logger.debug("user(%d) finished unfollowing %d stubborns" % (self.user.id, new_unfollow))
+
+        self.agent.clean_followee_log.add({'user_id': self.user.id,
+                                           'date': datetime.datetime.now().strftime("%Y-%m-%d")})
+        
 
 # follow new victim procedure
     def follow_new_victims(self, db_stat):
@@ -321,19 +336,18 @@ class Taras(object):
             else:
                 _logger.debug('will publish tweet(%s)' % tweet_text)
                 self.api.publish_tweet(text = tweet_text)
+            db_stat.new_post += 1
 
         except Exception, err:
             _logger.error("failed to post new tweet(%s, image:%s): %s" % (tweet_text, image_path, traceback.format_exc()))
-            return
-
-        db_stat.new_post += 1
-        # update db
-        try:
-            ts.published = 1
-            ts.save()
-            _logger.debug("tweet marked as published in DB")
-        except Exception, err:
-            _logger.error("tweet posted, but failed to mark it as published in DB, may result in duplicate tweet in the future: %s" % err)
+        finally:
+            # update db
+            try:
+                ts.published = 1
+                ts.save()
+                _logger.debug("tweet marked as published in DB")
+            except Exception, err:
+                _logger.error("tweet posted, but failed to mark it as published in DB, may result in duplicate tweet in the future: %s" % err)
 
 
     def save_tmp_image_for_upload(self, image_bin):
@@ -350,8 +364,17 @@ class Taras(object):
         href = tweet.href
 
         content_len = 140 - 25  - len(title)
-        content = "%s%s...%s" % (title, content[:content_len], href)
-        return content.encode('utf-8')
+        content = content[:content_len]
+
+        if type(title) == unicode:
+            title = title.encode('utf-8')
+        if type(content) == unicode:
+            content = content.encode('utf-8')
+        if type(href) == unicode:
+            href = href.encode('utf-8')
+        
+        content = "%s%s...%s" % (title, content, href)
+        return content
         
 
 if __name__ == "__main__":

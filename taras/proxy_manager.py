@@ -82,7 +82,10 @@ class ProxyManager:
     def get_proxy_in_slot(self, slot_id):
         proxy = self.agent.proxy.find({'slot_id': slot_id})
         if proxy != None:
-            return proxy
+            if not self._is_proxy_bad(proxy):
+                return proxy
+            else:
+                _logger.debug("proxy(%s) is ill, will remove it from the crew" % proxy.addr)
 
         _logger.debug("proxy slot(%d) is empty will try fill it" % slot_id)
         proxy = self.fill_slot(slot_id)
@@ -97,7 +100,7 @@ class ProxyManager:
 
     def get_proxied_connection_for_user(self, user_id):
         proxy = self.get_proxy_for_user(user_id)
-        _logger.debug("will use %s for user(%d)" % (proxy.addr, user_id))
+        #_logger.debug("will use %s for user(%d)" % (proxy.addr, user_id))
         proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5,
                                         proxy.addr, proxy.port,
                                         proxy_user = proxy.user_name,
@@ -107,7 +110,7 @@ class ProxyManager:
         return conn
 
     def get_random_proxy(self):
-        proxyies = self.agent.proxy.findAll()
+        proxies = self.agent.proxy.find_all()
         return random.choice(proxies)
         
 

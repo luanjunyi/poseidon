@@ -162,7 +162,7 @@ def bind_api(**config):
                     #     req = Request(url_full)
                     # resp = urlopen(req)
                 except Exception as e:
-                    print self.headers
+                    print "header:%s" % self.headers
                     print 'stack:\n%s\n' % traceback.format_exc()
 
                     raise QWeiboError("Failed to request %s headers=%s %s" % \

@@ -1,5 +1,6 @@
 var casper = require('casper').create({
     loadImages: false,
+    timeout: 120000,
     pageSettings: {
         userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/536.4 (KHTML, like Gecko) Chrome/19.0.1072.0 Safari/536.4"
     },
