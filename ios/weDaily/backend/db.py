@@ -2,11 +2,13 @@ import sys, os
 from datetime import datetime
 import time
 
-sys.path.append("/home/luanjunyi/posiden")
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../"))
 
-from common.sql_agent import SQLAgent
+import common.sql_agent
+from common.sql_agent import SQLAgent, extending_agent
 from util.log import _logger
 
+@extending_agent
 class WeeSQLAgent(SQLAgent):
     def get_all_sources(self):
         self.cursor.execute("select * from wee_source")
@@ -81,6 +83,10 @@ values(%s, %s, %s, %s, %s, %s, %s)', (source_id, url, title, text, updated_time,
         self.cursor.execute("select count(id) as count from wee")
         return self.cursor.fetchone()['count']
 
+    def get_wee_id_containing_term(self, term, limit=50):
+        self.cursor.execute("select * from inverted_index where word = %s and weight > 6.0 order by weight desc limit %s", (term, limit))
+        return  [item['wee_id'] for item in self.cursor.fetchall()]
+
     def get_num_wee_contain_term(self, term):
         self.cursor.execute("select count(id) as count from inverted_index where word = %s", term)
         return self.cursor.fetchone()['count']
@@ -97,6 +103,23 @@ values(%s, %s, %s, %s, %s, %s, %s)', (source_id, url, title, text, updated_time,
         self.cursor.execute("select * from custom_tags")
         return self.cursor.fetchall()
 
+    def add_custom_tags(self, tags):
+        self.cursor.executemany("insert ignore into custom_tags(tag) values(%s)", tags)
+        self.conn.commit()
+
     def mark_wee_as_indexed(self, wee):
         self.cursor.execute("update wee set indexed = 1 where id = %s", wee['id'])
         self.conn.commit()
+
+# After adding dynamic feature to SQLAgent 
+    def fetch_wees_by_id(self, ids):
+        if (len(ids) == 0):
+            return []
+        self.cursor.executemany("select * from wee where id = %s", ids)
+        return self.cursor.fetchall()
+
+def init(dbname, dbuser, dbpass, dbhost='localhost', sscursor=False):
+    global WeeSQLAgent
+    WeeSQLAgent = common.sql_agent.orm_from_connection(dbuser, dbpass, dbname, dbhost, sscursor, 'WeeSQLAgent')
+    agent = WeeSQLAgent()
+    return agent
