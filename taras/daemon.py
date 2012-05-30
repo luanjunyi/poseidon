@@ -74,8 +74,8 @@ def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
         try:
             all_user = agent.get_all_user()
             for user in all_user:
-                # if user.id != 8550:
-                #     continue
+                if user.id != 8684:
+                    continue
                 _logger.debug("user(%d) added to pool" % user.id)
                 pool.spawn(action_func, agent, user)
             _logger.info("waiting for all user to finish")

@@ -117,7 +117,7 @@ class Taras(object):
     def clean_content(self, content):
         soup = BeautifulSoup(content)
         return soup.text[:140].encode('utf-8')
-
+    
     def find_tweet(self, tweet_agent):
         _logger.debug("find_tweet called for user:(%s)" % (self.user.id))
         if (self.user.index_date == -1):
@@ -364,7 +364,7 @@ class Taras(object):
         href = tweet.href
 
         content_len = 140 - 25  - len(title)
-        content = content[:content_len]
+        cot = content[:content_len]
 
         if type(title) == unicode:
             title = title.encode('utf-8')

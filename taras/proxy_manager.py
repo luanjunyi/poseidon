@@ -115,7 +115,6 @@ class ProxyManager:
         
 
 if __name__ == '__main__':
-    from common.sql_agent import orm_from_connection
     import sql_agent
     agent = sql_agent.init('taras_qq', 'junyi', 'admin123')
     agent.start()
