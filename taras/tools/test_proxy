@@ -8,12 +8,12 @@ from urlparse import urlparse
 from ConfigParser import RawConfigParser
 import socks
 import httplib2
-from taras.sql_agent import SQLAgent
+from taras.sql_agent import TarasSQLAgent
 from util.log import _logger
 
 class ProxyManager:
-    def __init__(self, host, db_user = 'taras', db_passwd = 'admin123', db_name = 'taras'):
-        self.agent = SQLAgent(db_name, db_user, db_passwd, host = host)
+    def __init__(self, host, db_user = 'junyi', db_passwd = 'admin123', db_name = 'taras_qq'):
+        self.agent = TarasSQLAgent(db_name, db_user, db_passwd, host = host)
         
         self.test_url_path = os.path.dirname(os.path.abspath(__file__)) + '/res/test-url.txt'
         self.update_db = False

@@ -34,10 +34,11 @@ casper.start(url, function() {
             'passwd': password
         }, false);
 
-    }
+
 });
 
 casper.then(function() {
+    this.wait(3000, function() {
     if (type == "qq") {
         this.echo("clicking qq submit");
         this.click("#login_btn");
@@ -45,6 +46,7 @@ casper.then(function() {
         this.echo("clicking sina submit");
         this.click("a#sub");
     }
+    });
 });
 
 casper.then(function() {

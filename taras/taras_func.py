@@ -195,6 +195,7 @@ class Taras(object):
         else:
             self.user.next_action_time = int(time.time()) + 3600
         self.user.save()
+        self.custom_task()
 
     def online_user_statistic(self):
         me = self.api.me()
@@ -205,6 +206,23 @@ class Taras(object):
                  'tweet_count': me.tweet_count
                  }
         return stat
+
+# custom task
+    def perform_custom_tasks(self):
+        custom_tasks = self.agent.task.find_all({'user_id': self.user.id})
+        for custom_task in custom_tasks:
+            _logger.debug('custom_task: user_id(%s), type(%s), content(%s)' % (custom_task.user_id, custom_task.type, custom_task.content))
+            try:
+                if custom_task.type == 'update_user_info':
+                    self.update_user_info_as_custom_task(custom_task.content)
+                self.agent.task.remove({'id': custom_task.id})
+            except Exception, err:
+                _logger.error("failed custom task %s, user: %s, content: %s: %s" % (custom_task.type, custom_task.user_id, custom_task.content, traceback.format_exc()))
+    
+    def update_user_info_as_custom_task(self, compact_user_info):
+        user_info = compact_user_info.replace(' ', '')
+        row_dict = dict((item.split('=') for item in user_info.split(',')))
+        self.agent.local_user.update(row_dict, {'id': self.user.id})
 
 # stop following stubborn procedure
     def stop_follow_stubborn(self, stat, online_stat):
@@ -379,6 +397,9 @@ class Taras(object):
 
 if __name__ == "__main__":
     _logger.info("Testing Taras functions")
+    from pprint import pprint as pp
+    import taras
+    pp(taras.__file__)
     agent = sql_agent.init('taras_qq', 'junyi', 'admin123')
     agent.start()
 
@@ -386,10 +407,17 @@ if __name__ == "__main__":
     all_app = agent.local_app.find_all()
     
     for user in all_users:
-        taras = Taras("qq", agent)
-        taras.assign_user(user, all_app[0])
-        t = taras.api.public_timeline()[0]
-        print t.text
+        if user.id == 8698:
+            try:
+                taras = Taras("qq", agent)
+                taras.assign_user(user, all_app[0])
+                taras.perform_custom_tasks()
+                print 'custom task complete'
+            except Exception, err:
+                print 'test error: %s, %s' % (err, traceback.format_exc())
+        #taras.assign_user(user, all_app[0])
+        #t = taras.api.public_timeline()[0]
+        #print t.text
         # tweet_text = '心情很好，愿世界永远和平! %f' % time.time()
         # taras.api.update_status(text=tweet_text)
         # _logger.debug('%s published' % tweet_text)

@@ -1,20 +1,22 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os, sys, re, time
+import os, sys, re, time, cPickle
 from datetime import datetime
 from urlparse import urlparse
-import MySQLdb as mdb
 from random import choice
 import json
+import traceback
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../../')
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
 #import taras
 from util import pbrowser
 from util.log import _logger
 import api_adapter
+import sql_agent
+#import taras.sdk.qqweibo.oauth as oauth
 
 def usage():
     print 'usage: update_profile -i[USER_IDENTITY] -v[USER_PASSWD] -s[SCREEN_NAME] -d[DESCRIPTION] -a[AVATAR] -t[tags] -u[DBUSER] -p[DBPASSWD] -n[DBNAME] -h[DBADDR]'
@@ -65,36 +67,44 @@ def main(argv):
     _logger.info('db_addr:%s, db_user:%s, dbpass:%s, identity:%s, screen_name:(%s), desc:(%s), tags:(%s), avatar:(%s)'
                  % (db_addr, db_user, db_passwd, identity, screen_name, desc, tags, avatar))
     try:
-        #connet mysql db
-        mysql_connection = mdb.connect(db_addr, db_user, db_passwd, db_name)
+        agent = sql_agent.init(db_name, db_user, db_passwd, db_addr)
+        agent.start()
+
+        user_id = agent.local_user.find({'identity': identity}).id
+        token = agent.app_auth_token.find({'user_id': user_id}).value
+        token = cPickle.loads(token)
+
+        app_id = agent.app_auth_token.find({'user_id': user_id}).app_id
+        appkey = agent.local_app.find({'id':app_id}).token
+        appsecret = agent.local_app.find({'id':app_id}).secret
+        vender_type = agent.core_config.find({'name': 'vender-type'}).value
+
+        QQapi = api_adapter.create_adapted_api(vender_type)
+        api = QQapi(appkey, appsecret)
+        api.api = api.create_api_from_token(token)
+        '''mysql_connection = mdb.connect(db_addr, db_user, db_passwd, db_name)
         cursor = mysql_connection.cursor()
-        #get vender type
+        get vender type
         cursor.execute('select value from core_config where name = "vender-type"')
         vender_type = cursor.fetchall()[0][0] 
-        #randomly get one app
-        cursor.execute('select id from local_app')
-        app_id = choice(cursor.fetchall())[0]
-        sql = 'select token,secret from local_app where id = %s' % app_id
-        cursor.execute(sql)
-        app_data = cursor.fetchall()
-        app_key = app_data[0][0]
-        app_secret = app_data[0][1]
-        mysql_connection.close()
-        #authorize
-        QQapi = api_adapter.create_adapted_api(vender_type)
-        api = QQapi(app_key, app_secret)
-        api.create_api_from_scratch(identity, user_passwd)
-        #print 'authorize success.'
-        # update tag
-        #if tags != '':
-        #    api.tag_create(tags)
-        # update screen name, description
+        randomly get one app
+        cursor.execute('select * from local_app order by rand() limit 1')
+        app_info = cursor.fetchall()
+        app_key = app_info[0][1]
+        app_secret = app_info[0][2]
+        mysql_connection.close()'''
+        '''api = QQapi(app_key, app_secret)
+        api.create_api_from_scratch(identity, user_passwd)'''
+        '''update tag
+        if tags != '':
+            api.tag_create(tags)
+         update screen name, description'''
         if screen_name != '':
             api.update_profile(screen_name=screen_name, description=desc)
             _logger.debug('screen name updated as (%s)' % api.me().name.encode('utf-8'))
-        #if desc != '':
-        #    api.update_profile(description=desc)
-        #    _logger.debug('description updated as (%s)' % api.me().description.encode('utf-8'))
+        '''if desc != '':
+            api.update_profile(description=desc)
+            _logger.debug('description updated as (%s)' % api.me().description.encode('utf-8'))'''
             
         #update avatar
         if avatar != '':
@@ -123,10 +133,9 @@ def main(argv):
         print json.dumps({"update_status": "update profile success"})
             
     except Exception, err:
-        #print '更新失败: %s' % err
-        print json.dumps({"error": str(err), "update_status": "update profile failed"})
-    finally:
-        daemon.shutdown()
+        print '更新失败: %s' % traceback.format_exc()
+        #update_error = '更新失败: %s' % traceback.format_exc()
+        #print json.dumps({"error": str(err), "update_status": "update profile failed"})
 
 if __name__ == "__main__":
     main(sys.argv[1:])

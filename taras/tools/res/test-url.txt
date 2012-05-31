@@ -1,6 +1,6 @@
-http://api.t.sina.com.cn
-http://api.t.sina.com.cn
-http://api.t.sina.com.cn
-http://api.t.sina.com.cn
-http://api.t.sina.com.cn
+http://t.qq.com
+http://t.qq.com
+http://t.qq.com
+http://t.qq.com
+http://t.qq.com
 

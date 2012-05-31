@@ -140,9 +140,12 @@ if __name__ == "__main__":
 
     # Testing QQ api
     api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    qq_user = "1098363908"
-    #api.create_api_from_scratch(qq_user, "youhao2006")
-    api.create_api_from_scratch(qq_user, "youhao2006", "taras", "taras-ss5", "180.186.9.9", 37211)
+    #import sdk.qqweibo.oauth
+    #token = sdk.qqweibo.oauth.OAuthToken('c2d45ccb83f341e8af824d009eec7730', '9b1294099eb2734a52a1dde29a7c15c9')
+    #qq_user = "499967727"
+    #api.create_api_from_scratch(qq_user, "syy_860610")
+    #api.create_api_from_scratch(qq_user, "syy_860610", "taras", "taras-ss5", "122.200.77.71", 37211)
+    api.api = api.create_api_from_token(token)
     me = api.me()
     print me.name, me.follow_count, me.followed_count
     names = api.following_list()
@@ -171,4 +174,4 @@ def test_sina():
     import sdk.weibopy.oauth
     token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
     api.api = api.create_api_from_token(token)
-    return api.api.followers_ids(page=0)
+    return api.complete_followers_ids_list()
