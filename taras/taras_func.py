@@ -1,9 +1,9 @@
 # coding=utf-8
 
 FILE_UPLOADS_DIR = 'file_uploads/'
-MAX_NEW_FOLLOW_PER_DAY = 80
+MAX_NEW_FOLLOW_PER_DAY = 120
 MAX_NEW_POST_PER_DAY = 5
-FORCE_CLEAN_STOBBORN_LIMIT = 180
+FORCE_CLEAN_STOBBORN_LIMIT = 80
 SEEN_AS_STOBBORN_LIMIT_IN_DAY = 5
 OPERATION_INTERVAL_IN_SEC = 1
 
@@ -381,10 +381,11 @@ class Taras(object):
     def compose_tweet(self, tweet):
         title = u'【%s】' % tweet.title.decode('utf-8')
         content = tweet.content.decode('utf-8')
+        content = re.sub(r'\n+', '\n', content)
         href = tweet.href
 
-        content_len = 140 - 25  - len(title)
-        cot = content[:content_len]
+        content_len = 135 - len(href)  - len(title)
+        content = content[:content_len]
 
         if type(title) == unicode:
             title = title.encode('utf-8')
@@ -402,18 +403,18 @@ if __name__ == "__main__":
     from pprint import pprint as pp
     import taras
     pp(taras.__file__)
-    agent = sql_agent.init('taras_qq', 'junyi', 'admin123')
+    agent = sql_agent.init('taras_sina', 'taras', 'admin123')
     agent.start()
 
     all_users = agent.get_all_user()
     all_app = agent.local_app.find_all()
     
     for user in all_users:
-        if user.id == 8698:
+        if user.id == 7335:
             try:
-                taras = Taras("qq", agent)
+                taras = Taras("sina", agent)
                 taras.assign_user(user, all_app[0])
-                taras.perform_custom_tasks()
+                taras.api.publish_tweet(text='忙碌而充实的一天')
                 print 'custom task complete'
             except Exception, err:
                 print 'test error: %s, %s' % (err, traceback.format_exc())
