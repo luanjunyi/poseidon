@@ -114,7 +114,7 @@ method_dict = {'public_timeline':
                     
                 'following_list':
                     {"name": {"sina": sina_sdk.API.complete_friends_ids_list,
-                              "qq": qq_sdk.API.complete_fanlist_only_name},
+                              "qq": qq_sdk.API.complete_idolist_only_name},
                      "arg_convert": {"sina": {},
                                      "qq": {}},
                      "ret_convert": {"sina": {},
@@ -122,12 +122,12 @@ method_dict = {'public_timeline':
                      },
                 
                 'follower_list':
-                    {"name": {"sina": sina_sdk.API.followers,
-                              "qq": qq_sdk.API._friends_user_fanslist},
-                     "arg_convert": {"sina": {"uid": "user_id"},
-                                     "qq": {"uid": "name"}},
-                     "ret_convert": {"sina": {"screen_name": "name"},
-                                     "qq": {"screen_name": "name"}}
+                    {"name": {"sina": sina_sdk.API.complete_followers_ids_list,
+                              "qq": qq_sdk.API.complete_fanslist_only_name},
+                     "arg_convert": {"sina": {},
+                                     "qq": {}},
+                     "ret_convert": {"sina": {},
+                                     "qq": {}}
                     },
 
                 'follow':

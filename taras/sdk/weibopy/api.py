@@ -386,9 +386,17 @@ class API(object):
         allowed_param = ['id', 'page'],
     )
 
-    #def complete_followers_ids_list(self):
-    #    ids = list()
-    #    cursor
+    def complete_followers_ids_list(self):
+        ids = list()
+        page_size = 5000
+        cursor = 0
+        while True:
+            ret = self.followers_ids(count = page_size, cursor = cursor)
+            ids.extend([id for id in ret.ids])
+            if not ret.next_cursor:
+                break;
+            cursor += page_size
+        return ids
 
     """ account/verify_credentials """
     def verify_credentials(self):

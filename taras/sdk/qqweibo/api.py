@@ -558,6 +558,17 @@ class API(object):
         allowed_param = ['name', 'reqnum', 'startindex'],
         require_auth = True
     )
+    def complete_fanslist_only_name(self):
+        names = list()
+        cursor = 0
+        page_size = 200
+        while True:
+            ret = self._friends_fanslist_name(reqnum=page_size, startindex=cursor)
+            names.extend([item.name for item in ret])
+            if not ret.hasnext:
+                break;
+            cursor += page_size
+        return names
 
     """ 18.fanslist_name 我的听众列表，只输出name（200个） """
     _friends_fanslist_name = bind_api(
@@ -567,7 +578,7 @@ class API(object):
         require_auth = True
     )
 
-    def complete_fanlist_only_name(self):
+    def complete_idolist_only_name(self):
         names = list()
         cursor = 0
         page_size = 200
