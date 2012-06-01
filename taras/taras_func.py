@@ -170,6 +170,8 @@ class Taras(object):
 # report status
     def routine(self):
         _logger.debug("routine called for user:(%d)" % (self.user.id))
+
+        self.perform_custom_tasks()
         
         if int(time.time()) < self.user.next_action_time:
             _logger.debug("too early, no action until %s" % time.ctime(self.user.next_action_time))
@@ -195,7 +197,7 @@ class Taras(object):
         else:
             self.user.next_action_time = int(time.time()) + 3600
         self.user.save()
-        self.custom_task()
+
 
     def online_user_statistic(self):
         me = self.api.me()
