@@ -240,7 +240,13 @@ class Taras(object):
 
         force = online_stat['follow_count'] >= FORCE_CLEAN_STOBBORN_LIMIT
 
-        following_list = self.api.following_list()
+        try:
+            following_list = self.api.following_list()
+        except Exception, err:
+            _logger.error("failed to get following list for user(%d): %s" % (self.user.id,
+                                                                             traceback.format_exc()))
+            return
+
         _logger.debug('processing %d followed victims' % len(following_list))
         epoch_limit = int(time.time()) - SEEN_AS_STOBBORN_LIMIT_IN_DAY * 24 * 3600
         new_unfollow = 0
