@@ -60,6 +60,10 @@ class Taras(object):
         # return token
             
     def select_app_for_user(self, user):
+        app_token = self.agent.app_auth_token.find({'user_id': user.id})
+        if app_token != None:
+            return self.agent.local_app.find({'id': app_token.app_id})
+        _logger.error("no token found for user(%d)" % user.id)
         all_app = self.agent.local_app.find_all()
         return all_app[user.id % len(all_app)]
 
@@ -69,6 +73,8 @@ class Taras(object):
         APIClass = api_adapter.create_adapted_api(self.api_type)
         if not app:
             app = self.select_app_for_user(user)
+        if not app:
+            raise Exception('failed to select any feasible APP for user(%d)' % self.user.id)
         self.api = APIClass(app.token, app.secret)
         token = self.get_token(user, app)
         if token == None:
