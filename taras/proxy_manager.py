@@ -86,6 +86,8 @@ class ProxyManager:
                 return proxy
             else:
                 _logger.debug("proxy(%s) is ill, will remove it from the crew" % proxy.addr)
+                proxy.slot_id = None
+                proxy.save()
 
         _logger.debug("proxy slot(%d) is empty will try fill it" % slot_id)
         proxy = self.fill_slot(slot_id)
