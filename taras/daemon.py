@@ -74,8 +74,8 @@ def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
         try:
             all_user = agent.get_all_user()
             for user in all_user:
-                # if user.id != 8684:
-                #     continue
+                #if user.id != 8536:
+                #    continue
                 _logger.debug("user(%d) added to pool" % user.id)
                 pool.spawn(action_func, agent, user)
             _logger.info("waiting for all user to finish")
@@ -112,8 +112,8 @@ if __name__ == "__main__":
 
     usage_only = False
     dbhost = 'localhost'
-    dbname = 'taras_qq'
-    dbuser = 'junyi'
+    dbname = 'taras_sina'
+    dbuser = 'taras'
     dbpass = 'admin123'
     shard_id = 0
     shard_count = 1

@@ -139,21 +139,20 @@ if __name__ == "__main__":
     SinaApi = create_adapted_api("sina")
 
     # Testing QQ api
-    api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
-    import sdk.qqweibo.oauth
-    token = sdk.qqweibo.oauth.OAuthToken('c2d45ccb83f341e8af824d009eec7730', '9b1294099eb2734a52a1dde29a7c15c9')
-    api.api = api.create_api_from_token(token)
-    me = api.me()
-    ids=api.follower_list()
-    print ids
-    print len(ids)
+    #api = QQApi("801098027", "af8f3766d52c544852129d7952fd5089")
+    #import sdk.qqweibo.oauth
+    #token = sdk.qqweibo.oauth.OAuthToken('c2d45ccb83f341e8af824d009eec7730', '9b1294099eb2734a52a1dde29a7c15c9')
+    #api.api = api.create_api_from_token(token)
+    #me = api.me()
+    #print dir(me)
+    #print me.local_id
+    #print me.screen_name
 
     #testing sina api
-    #api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
-    #import sdk.weibopy.oauth
-    #token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
-    #api.api = api.create_api_from_token(token)
-    #followers = api.follower_list()
-    #print followers
-    #print dir(followers)
-    #print len(followers)
+    api = SinaApi("722861218", "1cfbec16db00cac0a3ad393a3e21f144")
+    import sdk.weibopy.oauth
+    token = sdk.weibopy.oauth.OAuthToken('fa473fbdc1d8b736e18a72f2ccad07d3','baac261ce0698aef8cfb5b35bdd79b7a')
+    api.api = api.create_api_from_token(token)
+    me = api.me()
+    print me.screen_name
+    print me.local_id

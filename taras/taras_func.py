@@ -87,7 +87,7 @@ class Taras(object):
         self.api.api.proxy_manager = self.proxy_manager
         self.api.api.user_id = self.user.id  
 
-        _logger.debug("%s assigned as user" % self.api.me().name)
+        _logger.debug("%s assigned as user" % self.api.me().screen_name)
 
 # Crawl victim
     def find_victim_by_keyword(self, keyword):
@@ -207,11 +207,15 @@ class Taras(object):
 
     def online_user_statistic(self):
         me = self.api.me()
+        screen_name = me.screen_name;
+        screen_name = screen_name.encode('utf-8');
         stat = { 'user_id': self.user.id,
                  'collect_date': datetime.datetime.now().strftime("%Y-%m-%d"),
                  'follow_count': me.follow_count,
                  'followed_count': me.followed_count,
-                 'tweet_count': me.tweet_count
+                 'tweet_count': me.tweet_count,
+                 'local_id': me.local_id,
+                 'screen_name': screen_name,
                  }
         return stat
 
@@ -223,6 +227,8 @@ class Taras(object):
             try:
                 if custom_task.type == 'update_user_info':
                     self.update_user_info_as_custom_task(custom_task.content)
+                elif custom_task.type == 'retweet':
+                    self.perform_retweet(custom_task.content)
                 self.agent.task.remove({'id': custom_task.id})
             except Exception, err:
                 _logger.error("failed custom task %s, user: %s, content: %s: %s" % (custom_task.type, custom_task.user_id, custom_task.content, traceback.format_exc()))
@@ -231,6 +237,12 @@ class Taras(object):
         user_info = compact_user_info.replace(' ', '')
         row_dict = dict((item.split('=') for item in user_info.split(',')))
         self.agent.local_user.update(row_dict, {'id': self.user.id})
+
+    def perform_retweet(self, retweet_id_and_content):
+        tweet_id_and_content_array = retweet_id_and_content.split('#')
+        tweet_id = tweet_id_and_content_array[0]
+        retweet_content = tweet_id_and_content_array[1]
+        self.api.retweet(id = tweet_id, text = retweet_content)
 
 # stop following stubborn procedure
     def stop_follow_stubborn(self, stat, online_stat):

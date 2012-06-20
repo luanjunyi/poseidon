@@ -14,8 +14,8 @@ from third_party import chardet
 import MySQLdb
 
 
-DB_NAME='taras_qq'
-DB_USER='junyi'
+DB_NAME='taras_sina'
+DB_USER='taras'
 DB_PASSWORD='admin123'
 DB_HOST='localhost'
 TarasSQLAgent = None
