@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3C0EF7431504C624002954C6 /* icon-picful-144-144.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C0EF7421504C624002954C6 /* icon-picful-144-144.png */; };
-		3C0EF7451504C62E002954C6 /* icon-picful -57-57.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C0EF7441504C62E002954C6 /* icon-picful -57-57.png */; };
-		3C0EF7471504C68D002954C6 /* icon-picful-72-72.png in Resources */ = {isa = PBXBuildFile; fileRef = 3C0EF7461504C68D002954C6 /* icon-picful-72-72.png */; };
 		3CBCF7AB14B45F2E00883253 /* NICInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CBCF7A814B45F2E00883253 /* NICInfo.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc "; }; };
 		3CBCF7AC14B45F2E00883253 /* NICInfoSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CBCF7AA14B45F2E00883253 /* NICInfoSummary.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc "; }; };
 		3CC059571498464100EA57AE /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC059561498464100EA57AE /* UIKit.framework */; };
@@ -69,12 +66,13 @@
 		3CF0F48514B4494A00680191 /* 22.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3CF0F46D14B4494A00680191 /* 22.jpg */; };
 		3CF0F48614B4494A00680191 /* 23.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3CF0F46E14B4494A00680191 /* 23.jpg */; };
 		3CF0F48714B4494A00680191 /* 24.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3CF0F46F14B4494A00680191 /* 24.jpg */; };
+		3CF8C6911557852300A7DB9A /* 144.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CF8C68D1557852300A7DB9A /* 144.png */; };
+		3CF8C6921557852300A7DB9A /* 72.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CF8C68E1557852300A7DB9A /* 72.png */; };
+		3CF8C6931557852300A7DB9A /* 57.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CF8C68F1557852300A7DB9A /* 57.png */; };
+		3CF8C6941557852300A7DB9A /* 114.png in Resources */ = {isa = PBXBuildFile; fileRef = 3CF8C6901557852300A7DB9A /* 114.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3C0EF7421504C624002954C6 /* icon-picful-144-144.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-picful-144-144.png"; sourceTree = "<group>"; };
-		3C0EF7441504C62E002954C6 /* icon-picful -57-57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-picful -57-57.png"; sourceTree = "<group>"; };
-		3C0EF7461504C68D002954C6 /* icon-picful-72-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-picful-72-72.png"; sourceTree = "<group>"; };
 		3CBCF7A714B45F2E00883253 /* NICInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NICInfo.h; sourceTree = "<group>"; };
 		3CBCF7A814B45F2E00883253 /* NICInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NICInfo.m; sourceTree = "<group>"; };
 		3CBCF7A914B45F2E00883253 /* NICInfoSummary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NICInfoSummary.h; sourceTree = "<group>"; };
@@ -157,6 +155,10 @@
 		3CF0F46D14B4494A00680191 /* 22.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 22.jpg; sourceTree = "<group>"; };
 		3CF0F46E14B4494A00680191 /* 23.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 23.jpg; sourceTree = "<group>"; };
 		3CF0F46F14B4494A00680191 /* 24.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 24.jpg; sourceTree = "<group>"; };
+		3CF8C68D1557852300A7DB9A /* 144.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 144.png; sourceTree = "<group>"; };
+		3CF8C68E1557852300A7DB9A /* 72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 72.png; sourceTree = "<group>"; };
+		3CF8C68F1557852300A7DB9A /* 57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 57.png; sourceTree = "<group>"; };
+		3CF8C6901557852300A7DB9A /* 114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 114.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,11 +179,12 @@
 		3CC059471498464000EA57AE = {
 			isa = PBXGroup;
 			children = (
-				3C0EF7461504C68D002954C6 /* icon-picful-72-72.png */,
-				3C0EF7441504C62E002954C6 /* icon-picful -57-57.png */,
-				3C0EF7421504C624002954C6 /* icon-picful-144-144.png */,
 				3CF0F3F114AEE7FC00680191 /* Default@2x.png */,
 				3CF0F3EF14AEE7EC00680191 /* Default.png */,
+				3CF8C68D1557852300A7DB9A /* 144.png */,
+				3CF8C68E1557852300A7DB9A /* 72.png */,
+				3CF8C68F1557852300A7DB9A /* 57.png */,
+				3CF8C6901557852300A7DB9A /* 114.png */,
 				3CC0595C1498464100EA57AE /* picful */,
 				3CC059551498464100EA57AE /* Frameworks */,
 				3CC059531498464100EA57AE /* Products */,
@@ -374,7 +377,7 @@
 		3CC059491498464000EA57AE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0430;
 			};
 			buildConfigurationList = 3CC0594C1498464000EA57AE /* Build configuration list for PBXProject "picful" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -433,9 +436,10 @@
 				3CF0F48514B4494A00680191 /* 22.jpg in Resources */,
 				3CF0F48614B4494A00680191 /* 23.jpg in Resources */,
 				3CF0F48714B4494A00680191 /* 24.jpg in Resources */,
-				3C0EF7431504C624002954C6 /* icon-picful-144-144.png in Resources */,
-				3C0EF7451504C62E002954C6 /* icon-picful -57-57.png in Resources */,
-				3C0EF7471504C68D002954C6 /* icon-picful-72-72.png in Resources */,
+				3CF8C6911557852300A7DB9A /* 144.png in Resources */,
+				3CF8C6921557852300A7DB9A /* 72.png in Resources */,
+				3CF8C6931557852300A7DB9A /* 57.png in Resources */,
+				3CF8C6941557852300A7DB9A /* 114.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -584,7 +588,7 @@
 					"\"$(SRCROOT)/scroll\"",
 				);
 				PRODUCT_NAME = picful;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -592,6 +596,7 @@
 		3CC059751498464100EA57AE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Junyi Luan";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "scroll/picful-Prefix.pch";
 				INFOPLIST_FILE = "scroll/picful-Info.plist";
@@ -601,7 +606,8 @@
 					"\"$(SRCROOT)/scroll\"",
 				);
 				PRODUCT_NAME = picful;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "4CEB6510-154A-42C3-A617-5ACEA5A382C1";
+				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
