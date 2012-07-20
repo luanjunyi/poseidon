@@ -4,7 +4,7 @@
 # commit explicitly on every 'write' SQL command. Otherwise, as implied by some ducument,
 # no change can take effect for innodb engine
 
-import sys, os, cPickle, random, hashlib, re, types
+import sys, os, cPickle, random, hashlib, re, types, time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../') # Poseidon root
 from datetime import datetime, timedelta, date
 from util.log import _logger
@@ -53,18 +53,36 @@ class SQLAgent(object):
         else:
             self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
 
+        self.cursor.old_execute = self.cursor.execute
+        self.cursor.execute = self.safe_execute
+
         self.cursor.execute('set names utf8')
         self.conn.commit()
 
     def stop(self):
-        self.cursor.close()
-        self.conn.close()
+        try:
+            self.cursor.close()
+            self.conn.close()
+        except Exception, err:
+            _logger.error('stopping SQLAgent failed: %s, will continue anyway' % err)
         _logger.info('sql agent stopped')
 
     def restart(self):
         self.stop()
         self.start()
 
+    def safe_execute(self, *argv, **kwargv):
+        while True:
+            try:
+                ret = self.cursor.old_execute(*argv, **kwargv)
+                return ret
+            except MySQLdb.OperationalError, err:
+                if err[0] == 2006:
+                    _logger.error('MySQL has gone away, will restart agent')
+                    self.restart()
+            else:
+                return None
+                
 class ORMTableRow(object):
     def __init__(self, row_dict = {}, table = None):
         object.__setattr__(self, 'dict', row_dict)
@@ -277,18 +295,18 @@ if __name__ == "__main__":
                                  'id': 8276})
     print u
     print dir(u)
-    agent.core_config.remove()
-    agent.core_config.add({'name': 'vender-type',
-                           'value': 'qq',
-                           'extra': 'type of current micro-blogging vender'})
-    agent.core_config.add({'name': 'vender-type1',
-                           'value': 'qq',
-                           'extra': 'type of current micro-blogging vender'})
-    agent.core_config.add({'name': 'vender-type2',
-                           'value': 'qq',
-                           'extra': 'type of current micro-blogging vender'})
-    t = agent.core_config.find({'name': 'vender-type1'})
-    t.value = 'sina'
-    t.save()
-    agent.core_config.update({'value': 'qq-api'}, {'name': 'vender-type2'})
+    # agent.core_config.remove()
+    # agent.core_config.add({'name': 'vender-type',
+    #                        'value': 'qq',
+    #                        'extra': 'type of current micro-blogging vender'})
+    # agent.core_config.add({'name': 'vender-type1',
+    #                        'value': 'qq',
+    #                        'extra': 'type of current micro-blogging vender'})
+    # agent.core_config.add({'name': 'vender-type2',
+    #                        'value': 'qq',
+    #                        'extra': 'type of current micro-blogging vender'})
+    # t = agent.core_config.find({'name': 'vender-type1'})
+    # t.value = 'sina'
+    # t.save()
+    # agent.core_config.update({'value': 'qq-api'}, {'name': 'vender-type2'})
     agent.stop()
