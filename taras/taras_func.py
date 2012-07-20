@@ -377,6 +377,7 @@ class Taras(object):
             if image_path != None:
                 _logger.debug('will upload image from (%s)' % image_path)
                 self.api.publish_tweet_with_image(text = tweet_text, image_path = image_path)
+                os.remove(image_path)
             else:
                 _logger.debug('will publish tweet(%s)' % tweet_text)
                 self.api.publish_tweet(text = tweet_text)
