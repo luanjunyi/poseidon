@@ -34,7 +34,9 @@ def proxy_wrapped(func, proxy_info, agent):
                                  proxy_info.proxy_host, proxy_info.proxy_port,
                                  proxy_info.proxy_user, proxy_info.proxy_pass))
             else:
-                raise Exception(traceback.format_exc())
+                raise Exception("unexpected exception during proxy request, proxy IP:(%s), port:(%d), user:(%s), passwd:(%s), %s"
+                                % (proxy_info.proxy_host, proxy_info.proxy_port,
+                                   proxy_info.proxy_user, proxy_info.proxy_pass, traceback.format_exc()))
     return function_wrapped
 
 
