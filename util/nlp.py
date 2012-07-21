@@ -1,5 +1,7 @@
 import os, sys, time
-sys.path.append("/home/luanjunyi/yhhd/py")
+
+sys.path.append(os.path.join(os.path.abspath(__file__), "../"))
+
 from third_party import mmseg
 mmseg.Dictionary.load_dictionaries()
 
