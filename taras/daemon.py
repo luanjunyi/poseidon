@@ -69,10 +69,17 @@ def action(dbuser, dbpass, dbname, dbhost, api_type, action_func):
 
     agent.start()
     pool = eventlet.GreenPool()
+    if action_func.func_name == 'crawl_victim':
+        pool.resize(10)
+    elif action_func.func_name == 'index_tweet':
+        pool.resize(10)
+    elif action_func.func_name == 'perform_routine':
+        pool.resize(80)
     loop_id = 1
     while True:
         try:
             all_user = agent.get_all_user()
+            pool.resize(10)
             for user in all_user:
                 #if user.id != 8536:
                 #    continue
