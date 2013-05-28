@@ -13,17 +13,13 @@ class API(object):
     """Mblog API"""
 
     def __init__(self, auth_handler=None,
-            host='api.t.sohu.com', search_host='api.t.sohu.com',
-             cache=None, secure=False, api_root='', search_root='',
+            host='api.weibo.com', search_host='api.weibo.com',
+             cache=None, secure=True, api_root='/2', search_root='/2',
             retry_count=0, retry_delay=0, retry_errors=None,source=None,
             parser=None, log = None):
         self.auth = auth_handler
         self.host = host
-        if source == None:
-            if auth_handler != None:
-                self.source = self.auth._consumer.key
-        else:
-            self.source = source
+        self.source = source
         self.search_host = search_host
         self.api_root = api_root
         self.search_root = search_root
@@ -39,35 +35,27 @@ class API(object):
     public_timeline = bind_api(
         path = '/statuses/public_timeline.json',
         payload_type = 'status', payload_list = True,
-        allowed_param = []
-    )
-
-    """ statuses/friends_timeline """
-    # allowed_param should include 'since', but can't get it through so far, so we just drop it here
-    friends_timeline = bind_api(
-        path = '/statuses/friends_timeline.json',
-        payload_type = 'status', payload_list = True,
-        allowed_param = ['since_id', 'max_id', 'count', 'page', 'cursor'],
-        require_auth = True
-    )
-
-    """ statuses/user_timeline """
-    user_timeline = bind_api(
-        path = '/statuses/user_timeline/{id|nick_name}.json',
-        payload_type = 'status', payload_list = True,
-        allowed_param = ['id', 'nick_name', 'since_id',
-                          'max_id', 'count', 'page', 'cursor']
+        payload_list_key = 'statuses',
+        allowed_param = ['count']
     )
 
     """ statuses/home_timeline """
     home_timeline = bind_api(
         path = '/statuses/home_timeline.json',
         payload_type = 'status', payload_list = True,
-        allowed_param = ['since_id', 'max_id', 'count', 'page'],
+        payload_list_key = 'statuses',
+        allowed_param = ['since_id', 'max_id', 'count', 'page', 'base_app', 'feature', 'trim_user'],
         require_auth = True
     )
 
-
+    """ statuses/friends_timeline """
+    friends_timeline = bind_api(
+        path = '/statuses/friends_timeline.json',
+        payload_type = 'status', payload_list = True,
+        payload_list_key = 'statuses',
+        allowed_param = ['since_id', 'max_id', 'count', 'page', 'base_app', 'feature', 'trim_user'],
+        require_auth = True
+    )
     """ statuses/comment """
     comment = bind_api(
         path = '/statuses/comment.json',
@@ -110,6 +98,13 @@ class API(object):
         require_auth = True
     )
     
+    """ statuses/user_timeline """
+    user_timeline = bind_api(
+        path = '/statuses/user_timeline.json',
+        payload_type = 'status', payload_list = True,
+        allowed_param = ['id', 'user_id', 'screen_name', 'since_id',
+                          'max_id', 'count', 'page']
+    )
 
     """ statuses/mentions """
     mentions = bind_api(

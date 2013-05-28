@@ -4,16 +4,16 @@
 import os
 import mimetypes
 
-from binder import bind_api
-from error import WeibopError
-from parsers import ModelParser
+from weibopy.binder import bind_api
+from weibopy.error import WeibopError
+from weibopy.parsers import ModelParser
 
 
 class API(object):
     """Mblog API"""
 
     def __init__(self, auth_handler=None,
-            host='api.t.sohu.com', search_host='api.t.sohu.com',
+            host='api.t.sina.com.cn', search_host='api.t.sina.com.cn',
              cache=None, secure=False, api_root='', search_root='',
             retry_count=0, retry_delay=0, retry_errors=None,source=None,
             parser=None, log = None):
@@ -42,23 +42,6 @@ class API(object):
         allowed_param = []
     )
 
-    """ statuses/friends_timeline """
-    # allowed_param should include 'since', but can't get it through so far, so we just drop it here
-    friends_timeline = bind_api(
-        path = '/statuses/friends_timeline.json',
-        payload_type = 'status', payload_list = True,
-        allowed_param = ['since_id', 'max_id', 'count', 'page', 'cursor'],
-        require_auth = True
-    )
-
-    """ statuses/user_timeline """
-    user_timeline = bind_api(
-        path = '/statuses/user_timeline/{id|nick_name}.json',
-        payload_type = 'status', payload_list = True,
-        allowed_param = ['id', 'nick_name', 'since_id',
-                          'max_id', 'count', 'page', 'cursor']
-    )
-
     """ statuses/home_timeline """
     home_timeline = bind_api(
         path = '/statuses/home_timeline.json',
@@ -67,7 +50,13 @@ class API(object):
         require_auth = True
     )
 
-
+    """ statuses/friends_timeline """
+    friends_timeline = bind_api(
+        path = '/statuses/friends_timeline.json',
+        payload_type = 'status', payload_list = True,
+        allowed_param = ['since_id', 'max_id', 'count', 'page'],
+        require_auth = True
+    )
     """ statuses/comment """
     comment = bind_api(
         path = '/statuses/comment.json',
@@ -110,6 +99,13 @@ class API(object):
         require_auth = True
     )
     
+    """ statuses/user_timeline """
+    user_timeline = bind_api(
+        path = '/statuses/user_timeline.json',
+        payload_type = 'status', payload_list = True,
+        allowed_param = ['id', 'user_id', 'screen_name', 'since_id',
+                          'max_id', 'count', 'page']
+    )
 
     """ statuses/mentions """
     mentions = bind_api(

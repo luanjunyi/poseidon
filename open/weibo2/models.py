@@ -26,8 +26,12 @@ class Model(object):
         raise NotImplementedError
 
     @classmethod
-    def parse_list(cls, api, json_list):
+    def parse_list(cls, api, json, list_key = ''):
         """Parse a list of JSON objects into a result set of model instances."""
+        if (type(json) == list):
+            json_list = json
+        else:
+            json_list = json[list_key]
         results = ResultSet()
         for obj in json_list:
             results.append(cls.parse(api, obj))
@@ -44,11 +48,9 @@ class Status(Model):
                 user = User.parse(api, v)
                 setattr(status, 'author', user)
                 setattr(status, 'user', user)  # DEPRECIATED
-            elif k == 'screen_name':
-                setattr(status, k, v)
             elif k == 'created_at':
                 if (v == ''): # When the retweeted tweet is deleted, v is ''
-                    setattr(status, k, None)
+                    v = 'Wed Feb 14 03:15:52 +0800 1984'
                 setattr(status, k, parse_datetime(v))
             elif k == 'source':
                 if '<' in v:
@@ -141,7 +143,7 @@ class User(Model):
         return user
 
     @classmethod
-    def parse_list(cls, api, json_list):
+    def parse_list(cls, api, json_list, list_key = 'users'):
         if isinstance(json_list, list):
             item_list = json_list
         else:

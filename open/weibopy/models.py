@@ -2,7 +2,7 @@
 # Copyright 2009-2010 Joshua Roesslein
 # See LICENSE for details.
 
-from utils import parse_datetime, parse_html_value, parse_a_href, \
+from weibopy.utils import parse_datetime, parse_html_value, parse_a_href, \
         parse_search_datetime, unescape_html
 
 class ResultSet(list):
@@ -48,7 +48,7 @@ class Status(Model):
                 setattr(status, k, v)
             elif k == 'created_at':
                 if (v == ''): # When the retweeted tweet is deleted, v is ''
-                    setattr(status, k, None)
+                    v = 'Wed Feb 15 03:15:52 +0800 2012'
                 setattr(status, k, parse_datetime(v))
             elif k == 'source':
                 if '<' in v:

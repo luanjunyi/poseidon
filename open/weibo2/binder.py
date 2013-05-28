@@ -13,17 +13,17 @@ import socket
 import httplib2, socks, traceback
 from httplib2.socks import ProxyError
 
-re_path_template = re.compile('{[|\w]+}')
-
+re_path_template = re.compile('{\w+}')
 
 def bind_api(**config):
     class APIMethod(object):
         path = config['path']
         payload_type = config.get('payload_type', None)
         payload_list = config.get('payload_list', False)
+        payload_list_key = config.get('payload_list_key', None)
         allowed_param = config.get('allowed_param', [])
         method = config.get('method', 'GET')
-        require_auth = config.get('require_auth', False)
+        require_auth = config.get('require_auth', True)
         search_api = config.get('search_api', False)
                 
         def __init__(self, api, args, kargs):
@@ -82,19 +82,16 @@ def bind_api(**config):
 
         def build_path(self):
             for variable in re_path_template.findall(self.path):
-                names = variable.strip('{}')
-                names = names.split('|')
-                value = None
-                if 'user' in names and self.api.auth:
+                name = variable.strip('{}')
+
+                if name == 'user' and self.api.auth:
                     value = self.api.auth.get_username()
                 else:
-                    for name in names:
-                        if name in self.parameters:
-                            value = urllib.quote(self.parameters[name])                            
-                            del self.parameters[name]
-                            break
-                if value == None:
-                    raise WeibopError('No parameter value found for at least one path variable: %s' % names)
+                    try:
+                        value = urllib.quote(self.parameters[name])
+                    except KeyError:
+                        raise WeibopError('No parameter value found for path variable: %s' % name)
+                    del self.parameters[name]
 
                 self.path = self.path.replace(variable, value)
 
@@ -156,23 +153,16 @@ def bind_api(**config):
 
                 # Apply authentication
                 if self.api.auth:
-                    self.api.auth.apply_auth(
-                            self.scheme + self.host + url,
-                            self.method, self.headers, self.parameters
-                    )
+                    self.api.auth.apply_auth(self.headers)
+
                 # Execute request
                 try:
-                    # sohu's API can't handle realm, so remove it from headers. Sohu promise to fix this in the future
-                    self.headers['Authorization'] = self.headers['Authorization'].replace('realm=""', '')
-
-                    # print "headers:(%s)" % self.headers
-                    # print "parameters:(%s)" % self.parameters
+                    print "headers:(%s)" % self.headers
+                    print "parameters:(%s)" % self.parameters
                     resp, content = conn.request(uri = self.scheme + self.host + url,
                                                  method = self.method,
                                                  headers = self.headers,
                                                  body = self.post_data)
-                    # print 'resp:(%s)' % resp
-                    # print 'content:(%s)' % content
                 except ProxyError, err:
                     self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
                     raise Exception("Got ProxyError: %s, IP:%s, port:%d, user:%s, passwd:%s" % 
@@ -213,9 +203,6 @@ def bind_api(**config):
                     error =  json['error']
                     error_msg = 'error_code:' + error_code +','+ error
                 except Exception:
-                    print 'url:(%s)' % url
-                    print 'resp:(%s)' % resp
-                    print 'content:(%s)' % content
                     error_msg = "Weibo error response: status code = %s" % resp['status']
                 raise WeibopError(error_msg)
             

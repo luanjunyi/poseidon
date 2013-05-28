@@ -6,14 +6,16 @@ import httplib
 import urllib
 import time
 import re
-from error import WeibopError
-from utils import convert_to_utf8_str
+from weibopy.error import WeibopError
+from weibopy.utils import convert_to_utf8_str
 
+# sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '../../') # Paracode root
+# from util.log import _logger
 import socket
 import httplib2, socks, traceback
 from httplib2.socks import ProxyError
 
-re_path_template = re.compile('{[|\w]+}')
+re_path_template = re.compile('{\w+}')
 
 
 def bind_api(**config):
@@ -82,19 +84,16 @@ def bind_api(**config):
 
         def build_path(self):
             for variable in re_path_template.findall(self.path):
-                names = variable.strip('{}')
-                names = names.split('|')
-                value = None
-                if 'user' in names and self.api.auth:
+                name = variable.strip('{}')
+
+                if name == 'user' and self.api.auth:
                     value = self.api.auth.get_username()
                 else:
-                    for name in names:
-                        if name in self.parameters:
-                            value = urllib.quote(self.parameters[name])                            
-                            del self.parameters[name]
-                            break
-                if value == None:
-                    raise WeibopError('No parameter value found for at least one path variable: %s' % names)
+                    try:
+                        value = urllib.quote(self.parameters[name])
+                    except KeyError:
+                        raise WeibopError('No parameter value found for path variable: %s' % name)
+                    del self.parameters[name]
 
                 self.path = self.path.replace(variable, value)
 
@@ -162,17 +161,12 @@ def bind_api(**config):
                     )
                 # Execute request
                 try:
-                    # sohu's API can't handle realm, so remove it from headers. Sohu promise to fix this in the future
-                    self.headers['Authorization'] = self.headers['Authorization'].replace('realm=""', '')
-
-                    # print "headers:(%s)" % self.headers
-                    # print "parameters:(%s)" % self.parameters
+                    print "headers:(%s)" % self.headers
+                    print "parameters:(%s)" % self.parameters
                     resp, content = conn.request(uri = self.scheme + self.host + url,
                                                  method = self.method,
                                                  headers = self.headers,
                                                  body = self.post_data)
-                    # print 'resp:(%s)' % resp
-                    # print 'content:(%s)' % content
                 except ProxyError, err:
                     self.api.taras.agent.update_proxy_log(proxy_addr, log_type="fail")
                     raise Exception("Got ProxyError: %s, IP:%s, port:%d, user:%s, passwd:%s" % 
@@ -213,14 +207,11 @@ def bind_api(**config):
                     error =  json['error']
                     error_msg = 'error_code:' + error_code +','+ error
                 except Exception:
-                    print 'url:(%s)' % url
-                    print 'resp:(%s)' % resp
-                    print 'content:(%s)' % content
                     error_msg = "Weibo error response: status code = %s" % resp['status']
                 raise WeibopError(error_msg)
             
             # Parse the response payload
-            # print 'body: %s' % body
+            #print 'body: %s' % body
             result = self.api.parser.parse(self, body)
 
             # Store result into cache if one is available.
